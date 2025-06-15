@@ -39,7 +39,7 @@ const AddJob = () => {
     };
 
     try {
-      const res = await axios.post(`${process.env.REACT_APP_API_URL}/jobs`, jobData);
+      const res = await axios.post(`${process.env.REACT_APP_API_URL}jobs`, jobData);
       alert("Job added successfully!");
       console.log(res.data);
 
