@@ -220,7 +220,7 @@ export default function CandidateForm() {
       const resumeData = new FormData();
       resumeData.append("resume", resumeFile);
 
-      const res = await fetch(`${process.env.REACT_APP_API_URL}/candidates/upload`, {
+      const res = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/candidates/upload`, {
         method: "POST",
         body: resumeData,
       });
@@ -233,7 +233,7 @@ export default function CandidateForm() {
     setProfile(finalData);
 
     // 🔁 Post to backend to store in DB
-    await fetch(`${process.env.REACT_APP_API_URL}/candidates`, {
+    await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/candidates`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(finalData),

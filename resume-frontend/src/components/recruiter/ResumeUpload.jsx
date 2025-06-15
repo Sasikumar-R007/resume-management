@@ -11,7 +11,7 @@ const ResumeUpload = () => {
 
   const fetchRecent = async () => {
     try {
-      const res = await fetch(`${process.env.REACT_APP_API_URL}/records`);
+      const res = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/records`);
       const data = await res.json();
       setRecentUploads(data);
     } catch (err) {
@@ -41,7 +41,7 @@ const ResumeUpload = () => {
     }
 
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/upload`, {
+      const response = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/upload`, {
         method: "POST",
         body: formData,
       });
@@ -136,7 +136,7 @@ const ResumeUpload = () => {
                       upload.files.map((filename, i) => (
                         <div key={i}>
                           <a
-                            href={`${process.env.REACT_APP_API_BASE_URL}/uploads/${filename}`}
+                            href={`${process.env.REACT_APP_API_BASE_URL}/api/uploads/${filename}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-blue-600 underline"

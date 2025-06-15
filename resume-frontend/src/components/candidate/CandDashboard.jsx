@@ -41,7 +41,7 @@ const CandidateDashboard = () => {
       try {
         // 2. Update the backend with the image
         const res = await axios.put(
-          `${process.env.REACT_APP_API_BASE_URL}/candidates/profile-image`,
+          `${process.env.REACT_APP_API_BASE_URL}/api/candidates/profile-image`,
           {
             email: profile.email, // assuming email is used to identify user
             profileImage: base64Image,
@@ -62,7 +62,7 @@ const CandidateDashboard = () => {
   const handleRemoveImage = async () => {
     try {
       const res = await axios.put(
-        `${process.env.REACT_APP_API_URL}/candidates/profile-image`,
+        `${process.env.REACT_APP_API_BASE_URL}/api/candidates/profile-image`,
         {
           email: profile.email,
           profileImage: "", // remove image
@@ -100,52 +100,52 @@ const CandidateDashboard = () => {
     }
   }, [profile]);
 
-  const jobData = [
-    {
-      id: 1,
-      company: "Symphonix Technologies",
-      logo: "https://symphonix-tech.web.app/assests/sym%20profile.png",
-      title: "Frontend Developer",
-      type: "Internship",
-      employees: 45,
-      description:
-        "We are a growing tech startup focusing on building UI-rich web apps.",
-      skills: ["React", "Tailwind", "JavaScript"],
-    },
-    {
-      id: 2,
-      company: "NetDev Solutions",
-      logo: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQm76XoSy0vee4MvSerm6U5U_5W6e7TT-2J-g&s",
-      title: "Marketing Analyst",
-      type: "Full-Time",
-      employees: 80,
-      description:
-        "Digital marketing agency helping brands grow online with performance ads.",
-      skills: ["SEO", "Google Ads", "Excel", "Communication"],
-    },
-    {
-      id: 3,
-      company: "High Tech Innovations",
-      logo: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTSyHd2CqvAVfhrZkSRzSAoG--zQ3TYjTCTkw&s",
-      title: "Java Developer",
-      type: "Internship",
-      employees: 45,
-      description:
-        "We are a growing tech startup focusing on building UI-rich web apps.",
-      skills: ["React", "Tailwind", "JavaScript"],
-    },
-    {
-      id: 4,
-      company: "Globe Tech",
-      logo: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQPY_d3dQFhCeeI8It8syLegLzIBCVq8MdzZw&s",
-      title: "Project Manager",
-      type: "Full-Time",
-      employees: 80,
-      description:
-        "Digital marketing agency helping brands grow online with performance ads.",
-      skills: ["SEO", "Google Ads", "Excel", "Communication"],
-    },
-  ];
+  // const jobData = [
+  //   {
+  //     id: 1,
+  //     company: "Symphonix Technologies",
+  //     logo: "https://symphonix-tech.web.app/assests/sym%20profile.png",
+  //     title: "Frontend Developer",
+  //     type: "Internship",
+  //     employees: 45,
+  //     description:
+  //       "We are a growing tech startup focusing on building UI-rich web apps.",
+  //     skills: ["React", "Tailwind", "JavaScript"],
+  //   },
+  //   {
+  //     id: 2,
+  //     company: "NetDev Solutions",
+  //     logo: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQm76XoSy0vee4MvSerm6U5U_5W6e7TT-2J-g&s",
+  //     title: "Marketing Analyst",
+  //     type: "Full-Time",
+  //     employees: 80,
+  //     description:
+  //       "Digital marketing agency helping brands grow online with performance ads.",
+  //     skills: ["SEO", "Google Ads", "Excel", "Communication"],
+  //   },
+  //   {
+  //     id: 3,
+  //     company: "High Tech Innovations",
+  //     logo: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTSyHd2CqvAVfhrZkSRzSAoG--zQ3TYjTCTkw&s",
+  //     title: "Java Developer",
+  //     type: "Internship",
+  //     employees: 45,
+  //     description:
+  //       "We are a growing tech startup focusing on building UI-rich web apps.",
+  //     skills: ["React", "Tailwind", "JavaScript"],
+  //   },
+  //   {
+  //     id: 4,
+  //     company: "Globe Tech",
+  //     logo: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQPY_d3dQFhCeeI8It8syLegLzIBCVq8MdzZw&s",
+  //     title: "Project Manager",
+  //     type: "Full-Time",
+  //     employees: 80,
+  //     description:
+  //       "Digital marketing agency helping brands grow online with performance ads.",
+  //     skills: ["SEO", "Google Ads", "Excel", "Communication"],
+  //   },
+  // ];
 
   //jobs from rec
 
@@ -153,7 +153,9 @@ const CandidateDashboard = () => {
   useEffect(() => {
     const fetchJobs = async () => {
       try {
-        const res = await axios.get(`${process.env.REACT_APP_API_URL}/jobs`);
+        const res = await axios.get(
+          `${process.env.REACT_APP_API_BASE_URL}/api/jobs`
+        );
         setJobs(res.data);
       } catch (err) {
         console.error("Error fetching jobs", err);
@@ -609,58 +611,61 @@ const CandidateDashboard = () => {
             </div>
 
             <div className="space-y-6">
-              {jobData.map((job) => (
-                <div
-                  key={job.id}
-                  className="bg-white rounded-lg shadow p-4 flex justify-between items-start"
-                >
-                  {/* Left content */}
-                  <div className="flex-1">
-                    <div className="flex items-center gap-4">
-                      <img
-                        src={job.logo}
-                        alt="logo"
-                        className="w-12 h-12 rounded"
-                      />
-                      <div>
-                        <h3 className="text-xl font-semibold">{job.company}</h3>
-                        <p className="text-gray-600">{job.title}</p>
+              {/* <div>
+                {jobData.map((job) => (
+                  <div
+                    key={job.id}
+                    className="bg-white rounded-lg shadow p-4 flex justify-between items-start"
+                  >
+
+                    <div className="flex-1">
+                      <div className="flex items-center gap-4">
+                        <img
+                          src={job.logo}
+                          alt="logo"
+                          className="w-12 h-12 rounded"
+                        />
+                        <div>
+                          <h3 className="text-xl font-semibold">
+                            {job.company}
+                          </h3>
+                          <p className="text-gray-600">{job.title}</p>
+                        </div>
+                      </div>
+
+                      <div className="mt-3 text-sm text-gray-700 space-y-1">
+                        <p>
+                          <strong>Type:</strong> {job.type}
+                        </p>
+                        <p>
+                          <strong>Employees:</strong> {job.employees}+
+                        </p>
+                        <p>
+                          <strong>About:</strong> {job.description}
+                        </p>
+                      </div>
+
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {job.skills.map((skill, i) => (
+                          <span
+                            key={i}
+                            className="bg-gray-200 text-sm text-gray-800 px-3 py-1 rounded-full"
+                          >
+                            {skill}
+                          </span>
+                        ))}
                       </div>
                     </div>
 
-                    <div className="mt-3 text-sm text-gray-700 space-y-1">
-                      <p>
-                        <strong>Type:</strong> {job.type}
-                      </p>
-                      <p>
-                        <strong>Employees:</strong> {job.employees}+
-                      </p>
-                      <p>
-                        <strong>About:</strong> {job.description}
-                      </p>
-                    </div>
-
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      {job.skills.map((skill, i) => (
-                        <span
-                          key={i}
-                          className="bg-gray-200 text-sm text-gray-800 px-3 py-1 rounded-full"
-                        >
-                          {skill}
-                        </span>
-                      ))}
+                    <div className="ml-4 mt-2">
+                      <button className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded flex items-center gap-2">
+                        Apply
+                        <ExternalLink size={18} />
+                      </button>
                     </div>
                   </div>
-
-                  {/* Right - Apply button */}
-                  <div className="ml-4 mt-2">
-                    <button className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded flex items-center gap-2">
-                      Apply
-                      <ExternalLink size={18} />
-                    </button>
-                  </div>
-                </div>
-              ))}
+                ))}
+              </div> */}
 
               {/* jobs from rec */}
 
