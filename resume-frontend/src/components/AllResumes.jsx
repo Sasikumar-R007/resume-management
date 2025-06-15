@@ -51,7 +51,7 @@ const AllResumes = () => {
               <td className="border px-3 py-2 text-center">
                 {res.files && res.files.length > 0 ? (
                   <a
-                    href={`http://localhost:5000/uploads/${res.files[0]}`}
+                    href={`${process.env.REACT_APP_API_BASE}/uploads/${res.files[0]}`}
                     target="_blank"
                     rel="noreferrer"
                     className="text-blue-600 underline"
