@@ -5,7 +5,7 @@ const AllResumes = () => {
   const [archivedCount, setArchivedCount] = useState(0); // placeholder
 
   useEffect(() => {
-    fetch(`${process.env.REACT_APP_API_URL}/all-resumes`)
+    fetch(`${process.env.REACT_APP_API_BASE_URL}/api/all-resumes`)
       .then((res) => res.json())
       .then((data) => {
         setResumes(data);

@@ -5,7 +5,7 @@ const JobBoard = () => {
   const [jobs, setJobs] = useState([]);
 
   useEffect(() => {
-  axios.get(`${process.env.REACT_APP_API_BASE}/jobs`).then((res) => {
+  axios.get(`${process.env.REACT_APP_API_BASE_URL}/api/jobs`).then((res) => {
     setJobs(res.data);
   });
 }, []);

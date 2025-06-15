@@ -132,7 +132,7 @@ export default function CandidatesApplied() {
   const [candidates, setCandidates] = useState([]);
 
   useEffect(() => {
-    fetch(`${process.env.REACT_APP_API_URL}/candidates`)
+    fetch(`${process.env.REACT_APP_API_BASE_URL}/api/candidates`)
       .then((res) => res.json())
       .then((data) => setCandidates(data))
       .catch((err) => console.error("Error:", err));

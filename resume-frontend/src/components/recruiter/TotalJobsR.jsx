@@ -9,14 +9,14 @@ const JobBoard = () => {
 
   useEffect(() => {
     axios
-      .get(`${process.env.REACT_APP_API_URL}/jobs`)
+      .get(`${process.env.REACT_APP_API_BASE_URL}/api/jobs`)
       .then((res) => setJobs(res.data))
       .catch((err) => console.error("Error fetching jobs:", err));
   }, []);
 
   const handleDelete = async (id) => {
     try {
-      await axios.delete(`${process.env.REACT_APP_API_URL}/jobs/${id}`);
+      await axios.delete(`${process.env.REACT_APP_API_BASE_URL}/api/jobs/${id}`);
       alert("Job deleted successfully!");
 
       // Optional: Refresh job list after delete

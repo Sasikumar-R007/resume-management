@@ -136,7 +136,7 @@ const ResumeUpload = () => {
                       upload.files.map((filename, i) => (
                         <div key={i}>
                           <a
-                            href={`http://localhost:5000/uploads/${filename}`}
+                            href={`${process.env.REACT_APP_API_BASE_URL}/uploads/${filename}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-blue-600 underline"
