@@ -1,4 +1,5 @@
 import React from "react";
+import { useState } from "react";
 import {
   FaBriefcase,
   FaUserCheck,
@@ -42,6 +43,102 @@ const RecruiterDashboardMain = () => {
       subtitle: "Pending: 1",
     },
   ];
+
+  // Mock candidates data
+
+  const mockCandidates = [
+    {
+      id: "cand001",
+      name: "John Doe",
+      jobId: "job001",
+      job: "Frontend Developer",
+      company: "TechCorp",
+    },
+    {
+      id: "cand002",
+      name: "Jane Smith",
+      jobId: "job002",
+      job: "UI/UX Designer",
+      company: "Designify",
+    },
+    {
+      id: "cand003",
+      name: "Ravi Kumar",
+      jobId: "job003",
+      job: "Backend Developer",
+      company: "CodeLabs",
+    },
+    {
+      id: "cand004",
+      name: "Aisha Ali",
+      jobId: "job004",
+      job: "Full Stack Dev",
+      company: "WebFusion",
+    },
+    {
+      id: "cand005",
+      name: "David Lee",
+      jobId: "job005",
+      job: "Project Manager",
+      company: "AgileWorks",
+    },
+    {
+      id: "cand006",
+      name: "Meena S",
+      jobId: "job006",
+      job: "QA Tester",
+      company: "BugCatchers",
+    },
+    {
+      id: "cand007",
+      name: "Tom Victor",
+      jobId: "job007",
+      job: "DevOps Engineer",
+      company: "CloudBase",
+    },
+    {
+      id: "cand008",
+      name: "Sara N",
+      jobId: "job008",
+      job: "Data Analyst",
+      company: "InsightSoft",
+    },
+    {
+      id: "cand009",
+      name: "Naveen R",
+      jobId: "job009",
+      job: "Mobile App Dev",
+      company: "AppLogic",
+    },
+    {
+      id: "cand010",
+      name: "Kavi R",
+      jobId: "job010",
+      job: "Product Designer",
+      company: "PixelMint",
+    },
+    {
+      id: "cand011",
+      name: "Deepak S",
+      jobId: "job011",
+      job: "HR Manager",
+      company: "HireNow",
+    },
+  ];
+
+  const statuses = [
+    "Processing",
+    "Interview Scheduled",
+    "Selected",
+    "Rejected",
+  ];
+
+  const [showAll, setShowAll] = useState(false);
+  const visibleCandidates = showAll
+    ? mockCandidates
+    : mockCandidates.slice(0, 10);
+
+  // Recent activities
 
   const recentActivities = [
     "Job 'Frontend Developer' posted 2 days ago",
@@ -109,6 +206,88 @@ const RecruiterDashboardMain = () => {
             Add Job
           </button>
         </div>
+
+        {/* Candidate Status */}
+
+        <div className="flex flex-col lg:flex-row gap-4 my-5 w-full">
+          {/* Left Column */}
+          <div className="lg:w-[75%] w-full bg-white rounded-2xl shadow p-4">
+            <h2 className="text-xl font-semibold mb-4">Candidate Status</h2>
+            <div className="overflow-x-auto">
+              <table className="min-w-full table-auto border-collapse">
+                <thead>
+                  <tr className="text-left bg-gray-100">
+                    <th className="p-2">S.No.</th>
+                    <th className="p-2">Name</th>
+                    <th className="p-2">Job Title</th>
+                    <th className="p-2">Company</th>
+                    <th className="p-2">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {visibleCandidates.map((cand, index) => (
+                    <tr key={cand.id} className="border-b hover:bg-gray-50">
+                      <td className="p-2">{index + 1}</td>
+                      <td
+                        className="p-2 text-blue-600 cursor-pointer hover:underline"
+                        onClick={() =>
+                          navigate(`/recruiter/candidate/${cand.id}`)
+                        }
+                      >
+                        {cand.name}
+                      </td>
+                      <td
+                        className="p-2 cursor-pointer hover:underline"
+                        onClick={() => navigate(`/recruiter/job/${cand.jobId}`)}
+                      >
+                        {cand.job}
+                      </td>
+                      <td className="p-2">{cand.company}</td>
+                      <td className="p-2">
+                        <select className="border px-2 py-1 rounded">
+                          {statuses.map((status) => (
+                            <option key={status}>{status}</option>
+                          ))}
+                        </select>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="text-right mt-4">
+              <button
+                className="text-blue-600 font-medium hover:underline"
+                onClick={() => setShowAll(!showAll)}
+              >
+                {showAll ? "Show Less" : "See More"}
+              </button>
+            </div>
+
+            {/* Right Column Buttons for small screens */}
+            <div className="block lg:hidden mt-6 flex flex-col gap-3">
+              <button className="w-full py-3 bg-gray-800 text-white rounded-xl shadow hover:bg-gray-700">
+                Pipeline
+              </button>
+              <button className="w-full py-3 bg-gray-500 text-white rounded-xl shadow hover:bg-gray-400">
+                Archived
+              </button>
+            </div>
+          </div>
+
+          {/* Right Column Buttons for large screens */}
+          <div className="hidden lg:flex lg:w-[25%] flex-col gap-4">
+            <button className="w-full py-3 bg-green-600 text-white text-lg rounded-xl shadow hover:bg-green-700">
+              Pipeline
+            </button>
+            <button className="w-full py-3 bg-yellow-500 text-white text-lg rounded-xl shadow hover:bg-yellow-400">
+              Archived
+            </button>
+          </div>
+        </div>
+
+        {/* Recent Activities */}
 
         <div className="bg-white p-6 rounded-lg shadow max-w-full mx-auto">
           <div className="flex justify-between items-center mb-4">

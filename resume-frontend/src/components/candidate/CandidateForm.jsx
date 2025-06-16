@@ -220,10 +220,13 @@ export default function CandidateForm() {
       const resumeData = new FormData();
       resumeData.append("resume", resumeFile);
 
-      const res = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/candidates/upload`, {
-        method: "POST",
-        body: resumeData,
-      });
+      const res = await fetch(
+        `${process.env.REACT_APP_API_BASE_URL}/api/candidates/upload`,
+        {
+          method: "POST",
+          body: resumeData,
+        }
+      );
 
       const result = await res.json();
       resumeLink = result.fileUrl; // 👈 fileUrl must be returned from backend
