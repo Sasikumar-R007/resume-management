@@ -126,12 +126,40 @@ const RecruiterDashboardMain = () => {
     },
   ];
 
+  const [selectedCandidate, setSelectedCandidate] = useState(null);
+  const [showReasonModal, setShowReasonModal] = useState(false);
+  const [reason, setReason] = useState("");
+  const [desc, setDesc] = useState("");
+
   const statuses = [
     "Processing",
     "Interview Scheduled",
     "Selected",
+    "Screened out",
     "Rejected",
   ];
+  const rejectionReasons = [
+    "Skill mismatch",
+    "Lack of communication",
+    "Inadequate experience",
+    "Unprofessional behavior",
+    "Other",
+  ];
+
+  const handleStatusChange = (cand, value) => {
+    if (value === "Rejected" || value === "Screened out") {
+      const confirmReject = window.confirm(
+        `Are you sure you want to mark ${cand.name} as ${value}?`
+      );
+      if (confirmReject) {
+        setSelectedCandidate(cand);
+        setShowReasonModal(true);
+      }
+    } else {
+      console.log(`${cand.name} status changed to ${value}`);
+      // Later: backend update for status
+    }
+  };
 
   const [showAll, setShowAll] = useState(false);
   const visibleCandidates = showAll
@@ -244,7 +272,13 @@ const RecruiterDashboardMain = () => {
                       </td>
                       <td className="p-2">{cand.company}</td>
                       <td className="p-2">
-                        <select className="border px-2 py-1 rounded">
+                        <select
+                          className="border px-2 py-1 rounded"
+                          defaultValue="Processing"
+                          onChange={(e) =>
+                            handleStatusChange(cand, e.target.value)
+                          }
+                        >
                           {statuses.map((status) => (
                             <option key={status}>{status}</option>
                           ))}
@@ -254,6 +288,69 @@ const RecruiterDashboardMain = () => {
                   ))}
                 </tbody>
               </table>
+              {showReasonModal && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                  <div className="bg-white w-full max-w-md p-6 rounded-2xl shadow-xl">
+                    <h3 className="text-lg font-semibold mb-4 text-center">
+                      Reason for Screening Out
+                    </h3>
+
+                    <div className="mb-4">
+                      <label className="block mb-1 font-medium">
+                        Select Reason
+                      </label>
+                      <select
+                        className="w-full border px-3 py-2 rounded"
+                        value={reason}
+                        onChange={(e) => setReason(e.target.value)}
+                      >
+                        <option value="">-- Choose a reason --</option>
+                        {rejectionReasons.map((r) => (
+                          <option key={r} value={r}>
+                            {r}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="mb-4">
+                      <label className="block mb-1 font-medium">
+                        Optional Description
+                      </label>
+                      <textarea
+                        rows="3"
+                        className="w-full border px-3 py-2 rounded"
+                        value={desc}
+                        onChange={(e) => setDesc(e.target.value)}
+                        placeholder="Write more details (optional)..."
+                      ></textarea>
+                    </div>
+
+                    <div className="flex justify-between">
+                      <button
+                        className="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500"
+                        onClick={() => setShowReasonModal(false)}
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+                        onClick={() => {
+                          console.log(
+                            `Rejected ${selectedCandidate.name} - ${reason} - ${desc}`
+                          );
+                          setShowReasonModal(false);
+                          setReason("");
+                          setDesc("");
+                          // Schedule: send reason to backend later
+                        }}
+                      >
+                        Submit
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="text-right mt-4">
