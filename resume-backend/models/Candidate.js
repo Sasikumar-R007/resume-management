@@ -33,6 +33,11 @@ const candidateSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
+  isArchived: {
+  type: Boolean,
+  default: false,
+},
+
 });
 
 module.exports = mongoose.model("Candidate", candidateSchema);

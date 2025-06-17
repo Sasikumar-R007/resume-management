@@ -17,13 +17,23 @@ router.post("/", async (req, res) => {
 // Get all candidates
 router.get("/", async (req, res) => {
   try {
-    const candidates = await Candidate.find().sort({ createdAt: -1 });
+    const candidates = await Candidate.find({ isArchived: false }); // ← ✅ Only active candidates
     res.json(candidates);
   } catch (err) {
     console.error("Error fetching candidates:", err);
     res.status(500).json({ error: "Server error" });
   }
 });
+
+router.get('/archived', async (req, res) => {
+  try {
+    const candidates = await Candidate.find({ isArchived: true }); // ← ✅ Only archived
+    res.json(candidates);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 
 const multer = require("multer");
 const path = require("path");
@@ -70,6 +80,59 @@ router.put("/profile-image", async (req, res) => {
     res.status(500).json({ error: "Server error" });
   }
 });
+
+router.patch('/:id/archive', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { reason, status } = req.body;
+
+    const updated = await Candidate.findByIdAndUpdate(
+      id,
+      {
+        isArchived: true,
+        status: status || "Rejected",
+        rejectionReason: reason,
+      },
+      { new: true }
+    );
+
+    if (!updated) {
+      return res.status(404).json({ message: "Candidate not found" });
+    }
+
+    res.status(200).json({ message: "Candidate archived successfully", data: updated });
+  } catch (err) {
+    res.status(500).json({ message: "Error archiving candidate", error: err.message });
+  }
+});
+
+
+// PATCH /api/candidates/:id/restore
+router.patch("/:id/restore", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updated = await Candidate.findByIdAndUpdate(
+      id,
+      {
+        $set: {
+          status: "Processing", // or "Active", depending on your logic
+        },
+        $unset: {
+          archivedAt: "",
+          reason: ""
+        }
+      },
+      { new: true }
+    );
+
+    if (!updated) return res.status(404).json({ error: "Candidate not found" });
+    res.json(updated);
+  } catch (err) {
+    console.error("Restore error:", err);
+    res.status(500).json({ error: "Failed to restore candidate" });
+  }
+});
+
 
 
 module.exports = router;

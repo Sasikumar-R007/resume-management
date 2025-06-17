@@ -22,6 +22,8 @@ import CandAuth from "./components/candidate/CandAuth";
 import CandDashboard from "./components/candidate/CandDashboard";
 import CandidateForm from "./components/candidate/CandidateForm";
 
+import ArchivedCandidates from "./components/ArchivedCandidates";
+
 import AddJob from "./components/AddJob";
 import JobBoard from "./components/JobBoard";
 
@@ -51,6 +53,8 @@ function App() {
         <Route path="/candidate-auth" element={<CandAuth />} />
         <Route path="/candidate-dashboard" element={<CandDashboard />} />
         <Route path="/candidate-form" element={<CandidateForm />} />
+
+        <Route path="/archived-candidates" element={<ArchivedCandidates />} />
 
         <Route path="/recruiter/add-job" element={<AddJob />} />
         <Route path="/job-board" element={<JobBoard />} />

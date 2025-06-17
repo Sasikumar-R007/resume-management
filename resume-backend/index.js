@@ -28,7 +28,7 @@ app.use(
         callback(new Error("Not allowed by CORS"));
       }
     },
-    methods: ["GET", "POST", "PUT", "DELETE"],
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
     credentials: true,
   })
 );
@@ -154,3 +154,12 @@ app.use("/api/candidates", require("./routes/candidates"));
 app.use("/uploads", express.static("uploads")); // Serve files
 
 
+// Archived Candidates
+
+const archivedRoutes = require("./routes/archived");
+
+// ✅ Mount routes AFTER connection
+app.use("/api/archived", archivedRoutes);
+
+// Start server
+app.listen(5000, () => console.log("Server running on port 5000"));

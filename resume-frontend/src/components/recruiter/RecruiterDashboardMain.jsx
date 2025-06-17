@@ -1,5 +1,4 @@
-import React from "react";
-import { useState } from "react";
+import React, { useState } from "react";
 import {
   FaBriefcase,
   FaUserCheck,
@@ -44,9 +43,7 @@ const RecruiterDashboardMain = () => {
     },
   ];
 
-  // Mock candidates data
-
-  const mockCandidates = [
+  const [activeCandidates, setActiveCandidates] = useState([
     {
       id: "cand001",
       name: "John Doe",
@@ -124,12 +121,14 @@ const RecruiterDashboardMain = () => {
       job: "HR Manager",
       company: "HireNow",
     },
-  ];
+  ]);
 
+  const [archivedCandidates, setArchivedCandidates] = useState([]);
   const [selectedCandidate, setSelectedCandidate] = useState(null);
   const [showReasonModal, setShowReasonModal] = useState(false);
   const [reason, setReason] = useState("");
   const [desc, setDesc] = useState("");
+  const [showAll, setShowAll] = useState(false);
 
   const statuses = [
     "Processing",
@@ -146,27 +145,69 @@ const RecruiterDashboardMain = () => {
     "Other",
   ];
 
+  const visibleCandidates = showAll
+    ? activeCandidates
+    : activeCandidates.slice(0, 10);
+
   const handleStatusChange = (cand, value) => {
     if (value === "Rejected" || value === "Screened out") {
       const confirmReject = window.confirm(
         `Are you sure you want to mark ${cand.name} as ${value}?`
       );
       if (confirmReject) {
-        setSelectedCandidate(cand);
+        setSelectedCandidate({ ...cand, status: value });
         setShowReasonModal(true);
       }
     } else {
       console.log(`${cand.name} status changed to ${value}`);
-      // Later: backend update for status
     }
   };
 
-  const [showAll, setShowAll] = useState(false);
-  const visibleCandidates = showAll
-    ? mockCandidates
-    : mockCandidates.slice(0, 10);
+  const archiveCandidate = async (candidate, reason) => {
+    const payload = {
+      name: candidate.name,
+      email: candidate.email || "noemail@example.com",
+      status: candidate.status,
+      reason,
+    };
 
-  // Recent activities
+    try {
+      const res = await fetch("http://localhost:5000/api/archived", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (res.ok) {
+        alert(`${candidate.name} archived successfully.`);
+        setActiveCandidates((prev) =>
+          prev.filter((c) => c.id !== candidate.id)
+        );
+      } else {
+        alert("Failed to archive.");
+      }
+    } catch (err) {
+      console.error("Archive error:", err);
+    }
+  };
+
+  const handleSubmitReason = () => {
+    if (!reason.trim()) {
+      alert("Please enter a reason.");
+      return;
+    }
+
+    const updatedCandidate = {
+      ...selectedCandidate,
+      status: selectedCandidate.status,
+    };
+
+    archiveCandidate(updatedCandidate, reason);
+    setShowReasonModal(false);
+    setReason("");
+    setDesc("");
+    setSelectedCandidate(null);
+  };
 
   const recentActivities = [
     "Job 'Frontend Developer' posted 2 days ago",
@@ -177,8 +218,8 @@ const RecruiterDashboardMain = () => {
   ];
 
   const handleLogout = () => {
-    localStorage.removeItem("user"); // or whatever you stored
-    navigate("/login"); // redirect to login page
+    localStorage.removeItem("user");
+    navigate("/login");
   };
 
   return (
@@ -335,15 +376,7 @@ const RecruiterDashboardMain = () => {
                       </button>
                       <button
                         className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
-                        onClick={() => {
-                          console.log(
-                            `Rejected ${selectedCandidate.name} - ${reason} - ${desc}`
-                          );
-                          setShowReasonModal(false);
-                          setReason("");
-                          setDesc("");
-                          // Schedule: send reason to backend later
-                        }}
+                        onClick={handleSubmitReason}
                       >
                         Submit
                       </button>
@@ -378,7 +411,10 @@ const RecruiterDashboardMain = () => {
             <button className="w-full py-3 bg-green-600 text-white text-lg rounded-xl shadow hover:bg-green-700">
               Pipeline
             </button>
-            <button className="w-full py-3 bg-yellow-500 text-white text-lg rounded-xl shadow hover:bg-yellow-400">
+            <button
+              className="w-full py-3 bg-yellow-500 text-white text-lg rounded-xl shadow hover:bg-yellow-400"
+              onClick={() => navigate("/archived-candidates")}
+            >
               Archived
             </button>
           </div>
@@ -402,6 +438,16 @@ const RecruiterDashboardMain = () => {
           </ul>
         </div>
       </div>
+      {/* <div>
+        <h2 className="text-lg font-semibold mt-6">Archived Candidates</h2>
+        <ul className="mt-2">
+          {archivedCandidates.map((cand) => (
+            <li key={cand.id} className="text-gray-700">
+              {cand.name} - {cand.status} ({cand.reason})
+            </li>
+          ))}
+        </ul>
+      </div> */}
       <button
         onClick={handleLogout}
         className="bg-red-500 text-white mt-5 px-4 py-2 rounded hover:bg-red-600"
