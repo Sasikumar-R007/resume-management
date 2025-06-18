@@ -100,6 +100,74 @@ const CandidateDashboard = () => {
     }
   }, [profile]);
 
+  // Sample applied jobs
+  const [appliedJobs] = useState([
+    {
+      id: "job001",
+      title: "Frontend Developer",
+      company: "TechCorp",
+      type: "Full-Time",
+      status: "Shortlisted",
+    },
+    {
+      id: "job002",
+      title: "UI/UX Designer",
+      company: "Designify",
+      type: "Internship",
+      status: "Interview",
+    },
+    {
+      id: "job003",
+      title: "Backend Developer",
+      company: "CodeLabs",
+      type: "Full-Time",
+      status: "Rejected",
+    },
+    {
+      id: "job004",
+      title: "QA Tester",
+      company: "BugCatchers",
+      type: "Internship",
+      status: "Shortlisted",
+    },
+    {
+      id: "job005",
+      title: "Mobile App Dev",
+      company: "AppLogic",
+      type: "Full-Time",
+      status: "Interview",
+    },
+    {
+      id: "job006",
+      title: "Product Designer",
+      company: "PixelMint",
+      type: "Full-Time",
+      status: "Shortlisted",
+    },
+  ]);
+
+  // Sample suggestions
+  const [suggestedJobs] = useState([
+    { title: "Data Analyst", company: "InsightSoft", type: "Full-Time" },
+    { title: "DevOps Engineer", company: "CloudBase", type: "Internship" },
+    { title: "Software Tester", company: "BugWorld", type: "Full-Time" },
+    { title: "React Developer", company: "WebFusion", type: "Internship" },
+    { title: "Business Analyst", company: "AgileWorks", type: "Full-Time" },
+  ]);
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case "Shortlisted":
+        return "text-green-600";
+      case "Interview":
+        return "text-blue-600";
+      case "Rejected":
+        return "text-red-600";
+      default:
+        return "text-gray-600";
+    }
+  };
+
   // const jobData = [
   //   {
   //     id: 1,
@@ -491,6 +559,80 @@ const CandidateDashboard = () => {
               >
                 Edit Profile
               </button>
+
+            </div>
+            {/* Applied Jobs and Suggestions Section */}
+            <div className="mt-3">
+
+              <div className="flex flex-col lg:flex-row gap-6 max-w-7xl mx-auto mt-8">
+                <div className="w-full lg:w-2/3 bg-white dark:bg-gray-900 p-6 rounded shadow">
+                  <h2 className="text-xl font-bold mb-4 text-gray-800 dark:text-white">
+                    Applied Jobs
+                  </h2>
+                  <table className="w-full border-collapse border text-sm">
+                    <thead className="bg-gray-200">
+                      <tr>
+                        <th className="border px-2 py-1">S.No</th>
+                        <th className="border px-2 py-1">Job Title</th>
+                        <th className="border px-2 py-1">Company</th>
+                        <th className="border px-2 py-1">Type</th>
+                        <th className="border px-2 py-1">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {appliedJobs.slice(0, 5).map((job, i) => (
+                        <tr
+                          key={job.id}
+                          className="hover:bg-gray-50 cursor-pointer"
+                          onClick={() => navigate(`/job/${job.id}`)}
+                        >
+                          <td className="border px-2 py-1">{i + 1}</td>
+                          <td className="border px-2 py-1">{job.title}</td>
+                          <td className="border px-2 py-1">{job.company}</td>
+                          <td className="border px-2 py-1">{job.type}</td>
+                          <td
+                            className={`border px-2 py-1 font-medium ${getStatusColor(
+                              job.status
+                            )}`}
+                          >
+                            {job.status}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  {appliedJobs.length > 5 && (
+                    <p
+                      className="text-right text-blue-600 cursor-pointer mt-2"
+                      onClick={() => alert("See more coming soon")}
+                    >
+                      See more...
+                    </p>
+                  )}
+                </div>
+
+                {/* Suggested Jobs */}
+                <div className="w-full lg:w-1/3 bg-white dark:bg-gray-900 p-6 rounded shadow">
+                  <h2 className="text-xl font-bold mb-4 text-gray-800 dark:text-white">
+                    Job Suggestions
+                  </h2>
+                  <ul className="space-y-3">
+                    {suggestedJobs.map((job, i) => (
+                      <li
+                        key={i}
+                        className="p-3 border rounded hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer"
+                      >
+                        <p className="font-semibold text-gray-800 dark:text-white">
+                          {job.title}
+                        </p>
+                        <p className="text-gray-600 text-sm dark:text-gray-300">
+                          {job.company} • {job.type}
+                        </p>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
             </div>
 
             {/* Edit Modal */}

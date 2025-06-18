@@ -15,6 +15,7 @@ import TotalJobs from "./components/recruiter/TotalJobsR";
 import ResumeUpload from "./components/recruiter/ResumeUpload";
 import AllResumes from "./components/AllResumes";
 import AIShortlist from "./components/AIShortlist";
+import PipelinePage from "./components/recruiter/PipelinePage";
 
 import OfficialLandingPage from "./components/OfficialLandingPage";
 
@@ -47,6 +48,7 @@ function App() {
         <Route path="/upload-resume" element={<ResumeUpload />} />
         <Route path="/all-resumes" element={<AllResumes />} />
         <Route path="/ai-shortlist" element={<AIShortlist />} />
+        <Route path="/pipeline" element={<PipelinePage />} />
 
         <Route path="/officialpage" element={<OfficialLandingPage />} />
 
@@ -58,6 +60,8 @@ function App() {
 
         <Route path="/recruiter/add-job" element={<AddJob />} />
         <Route path="/job-board" element={<JobBoard />} />
+
+
 
         {/* Add more routes as needed */}
       </Routes>
