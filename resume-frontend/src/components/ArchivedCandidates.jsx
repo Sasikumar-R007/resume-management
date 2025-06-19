@@ -10,7 +10,7 @@ const ArchivedCandidates = () => {
 
   const fetchArchived = async () => {
     try {
-      const res = await fetch("http://localhost:5000/api/archived");
+      const res = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/archived`);
       const data = await res.json();
       setArchived(data);
     } catch (err) {
