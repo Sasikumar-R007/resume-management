@@ -280,6 +280,8 @@ const CandidateDashboard = () => {
   //   );
   // }
 
+  
+
   return (
     <div className="min-h-screen flex">
       {/* Sidebar */}

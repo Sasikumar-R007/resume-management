@@ -408,7 +408,7 @@ const RecruiterDashboardMain = () => {
 
           {/* Right Column Buttons for large screens */}
           <div className="hidden lg:flex lg:w-[25%] flex-col gap-4">
-            <button className="w-full py-3 bg-green-600 text-white text-lg rounded-xl shadow hover:bg-green-700">
+            <button className="w-full py-3 bg-green-600 text-white text-lg rounded-xl shadow hover:bg-green-700" onClick={() => navigate("/recruiter/pipeline")}>
               Pipeline
             </button>
             <button
