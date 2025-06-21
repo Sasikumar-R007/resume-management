@@ -23,6 +23,10 @@ const candidateSchema = new mongoose.Schema({
   relevantExperience: String,
   pedigree: String,
   primarySkill: String,
+  secondarySkill: String,
+  knowledgeOnly: String,
+  currentLocation: String,
+  preferredLocation: String,
   resumeLink: String, // 👈 add later when uploading/resume feature is added
   profileImage: String,
   appliedBy: {

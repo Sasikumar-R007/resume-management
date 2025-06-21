@@ -26,6 +26,10 @@ const CandidateDashboard = () => {
   const [newSkill, setNewSkill] = useState("");
   const [newProject, setNewProject] = useState({ name: "", link: "" });
 
+  const [primarySkills, setPrimarySkills] = useState("");
+  const [secondarySkills, setSecondarySkills] = useState("");
+  const [knowledgeOnly, setKnowledgeOnly] = useState("");
+
   // Change Image
   const handleImageUpload = async (e) => {
     const file = e.target.files[0];
@@ -280,8 +284,6 @@ const CandidateDashboard = () => {
   //   );
   // }
 
-  
-
   return (
     <div className="min-h-screen flex">
       {/* Sidebar */}
@@ -342,31 +344,73 @@ const CandidateDashboard = () => {
               </p>
               <div className="flex justify-between items-start bg-white p-1 rounded-lg ">
                 {/* Left: Profile Details */}
-                <div className="space-y-2">
-                  <p>
-                    <strong>Name:</strong> {profile.firstName}{" "}
-                    {profile.lastName}
-                  </p>
-                  <p>
-                    <strong>Email:</strong> {profile.email}
-                  </p>
-                  <p>
-                    <strong>Mobile:</strong> {profile.mobile}
-                  </p>
-                  <p>
-                    <strong>Designation:</strong> {profile.designation}
-                  </p>
-                  <p>
-                    <strong>Experience:</strong> {profile.totalExperience}
-                  </p>
-                  <p>
-                    <strong>Current Company:</strong> {profile.currentCompany}
-                  </p>
-                  <p>
-                    <strong>Primary Skill:</strong> {profile.primarySkill}
-                  </p>
-                  <p>
-                    <strong>LinkedIn:</strong>{" "}
+                <div className="grid grid-cols-1 gap-2 text-sm">
+                  <div className="flex">
+                    <span className="w-48 font-semibold">Name:</span>
+                    <span>
+                      {profile.firstName} {profile.lastName}
+                    </span>
+                  </div>
+
+                  <div className="flex">
+                    <span className="w-48 font-semibold">Email:</span>
+                    <span>{profile.email}</span>
+                  </div>
+
+                  <div className="flex">
+                    <span className="w-48 font-semibold">Mobile:</span>
+                    <span>{profile.mobile}</span>
+                  </div>
+
+                  <div className="flex">
+                    <span className="w-48 font-semibold">Designation:</span>
+                    <span>{profile.designation}</span>
+                  </div>
+
+                  <div className="flex">
+                    <span className="w-48 font-semibold">Experience:</span>
+                    <span>{profile.totalExperience}</span>
+                  </div>
+
+                  <div className="flex">
+                    <span className="w-48 font-semibold">Current Company:</span>
+                    <span>
+                      {profile.currentCompany} | {profile.companySector} |{" "}
+                      {profile.companyLevel}
+                    </span>
+                  </div>
+
+                  <div className="flex">
+                    <span className="w-48 font-semibold">Primary Skill:</span>
+                    <span>{profile.primarySkill}</span>
+                  </div>
+
+                  <div className="flex">
+                    <span className="w-48 font-semibold">Secondary Skill:</span>
+                    <span>{profile.secondarySkill}</span>
+                  </div>
+
+                  <div className="flex">
+                    <span className="w-48 font-semibold">Knowledge Only:</span>
+                    <span>{profile.knowledgeOnly}</span>
+                  </div>
+
+                  <div className="flex">
+                    <span className="w-48 font-semibold">
+                      Current Location:
+                    </span>
+                    <span>{profile.currentLocation}</span>
+                  </div>
+
+                  <div className="flex">
+                    <span className="w-48 font-semibold">
+                      Preferred Location:
+                    </span>
+                    <span>{profile.preferredLocation}</span>
+                  </div>
+
+                  <div className="flex">
+                    <span className="w-48 font-semibold">LinkedIn:</span>
                     <a
                       href={profile.linkedin}
                       target="_blank"
@@ -375,7 +419,20 @@ const CandidateDashboard = () => {
                     >
                       {profile.linkedin}
                     </a>
-                  </p>
+                  </div>
+
+                  <div className="flex">
+                    <span className="w-48 font-semibold">Portfolio:</span>
+                    <a
+                      href={profile.portfolio}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-blue-600 underline"
+                    >
+                      {profile.portfolio}
+                    </a>
+                  </div>
+
                   <div className="flex gap-4 mt-4">
                     <button
                       onClick={() => setShowSkillModal(true)}
@@ -432,16 +489,53 @@ const CandidateDashboard = () => {
 
               {showSkillModal && (
                 <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-                  <div className="bg-white p-6 rounded-lg w-full max-w-md shadow-xl">
-                    <h3 className="text-xl font-semibold mb-4">Add Skill</h3>
-                    <input
-                      type="text"
-                      placeholder="Enter skill"
-                      value={newSkill}
-                      onChange={(e) => setNewSkill(e.target.value)}
-                      className="border p-2 w-full rounded mb-4"
-                    />
-                    <div className="flex justify-end gap-2">
+                  <div className="bg-white p-6 rounded-lg w-full max-w-xl shadow-xl">
+                    <h3 className="text-xl font-semibold mb-4 text-center text-gray-800">
+                      Add Skills
+                    </h3>
+
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium mb-1">
+                          Primary Skills (comma separated)
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="React, Node"
+                          value={primarySkills}
+                          onChange={(e) => setPrimarySkills(e.target.value)}
+                          className="border p-2 w-full rounded"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium mb-1">
+                          Secondary Skills
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="Tailwind, Redux"
+                          value={secondarySkills}
+                          onChange={(e) => setSecondarySkills(e.target.value)}
+                          className="border p-2 w-full rounded"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium mb-1">
+                          Knowledge Only
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="Docker, GraphQL"
+                          value={knowledgeOnly}
+                          onChange={(e) => setKnowledgeOnly(e.target.value)}
+                          className="border p-2 w-full rounded"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex justify-end gap-2 mt-6">
                       <button
                         onClick={() => setShowSkillModal(false)}
                         className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
@@ -450,11 +544,29 @@ const CandidateDashboard = () => {
                       </button>
                       <button
                         onClick={() => {
-                          if (newSkill.trim()) {
-                            setSkills([...skills, newSkill.trim()]);
-                            setNewSkill("");
-                            setShowSkillModal(false);
-                          }
+                          const p = primarySkills
+                            .split(",")
+                            .map((s) => s.trim())
+                            .filter(Boolean);
+                          const s = secondarySkills
+                            .split(",")
+                            .map((s) => s.trim())
+                            .filter(Boolean);
+                          const k = knowledgeOnly
+                            .split(",")
+                            .map((s) => s.trim())
+                            .filter(Boolean);
+                          setSkills([...p, ...s, ...k]);
+                          setProfile((prev) => ({
+                            ...prev,
+                            primarySkill: p.join(", "),
+                            secondarySkill: s.join(", "),
+                            knowledgeOnly: k.join(", "),
+                          }));
+                          setPrimarySkills("");
+                          setSecondarySkills("");
+                          setKnowledgeOnly("");
+                          setShowSkillModal(false);
                         }}
                         className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
                       >
@@ -487,6 +599,17 @@ const CandidateDashboard = () => {
                       }
                       className="border p-2 w-full rounded mb-4"
                     />
+                    <textarea
+                      placeholder="Project Description"
+                      value={newProject.description}
+                      onChange={(e) =>
+                        setNewProject({
+                          ...newProject,
+                          description: e.target.value,
+                        })
+                      }
+                      className="border h-24 p-2 w-full rounded mb-4 required:"
+                    />
 
                     <div className="flex justify-end gap-2">
                       <button
@@ -499,7 +622,11 @@ const CandidateDashboard = () => {
                         onClick={() => {
                           if (newProject.name.trim()) {
                             setProjects([...projects, newProject]);
-                            setNewProject({ name: "", link: "" });
+                            setNewProject({
+                              name: "",
+                              link: "",
+                              description: "",
+                            });
                             setShowProjectModal(false);
                           }
                         }}
@@ -546,6 +673,9 @@ const CandidateDashboard = () => {
                             </a>
                           </>
                         )}
+                        <p className="text-sm text-gray-500">
+                          {project.description}
+                        </p>
                       </li>
                     ))}
                   </ul>
@@ -561,11 +691,9 @@ const CandidateDashboard = () => {
               >
                 Edit Profile
               </button>
-
             </div>
             {/* Applied Jobs and Suggestions Section */}
             <div className="mt-3">
-
               <div className="flex flex-col lg:flex-row gap-6 max-w-7xl mx-auto mt-8">
                 <div className="w-full lg:w-2/3 bg-white dark:bg-gray-900 p-6 rounded shadow">
                   <h2 className="text-xl font-bold mb-4 text-gray-800 dark:text-white">

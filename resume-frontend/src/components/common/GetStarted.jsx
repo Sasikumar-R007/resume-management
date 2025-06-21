@@ -5,9 +5,9 @@ import {
   FaBriefcase,
   FaUsers,
   FaChartLine,
+  FaUser,
 } from "react-icons/fa";
-import {ExternalLink } from "lucide-react"; // for nav icons
-
+// import { ExternalLink } from "lucide-react"; // for nav icons
 
 const features = [
   {
@@ -36,6 +36,26 @@ const GetStarted = () => {
   const navigate = useNavigate();
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100 p-6">
+      {/* Top-right login buttons */}
+
+      <div className="absolute top-4 right-6 space-x-4 flex">
+        <button
+          onClick={() => navigate("/candidate-auth")}
+          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+        >
+          <FaUser className="text-white" />
+          Candidate Login
+        </button>
+
+        <button
+          onClick={() => navigate("/login")}
+          className="flex items-center gap-2 px-4 py-2 bg-gray-800 text-white rounded hover:bg-gray-900 transition"
+        >
+          <FaUsers size={20} className="text-white" />
+          Recruiter Login
+        </button>
+      </div>
+
       <div className="max-w-5xl w-full text-center">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-12">
           {features.map((feature, index) => (
@@ -61,14 +81,10 @@ const GetStarted = () => {
             process.
           </p>
           <button
-            onClick={() => navigate("/login")}
+            onClick={() => navigate("/candidate-auth")}
             className="mt-4 px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition"
           >
             Get Started Now
-          </button>
-          <button className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded flex items-center gap-2"  onClick={() => navigate("/candidate-auth")}>
-            Candidate
-            <ExternalLink size={18} />
           </button>
         </div>
       </div>
