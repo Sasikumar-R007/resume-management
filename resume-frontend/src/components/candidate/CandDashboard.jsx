@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { Menu, X, ExternalLink, UserCircle } from "lucide-react"; // for nav icons
+import { FiExternalLink } from "react-icons/fi";
+import { MdDelete } from "react-icons/md";
 import { ProfileContext } from "./ProfileContext";
 import axios from "axios";
 
@@ -17,19 +19,18 @@ const CandidateDashboard = () => {
   const [formData, setFormData] = useState(profile);
   const [showEdit, setShowEdit] = useState(false);
 
-  const [skills, setSkills] = useState([]);
   const [projects, setProjects] = useState([]);
 
   const [showSkillModal, setShowSkillModal] = useState(false);
   const [showProjectModal, setShowProjectModal] = useState(false);
 
-  const [newSkill, setNewSkill] = useState("");
+  const [skills, setSkills] = useState({
+    primary: "",
+    secondary: "",
+    knowledge: "",
+  });
+
   const [newProject, setNewProject] = useState({ name: "", link: "" });
-
-  const [primarySkills, setPrimarySkills] = useState("");
-  const [secondarySkills, setSecondarySkills] = useState("");
-  const [knowledgeOnly, setKnowledgeOnly] = useState("");
-
   // Change Image
   const handleImageUpload = async (e) => {
     const file = e.target.files[0];
@@ -104,6 +105,10 @@ const CandidateDashboard = () => {
     }
   }, [profile]);
 
+
+  const [resumeFile, setResumeFile] = useState(null);
+
+
   // Sample applied jobs
   const [appliedJobs] = useState([
     {
@@ -172,55 +177,6 @@ const CandidateDashboard = () => {
     }
   };
 
-  // const jobData = [
-  //   {
-  //     id: 1,
-  //     company: "Symphonix Technologies",
-  //     logo: "https://symphonix-tech.web.app/assests/sym%20profile.png",
-  //     title: "Frontend Developer",
-  //     type: "Internship",
-  //     employees: 45,
-  //     description:
-  //       "We are a growing tech startup focusing on building UI-rich web apps.",
-  //     skills: ["React", "Tailwind", "JavaScript"],
-  //   },
-  //   {
-  //     id: 2,
-  //     company: "NetDev Solutions",
-  //     logo: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQm76XoSy0vee4MvSerm6U5U_5W6e7TT-2J-g&s",
-  //     title: "Marketing Analyst",
-  //     type: "Full-Time",
-  //     employees: 80,
-  //     description:
-  //       "Digital marketing agency helping brands grow online with performance ads.",
-  //     skills: ["SEO", "Google Ads", "Excel", "Communication"],
-  //   },
-  //   {
-  //     id: 3,
-  //     company: "High Tech Innovations",
-  //     logo: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTSyHd2CqvAVfhrZkSRzSAoG--zQ3TYjTCTkw&s",
-  //     title: "Java Developer",
-  //     type: "Internship",
-  //     employees: 45,
-  //     description:
-  //       "We are a growing tech startup focusing on building UI-rich web apps.",
-  //     skills: ["React", "Tailwind", "JavaScript"],
-  //   },
-  //   {
-  //     id: 4,
-  //     company: "Globe Tech",
-  //     logo: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQPY_d3dQFhCeeI8It8syLegLzIBCVq8MdzZw&s",
-  //     title: "Project Manager",
-  //     type: "Full-Time",
-  //     employees: 80,
-  //     description:
-  //       "Digital marketing agency helping brands grow online with performance ads.",
-  //     skills: ["SEO", "Google Ads", "Excel", "Communication"],
-  //   },
-  // ];
-
-  //jobs from rec
-
   const [jobs, setJobs] = useState([]);
   useEffect(() => {
     const fetchJobs = async () => {
@@ -266,23 +222,6 @@ const CandidateDashboard = () => {
   const handleRemove = () => {
     setResume(null);
   };
-
-  // if (!profile || Object.keys(profile).length === 0) {
-  //   return (
-  //     <div className="text-center mt-20 text-gray-700 text-xl">
-  //       Loading... or please fill the profile form first.
-  //       <br />
-  //       <div className="flex justify-center mt-4">
-  //         <button
-  //           onClick={() => navigate(-1)}
-  //           className="bg-green-600 text-white px-4 py-2 rounded flex items-center gap-2 hover:bg-green-700"
-  //         >
-  //           Fill Profile
-  //         </button>
-  //       </div>
-  //     </div>
-  //   );
-  // }
 
   return (
     <div className="min-h-screen flex">
@@ -336,42 +275,40 @@ const CandidateDashboard = () => {
           <div>
             {/* Profile Section */}
             <div className="border p-4 rounded shadow bg-white">
+              {/* Welcome Line */}
               <h2 className="text-2xl font-semibold mb-1">
                 Welcome, {profile.firstName}
               </h2>
               <p className="text-gray-600 mb-4">
                 Hope you're having a great day! Here's your profile overview:
               </p>
-              <div className="flex justify-between items-start bg-white p-1 rounded-lg ">
+
+              {/* Top Grid: Profile Info + Image */}
+              <div className="flex flex-col md:flex-row gap-6">
                 {/* Left: Profile Details */}
-                <div className="grid grid-cols-1 gap-2 text-sm">
+                <div className="md:w-2/3 space-y-2 text-sm">
                   <div className="flex">
                     <span className="w-48 font-semibold">Name:</span>
                     <span>
                       {profile.firstName} {profile.lastName}
                     </span>
                   </div>
-
                   <div className="flex">
                     <span className="w-48 font-semibold">Email:</span>
                     <span>{profile.email}</span>
                   </div>
-
                   <div className="flex">
                     <span className="w-48 font-semibold">Mobile:</span>
                     <span>{profile.mobile}</span>
                   </div>
-
                   <div className="flex">
                     <span className="w-48 font-semibold">Designation:</span>
                     <span>{profile.designation}</span>
                   </div>
-
                   <div className="flex">
                     <span className="w-48 font-semibold">Experience:</span>
-                    <span>{profile.totalExperience}</span>
+                    <span>{profile.experience} years</span>
                   </div>
-
                   <div className="flex">
                     <span className="w-48 font-semibold">Current Company:</span>
                     <span>
@@ -379,36 +316,30 @@ const CandidateDashboard = () => {
                       {profile.companyLevel}
                     </span>
                   </div>
-
                   <div className="flex">
                     <span className="w-48 font-semibold">Primary Skill:</span>
                     <span>{profile.primarySkill}</span>
                   </div>
-
                   <div className="flex">
                     <span className="w-48 font-semibold">Secondary Skill:</span>
                     <span>{profile.secondarySkill}</span>
                   </div>
-
                   <div className="flex">
                     <span className="w-48 font-semibold">Knowledge Only:</span>
                     <span>{profile.knowledgeOnly}</span>
                   </div>
-
                   <div className="flex">
                     <span className="w-48 font-semibold">
                       Current Location:
                     </span>
                     <span>{profile.currentLocation}</span>
                   </div>
-
                   <div className="flex">
                     <span className="w-48 font-semibold">
                       Preferred Location:
                     </span>
                     <span>{profile.preferredLocation}</span>
                   </div>
-
                   <div className="flex">
                     <span className="w-48 font-semibold">LinkedIn:</span>
                     <a
@@ -420,7 +351,6 @@ const CandidateDashboard = () => {
                       {profile.linkedin}
                     </a>
                   </div>
-
                   <div className="flex">
                     <span className="w-48 font-semibold">Portfolio:</span>
                     <a
@@ -433,25 +363,22 @@ const CandidateDashboard = () => {
                     </a>
                   </div>
 
-                  <div className="flex gap-4 mt-4">
-                    <button
-                      onClick={() => setShowSkillModal(true)}
-                      className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-                    >
-                      Add Skill
-                    </button>
-                    <button
-                      onClick={() => setShowProjectModal(true)}
-                      className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
-                    >
-                      Add Project
-                    </button>
-                  </div>
+                  {/* Edit Button */}
+                  <button
+                    onClick={() => {
+                      setFormData(profile);
+                      setShowEdit(true);
+                    }}
+                    className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+                  >
+                    Edit Profile
+                  </button>
                 </div>
 
                 {/* Right: Profile Image */}
-                <div className="relative group mr-20">
-                  <div className="w-52 h-52 rounded-full overflow-hidden bg-gray-200 flex items-center justify-center">
+                <div className="md:w-1/3 flex justify-center items-start">
+                  {" "}
+                  <div className="relative group w-48 h-48 rounded-full flex items-center justify-center overflow-hidden bg-gray-200">
                     {profile.profileImage ? (
                       <img
                         src={profile.profileImage}
@@ -459,239 +386,352 @@ const CandidateDashboard = () => {
                         className="w-full h-full object-cover"
                       />
                     ) : (
-                      <UserCircle className="text-gray-500 w-20 h-20" />
+                      <UserCircle className="text-gray-500 w-20 h-20 m-auto" />
                     )}
-                  </div>
 
-                  <div className="absolute inset-0 rounded-full bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                    <div className="text-white text-xs space-y-1 text-center">
-                      <label className="cursor-pointer block">
-                        <span className="underline text-xl hover:text-gray-300">
-                          Change
-                        </span>
-                        <input
-                          type="file"
-                          accept="image/*"
-                          onChange={handleImageUpload}
-                          className="hidden"
-                        />
-                      </label>
-                      <button
-                        onClick={handleRemoveImage}
-                        className="underline text-xl hover:text-gray-300"
-                      >
-                        Remove
-                      </button>
+                    <div className="absolute inset-0 rounded-full bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="text-white text-xs space-y-1 text-center">
+                        <label className="cursor-pointer block">
+                          <span className="underline text-xl hover:text-gray-300">
+                            Change
+                          </span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handleImageUpload}
+                            className="hidden"
+                          />
+                        </label>
+                        <button
+                          onClick={handleRemoveImage}
+                          className="underline text-xl hover:text-gray-300"
+                        >
+                          Remove
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
 
-              {showSkillModal && (
-                <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-                  <div className="bg-white p-6 rounded-lg w-full max-w-xl shadow-xl">
-                    <h3 className="text-xl font-semibold mb-4 text-center text-gray-800">
-                      Add Skills
-                    </h3>
+              {/* Divider */}
+              {/* <hr className="my-6" />  */}
+            </div>
 
-                    <div className="space-y-4">
-                      <div>
-                        <label className="block text-sm font-medium mb-1">
-                          Primary Skills (comma separated)
-                        </label>
-                        <input
-                          type="text"
-                          placeholder="React, Node"
-                          value={primarySkills}
-                          onChange={(e) => setPrimarySkills(e.target.value)}
-                          className="border p-2 w-full rounded"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium mb-1">
-                          Secondary Skills
-                        </label>
-                        <input
-                          type="text"
-                          placeholder="Tailwind, Redux"
-                          value={secondarySkills}
-                          onChange={(e) => setSecondarySkills(e.target.value)}
-                          className="border p-2 w-full rounded"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium mb-1">
-                          Knowledge Only
-                        </label>
-                        <input
-                          type="text"
-                          placeholder="Docker, GraphQL"
-                          value={knowledgeOnly}
-                          onChange={(e) => setKnowledgeOnly(e.target.value)}
-                          className="border p-2 w-full rounded"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="flex justify-end gap-2 mt-6">
-                      <button
-                        onClick={() => setShowSkillModal(false)}
-                        className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        onClick={() => {
-                          const p = primarySkills
-                            .split(",")
-                            .map((s) => s.trim())
-                            .filter(Boolean);
-                          const s = secondarySkills
-                            .split(",")
-                            .map((s) => s.trim())
-                            .filter(Boolean);
-                          const k = knowledgeOnly
-                            .split(",")
-                            .map((s) => s.trim())
-                            .filter(Boolean);
-                          setSkills([...p, ...s, ...k]);
-                          setProfile((prev) => ({
-                            ...prev,
-                            primarySkill: p.join(", "),
-                            secondarySkill: s.join(", "),
-                            knowledgeOnly: k.join(", "),
-                          }));
-                          setPrimarySkills("");
-                          setSecondarySkills("");
-                          setKnowledgeOnly("");
-                          setShowSkillModal(false);
-                        }}
-                        className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-                      >
-                        Save
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {showProjectModal && (
-                <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-                  <div className="bg-white p-6 rounded-lg w-full max-w-md shadow-xl">
-                    <h3 className="text-xl font-semibold mb-4">Add Project</h3>
-                    <input
-                      type="text"
-                      placeholder="Project Name"
-                      value={newProject.name}
-                      onChange={(e) =>
-                        setNewProject({ ...newProject, name: e.target.value })
-                      }
-                      className="border p-2 w-full rounded mb-3"
-                    />
-                    <input
-                      type="text"
-                      placeholder="Live Link (optional)"
-                      value={newProject.link}
-                      onChange={(e) =>
-                        setNewProject({ ...newProject, link: e.target.value })
-                      }
-                      className="border p-2 w-full rounded mb-4"
-                    />
-                    <textarea
-                      placeholder="Project Description"
-                      value={newProject.description}
-                      onChange={(e) =>
-                        setNewProject({
-                          ...newProject,
-                          description: e.target.value,
-                        })
-                      }
-                      className="border h-24 p-2 w-full rounded mb-4 required:"
-                    />
-
-                    <div className="flex justify-end gap-2">
-                      <button
-                        onClick={() => setShowProjectModal(false)}
-                        className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        onClick={() => {
-                          if (newProject.name.trim()) {
-                            setProjects([...projects, newProject]);
-                            setNewProject({
-                              name: "",
-                              link: "",
-                              description: "",
-                            });
-                            setShowProjectModal(false);
-                          }
-                        }}
-                        className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
-                      >
-                        Save
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              )}
-
+            <div className="flex flex-col md:flex-row gap-6 mt-6">
+              <div className="w-full md:w-1/2 space-y-6 bg-white p-4 rounded shadow">
               {/* Skill Section */}
-              {skills.length > 0 && (
-                <div className="mt-6">
-                  <h4 className="text-lg font-semibold mb-2">Skills</h4>
-                  <ul className="list-disc list-inside text-gray-700">
-                    {skills.map((skill, index) => (
-                      <li key={index}>{skill}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
+              <div className="mt-6 bg-gray-100 p-2 rounded">
+                <h4 className="text-lg font-semibold mb-2 flex justify-between items-center">
+                  Skills
+                  <button
+                    onClick={() => setShowSkillModal(true)}
+                    className="text-sm bg-blue-600 hover:bg-blue-700 text-white px-4 py-1 rounded"
+                  >
+                    Edit
+                  </button>
+                </h4>
+                <ul className="text-gray-700 list-disc list-inside space-y-1">
+                  {skills.primary && (
+                    <li>
+                      <strong>Primary Skills:</strong> {skills.primary}
+                    </li>
+                  )}
+                  {skills.secondary && (
+                    <li>
+                      <strong>Secondary Skills:</strong> {skills.secondary}
+                    </li>
+                  )}
+                  {skills.knowledge && (
+                    <li>
+                      <strong>Knowledge Only:</strong> {skills.knowledge}
+                    </li>
+                  )}
+                </ul>
+              </div>
 
-              {/* Project Section */}
-              {projects.length > 0 && (
-                <div className="mt-6">
-                  <h4 className="text-lg font-semibold mb-2">Projects</h4>
-                  <ul className="list-disc list-inside text-gray-700">
-                    {projects.map((project, index) => (
-                      <li key={index}>
-                        {project.name}
-                        {project.link && (
-                          <>
-                            {" "}
-                            -{" "}
+              {/* Projects Section */}
+              <div className="mt-6">
+                <h4 className="text-lg font-semibold mb-2 flex justify-between items-center">
+                  Projects
+                  <button
+                    onClick={() => setShowProjectModal(true)}
+                    className="text-sm bg-blue-600 hover:bg-blue-700 text-white px-4 py-1 mr-2 rounded"
+                  >
+                    Add
+                  </button>
+                </h4>
+
+                <div className="space-y-4">
+                  {projects.map((project, index) => (
+                    <div
+                      key={index}
+                      className="border rounded-lg p-4 shadow-sm bg-white dark:bg-gray-800 relative"
+                    >
+                      {/* Project Title + Actions */}
+                      <div className="flex justify-between items-start">
+                        <h5 className="font-semibold text-base text-gray-800 dark:text-white">
+                          {project.name}
+                        </h5>
+
+                        <div className="flex gap-3 items-center">
+                          {project.link && (
                             <a
                               href={project.link}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="text-blue-600 underline"
+                              className="text-blue-600 hover:text-blue-800"
+                              title="Open Project"
                             >
-                              Live Link
+                              <FiExternalLink size={18} />
                             </a>
-                          </>
-                        )}
-                        <p className="text-sm text-gray-500">
-                          {project.description}
-                        </p>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
+                          )}
+                          <button
+                            onClick={() => {
+                              const updatedProjects = [...projects];
+                              updatedProjects.splice(index, 1);
+                              setProjects(updatedProjects);
+                            }}
+                            className="text-red-500 hover:text-red-700"
+                            title="Delete Project"
+                          >
+                            <MdDelete size={20} />
+                          </button>
+                        </div>
+                      </div>
 
-              <button
-                onClick={() => {
-                  setFormData(profile);
-                  setShowEdit(true);
-                }}
-                className="px-4 py-2 bg-blue-600 text-white rounded mt-4"
-              >
-                Edit Profile
-              </button>
+                      {/* Description */}
+                      <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
+                        {project.description}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+                {/* Skill Section */}
+                {showSkillModal && (
+                  <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+                    <div className="bg-white p-6 rounded-lg w-full max-w-md shadow-xl">
+                      <h3 className="text-xl font-semibold mb-4">
+                        Edit Skills
+                      </h3>
+
+                      <div className="space-y-3">
+                        <div>
+                          <label className="block text-sm font-medium mb-1">
+                            Primary Skills
+                          </label>
+                          <input
+                            type="text"
+                            placeholder="e.g., Python, SQL"
+                            value={skills.primary}
+                            onChange={(e) =>
+                              setSkills({ ...skills, primary: e.target.value })
+                            }
+                            className="border p-2 w-full rounded"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium mb-1">
+                            Secondary Skills
+                          </label>
+                          <input
+                            type="text"
+                            placeholder="e.g., Java, MongoDB"
+                            value={skills.secondary}
+                            onChange={(e) =>
+                              setSkills({
+                                ...skills,
+                                secondary: e.target.value,
+                              })
+                            }
+                            className="border p-2 w-full rounded"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium mb-1">
+                            Knowledge Only
+                          </label>
+                          <input
+                            type="text"
+                            placeholder="e.g., C++, HTML"
+                            value={skills.knowledge}
+                            onChange={(e) =>
+                              setSkills({
+                                ...skills,
+                                knowledge: e.target.value,
+                              })
+                            }
+                            className="border p-2 w-full rounded"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="flex justify-end gap-2 mt-6">
+                        <button
+                          onClick={() => setShowSkillModal(false)}
+                          className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          onClick={() => setShowSkillModal(false)}
+                          className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+                        >
+                          Save
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Project Section */}
+                {showProjectModal && (
+                  <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+                    <div className="bg-white p-6 rounded-lg w-full max-w-md shadow-xl">
+                      <h3 className="text-xl font-semibold mb-4">
+                        Add Project
+                      </h3>
+
+                      <div className="space-y-4">
+                        <div>
+                          <label className="block text-sm font-medium mb-1">
+                            Project Name
+                          </label>
+                          <input
+                            type="text"
+                            placeholder="e.g., Resume Builder App"
+                            value={newProject.name}
+                            onChange={(e) =>
+                              setNewProject({
+                                ...newProject,
+                                name: e.target.value,
+                              })
+                            }
+                            className="border p-2 w-full rounded"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium mb-1">
+                            Live Link (optional)
+                          </label>
+                          <input
+                            type="text"
+                            placeholder="https://example.com"
+                            value={newProject.link}
+                            onChange={(e) =>
+                              setNewProject({
+                                ...newProject,
+                                link: e.target.value,
+                              })
+                            }
+                            className="border p-2 w-full rounded"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium mb-1">
+                            Project Description
+                          </label>
+                          <textarea
+                            placeholder="Describe your project briefly"
+                            value={newProject.description}
+                            onChange={(e) =>
+                              setNewProject({
+                                ...newProject,
+                                description: e.target.value,
+                              })
+                            }
+                            className="border h-24 p-2 w-full rounded"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="flex justify-end gap-2 mt-6">
+                        <button
+                          onClick={() => setShowProjectModal(false)}
+                          className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          onClick={() => {
+                            if (newProject.name.trim()) {
+                              setProjects([...projects, newProject]);
+                              setNewProject({
+                                name: "",
+                                link: "",
+                                description: "",
+                              });
+                              setShowProjectModal(false);
+                            }
+                          }}
+                          className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+                        >
+                          Save
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Resume Section */}
+              <div className="w-full md:w-1/2 bg-white p-4 rounded shadow space-y-4">
+                <h4 className="text-lg font-semibold mb-2">Uploaded Resume</h4>
+
+                {resumeFile ? (
+                  <div className="space-y-3">
+                    {resumeFile.type.includes("image") ? (
+                      <img
+                        src={URL.createObjectURL(resumeFile)}
+                        alt="Resume Preview"
+                        className="w-full h-auto max-h-[400px] rounded border"
+                      />
+                    ) : (
+                      <iframe
+                        src={URL.createObjectURL(resumeFile)}
+                        title="Resume"
+                        className="w-full h-96 rounded border"
+                      />
+                    )}
+
+                    <div className="flex gap-4">
+                      <button
+                        onClick={() => setResumeFile(null)}
+                        className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+                      >
+                        Remove
+                      </button>
+                      <label className="px-4 py-2 bg-blue-600 text-white rounded cursor-pointer hover:bg-blue-700">
+                        Change
+                        <input
+                          type="file"
+                          accept=".pdf,.jpg,.jpeg,.png"
+                          onChange={(e) => setResumeFile(e.target.files[0])}
+                          className="hidden"
+                        />
+                      </label>
+                    </div>
+                  </div>
+                ) : (
+                  <label className="block border border-dashed border-gray-400 p-6 text-center cursor-pointer rounded hover:bg-gray-50">
+                    <p className="text-gray-600 mb-2">
+                      Click to upload resume (PDF or Image)
+                    </p>
+                    <input
+                      type="file"
+                      accept=".pdf,.jpg,.jpeg,.png"
+                      onChange={(e) => setResumeFile(e.target.files[0])}
+                      className="hidden"
+                    />
+                  </label>
+                )}
+              </div>
             </div>
+
             {/* Applied Jobs and Suggestions Section */}
             <div className="mt-3">
               <div className="flex flex-col lg:flex-row gap-6 max-w-7xl mx-auto mt-8">
