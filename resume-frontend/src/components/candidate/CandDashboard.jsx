@@ -280,7 +280,7 @@ const CandidateDashboard = () => {
                   </div>
                   <div className="flex">
                     <span className="w-48 font-semibold">Email:</span>
-                    <span>{profile.email}</span>
+                    <span>{profile.primaryEmail}</span>
                   </div>
                   <div className="flex">
                     <span className="w-48 font-semibold">Mobile:</span>
@@ -288,7 +288,7 @@ const CandidateDashboard = () => {
                   </div>
                   <div className="flex">
                     <span className="w-48 font-semibold">Designation:</span>
-                    <span>{profile.designation}</span>
+                    <span>{profile.currentRole}</span>
                   </div>
                   <div className="flex">
                     <span className="w-48 font-semibold">Experience:</span>
