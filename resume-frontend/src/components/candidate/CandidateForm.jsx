@@ -11,25 +11,42 @@ export default function CandidateForm({ initialData = {}, onSave }) {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  const [resumeFile, setResumeFile] = useState(null);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const finalData = { ...formData };
+    let resumeLink = "";
 
-    if (onSave) {
-      // 👉 Edit mode
-      setProfile(finalData);
-      onSave(finalData);
-    } else {
-      // 👉 New submission
-      setProfile(finalData);
-      await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/candidates`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(finalData),
-      });
-      navigate("/candidate-dashboard");
+    if (resumeFile) {
+      const resumeData = new FormData();
+      resumeData.append("resume", resumeFile);
+
+      try {
+        const res = await fetch(
+          `${process.env.REACT_APP_API_BASE_URL}/api/candidates/upload`,
+          {
+            method: "POST",
+            body: resumeData,
+          }
+        );
+
+        const result = await res.json();
+        resumeLink = result.fileUrl; // ✅ this should hold the uploaded file link
+      } catch (err) {
+        console.error("Resume upload failed:", err);
+      }
     }
+
+    const finalData = { ...formData, resumeLink }; // ✅ include this in submitted data
+
+    await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/candidates`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(finalData),
+    });
+
+    navigate("/candidate-dashboard");
   };
 
   useEffect(() => {
@@ -49,18 +66,79 @@ export default function CandidateForm({ initialData = {}, onSave }) {
           onSubmit={handleSubmit}
           className="grid grid-cols-1 md:grid-cols-2 gap-6"
         >
-          <Input label="First Name" name="firstName" value={formData.firstName} onChange={handleChange} />
-          <Input label="Last Name" name="lastName" value={formData.lastName} onChange={handleChange} />
-          <Input label="Mobile Number" name="mobile" value={formData.mobile} onChange={handleChange} />
-          <Input label="Alternate Mobile Number" name="altMobile" value={formData.altMobile} onChange={handleChange} />
-          <Input label="Primary Email" name="primaryEmail" value={formData.primaryEmail} onChange={handleChange} />
-          <Input label="Secondary Email" name="secondaryEmail" value={formData.secondaryEmail} onChange={handleChange} />
-          <Input label="LinkedIn Link" name="linkedin" value={formData.linkedin} onChange={handleChange} />
-          <Input label="Portfolio Link" name="portfolio" value={formData.portfolio} onChange={handleChange} />
-          <Input label="Website Link" name="website" value={formData.website} onChange={handleChange} />
-          <Input label="WhatsApp No" name="whatsapp" value={formData.whatsapp} onChange={handleChange} />
-          <Input label="Date of Birth" name="dob" type="date" value={formData.dob} onChange={handleChange} />
-          <Input label="Current Company" name="currentCompany" value={formData.currentCompany} onChange={handleChange} />
+          <Input
+            label="First Name"
+            name="firstName"
+            value={formData.firstName}
+            onChange={handleChange}
+          />
+          <Input
+            label="Last Name"
+            name="lastName"
+            value={formData.lastName}
+            onChange={handleChange}
+          />
+          <Input
+            label="Mobile Number"
+            name="mobile"
+            value={formData.mobile}
+            onChange={handleChange}
+          />
+          <Input
+            label="Alternate Mobile Number"
+            name="altMobile"
+            value={formData.altMobile}
+            onChange={handleChange}
+          />
+          <Input
+            label="Primary Email"
+            name="primaryEmail"
+            value={formData.primaryEmail}
+            onChange={handleChange}
+          />
+          <Input
+            label="Secondary Email"
+            name="secondaryEmail"
+            value={formData.secondaryEmail}
+            onChange={handleChange}
+          />
+          <Input
+            label="LinkedIn Link"
+            name="linkedin"
+            value={formData.linkedin}
+            onChange={handleChange}
+          />
+          <Input
+            label="Portfolio Link"
+            name="portfolio"
+            value={formData.portfolio}
+            onChange={handleChange}
+          />
+          <Input
+            label="Website Link"
+            name="website"
+            value={formData.website}
+            onChange={handleChange}
+          />
+          <Input
+            label="WhatsApp No"
+            name="whatsapp"
+            value={formData.whatsapp}
+            onChange={handleChange}
+          />
+          <Input
+            label="Date of Birth"
+            name="dob"
+            type="date"
+            value={formData.dob}
+            onChange={handleChange}
+          />
+          <Input
+            label="Current Company"
+            name="currentCompany"
+            value={formData.currentCompany}
+            onChange={handleChange}
+          />
 
           <Select
             label="Company Sector"
@@ -97,7 +175,12 @@ export default function CandidateForm({ initialData = {}, onSave }) {
             onChange={handleChange}
             options={["B2B", "B2C", "Marketplace", "Other"]}
           />
-          <Input label="Current Role" name="currentRole" value={formData.currentRole} onChange={handleChange} />
+          <Input
+            label="Current Role"
+            name="currentRole"
+            value={formData.currentRole}
+            onChange={handleChange}
+          />
           <Select
             label="Total Experience"
             name="totalExperience"
@@ -105,7 +188,12 @@ export default function CandidateForm({ initialData = {}, onSave }) {
             onChange={handleChange}
             options={["Fresher", "1-2 years", "3-5 years", "5+ years"]}
           />
-          <Input label="Relevant Experience" name="relevantExperience" value={formData.relevantExperience} onChange={handleChange} />
+          <Input
+            label="Relevant Experience"
+            name="relevantExperience"
+            value={formData.relevantExperience}
+            onChange={handleChange}
+          />
           <Select
             label="Pedigree Level"
             name="pedigree"
@@ -113,11 +201,48 @@ export default function CandidateForm({ initialData = {}, onSave }) {
             onChange={handleChange}
             options={["Tier 1", "Tier 2", "Tier 3", "Other"]}
           />
-          <Input label="Primary Skill" name="primarySkill" value={formData.primarySkill} onChange={handleChange} />
-          <Input label="Secondary Skill" name="secondarySkill" value={formData.secondarySkill} onChange={handleChange} />
-          <Input label="Knowledge Only" name="knowledgeOnly" value={formData.knowledgeOnly} onChange={handleChange} />
-          <Input label="Current Location" name="currentLocation" value={formData.currentLocation} onChange={handleChange} />
-          <Input label="Preferred Location" name="preferredLocation" value={formData.preferredLocation} onChange={handleChange} />
+          <Input
+            label="Primary Skill"
+            name="primarySkill"
+            value={formData.primarySkill}
+            onChange={handleChange}
+          />
+          <Input
+            label="Secondary Skill"
+            name="secondarySkill"
+            value={formData.secondarySkill}
+            onChange={handleChange}
+          />
+          <Input
+            label="Knowledge Only"
+            name="knowledgeOnly"
+            value={formData.knowledgeOnly}
+            onChange={handleChange}
+          />
+          <Input
+            label="Current Location"
+            name="currentLocation"
+            value={formData.currentLocation}
+            onChange={handleChange}
+          />
+          <Input
+            label="Preferred Location"
+            name="preferredLocation"
+            value={formData.preferredLocation}
+            onChange={handleChange}
+          />
+
+          <div className="col-span-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+              Upload Resume (PDF or Image)
+            </label>
+            <input
+              type="file"
+              accept=".pdf,.jpg,.jpeg,.png"
+              onChange={(e) => setResumeFile(e.target.files[0])}
+              className="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded px-3 py-2"
+            />
+          </div>
 
           <button
             type="submit"

@@ -161,7 +161,12 @@ const archivedRoutes = require("./routes/archived");
 // ✅ Mount routes AFTER connection
 app.use("/api/archived", archivedRoutes);
 
-// Start server
-app.listen(PORT, () => {
-  console.log(`🚀 Server running at http://localhost:${PORT}`);
+// ============ Candidate Resume Upload Route =============
+app.post("/api/candidates/upload", upload.single("resume"), (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ message: "No file uploaded" });
+  }
+
+  const fileUrl = `${process.env.SERVER_BASE_URL}/uploads/${req.file.filename}`;
+  res.status(200).json({ fileUrl });
 });

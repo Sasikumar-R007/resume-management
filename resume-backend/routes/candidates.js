@@ -133,6 +133,19 @@ router.patch("/:id/restore", async (req, res) => {
   }
 });
 
+// Upload Endpoint
+// ✅ Correct usage
+router.post("/upload", upload.single("resume"), (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ message: "No file uploaded" });
+  }
+
+  const fileUrl = `${process.env.FRONTEND_URL || "http://localhost:5000"}/uploads/${req.file.filename}`;
+
+  res.json({ fileUrl });
+});
+
+
 
 
 module.exports = router;

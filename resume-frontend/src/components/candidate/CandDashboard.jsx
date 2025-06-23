@@ -664,29 +664,41 @@ const CandidateDashboard = () => {
               <div className="w-full md:w-1/2 bg-white p-4 rounded shadow space-y-4">
                 <h4 className="text-lg font-semibold mb-2">Resume</h4>
 
-                {resumeFile ? (
+                {resumeFile || profile.resumeLink ? (
                   <div className="space-y-3">
-                    {resumeFile.type.includes("image") ? (
-                      <img
-                        src={URL.createObjectURL(resumeFile)}
-                        alt="Resume Preview"
-                        className="w-full h-auto max-h-[400px] rounded border"
-                      />
-                    ) : (
-                      <iframe
-                        src={URL.createObjectURL(resumeFile)}
-                        title="Resume"
-                        className="w-full h-96 rounded border"
-                      />
-                    )}
+                    {(() => {
+                      const file = resumeFile
+                        ? URL.createObjectURL(resumeFile)
+                        : profile.resumeLink;
+                      const isImage = file.match(/\.(jpg|jpeg|png)$/i);
+
+                      return isImage ? (
+                        <img
+                          src={file}
+                          alt="Resume Preview"
+                          className="w-full h-auto max-h-[400px] rounded border"
+                        />
+                      ) : (
+                        <iframe
+                          src={file}
+                          title="Resume"
+                          className="w-full h-96 rounded border"
+                        />
+                      );
+                    })()}
 
                     <div className="flex gap-4">
                       <button
-                        onClick={() => setResumeFile(null)}
+                        onClick={() => {
+                          setResumeFile(null);
+                          setProfile({ ...profile, resumeLink: "" }); // clear from UI
+                          // Optional: Also update in backend using PATCH
+                        }}
                         className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
                       >
                         Remove
                       </button>
+
                       <label className="px-4 py-2 bg-blue-600 text-white rounded cursor-pointer hover:bg-blue-700">
                         Change
                         <input
@@ -719,7 +731,9 @@ const CandidateDashboard = () => {
               <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 overflow-auto">
                 <div className="bg-gray-100 mx-4 p-6 rounded-lg w-full max-w-6xl shadow-xl max-h-[90vh] overflow-y-auto">
                   <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-xl mx-6 font-semibold">Edit Your Profile</h3>
+                    <h3 className="text-xl mx-6 font-semibold">
+                      Edit Your Profile
+                    </h3>
                     <button
                       onClick={() => setShowEdit(false)}
                       className="text-gray-500 mx-6 hover:text-gray-700 text-2xl"

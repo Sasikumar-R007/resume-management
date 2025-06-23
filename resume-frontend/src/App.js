@@ -16,6 +16,7 @@ import ResumeUpload from "./components/recruiter/ResumeUpload";
 import AllResumes from "./components/AllResumes";
 import AIShortlist from "./components/AIShortlist";
 import PipelinePage from "./components/recruiter/PipelinePage";
+import FunnelPage from "./components/FunnelPage";
 
 import OfficialLandingPage from "./components/OfficialLandingPage";
 
@@ -42,13 +43,17 @@ function App() {
         {/* <Route path="/team-leader/setup-profile" element={<TeamLeaderProfileSetup />} /> */}
         <Route path="/team-leader/home" element={<TeamLeaderMainDashboard />} />
         {/* <Route path="/recruiter" element={<RecruiterDashboard />} /> */}
-        <Route path="/recruiter/candidates-applied" element={<CandidatesApplied />} />
+        <Route
+          path="/recruiter/candidates-applied"
+          element={<CandidatesApplied />}
+        />
         <Route path="/recruiter/home" element={<RecruiterDashboardMain />} />
         <Route path="/recruiter/total-jobs" element={<TotalJobs />} />
         <Route path="/upload-resume" element={<ResumeUpload />} />
         <Route path="/all-resumes" element={<AllResumes />} />
         <Route path="/ai-shortlist" element={<AIShortlist />} />
         <Route path="/recruiter/pipeline" element={<PipelinePage />} />
+        <Route path="/funnel" element={<FunnelPage />} />
 
         <Route path="/officialpage" element={<OfficialLandingPage />} />
 
@@ -60,8 +65,6 @@ function App() {
 
         <Route path="/recruiter/add-job" element={<AddJob />} />
         <Route path="/job-board" element={<JobBoard />} />
-
-
 
         {/* Add more routes as needed */}
       </Routes>

@@ -52,7 +52,7 @@ const GetStarted = () => {
           className="flex items-center gap-2 px-4 py-2 bg-gray-800 text-white rounded hover:bg-gray-900 transition"
         >
           <FaUsers size={20} className="text-white" />
-          Recruiter Login
+          Employer Login
         </button>
       </div>
 

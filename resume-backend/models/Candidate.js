@@ -29,6 +29,11 @@ const candidateSchema = new mongoose.Schema({
   preferredLocation: String,
   resumeLink: String, // 👈 add later when uploading/resume feature is added
   profileImage: String,
+  resumeLink: {
+    type: String,
+    default: "",
+  },
+
   appliedBy: {
     type: String,
     default: "candidate", // or "recruiter"
@@ -38,10 +43,9 @@ const candidateSchema = new mongoose.Schema({
     default: Date.now,
   },
   isArchived: {
-  type: Boolean,
-  default: false,
-},
-
+    type: Boolean,
+    default: false,
+  },
 });
 
 module.exports = mongoose.model("Candidate", candidateSchema);
