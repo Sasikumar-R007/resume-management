@@ -4,6 +4,7 @@ import { Menu, X, ExternalLink, UserCircle } from "lucide-react"; // for nav ico
 import { FiExternalLink } from "react-icons/fi";
 import { MdDelete } from "react-icons/md";
 import { ProfileContext } from "./ProfileContext";
+import CandidateForm from "./CandidateForm";
 import axios from "axios";
 
 const CandidateDashboard = () => {
@@ -11,7 +12,7 @@ const CandidateDashboard = () => {
   const [selectedNav, setSelectedNav] = useState("Dashboard");
   const navigate = useNavigate();
 
-  const navItems = ["Dashboard", "Job Board", "Resume", "Settings"];
+  const navItems = ["Dashboard", "Job Board", "Settings"];
 
   const { profile, setProfile } = useContext(ProfileContext);
 
@@ -84,30 +85,13 @@ const CandidateDashboard = () => {
     }
   };
 
-  // Handle input change
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
-
-  // Save edited profile
-  const handleSave = () => {
-    setProfile({ ...formData });
-    setShowEdit(false);
-  };
-
   useEffect(() => {
     if (profile) {
       setFormData(profile);
     }
   }, [profile]);
 
-
   const [resumeFile, setResumeFile] = useState(null);
-
 
   // Sample applied jobs
   const [appliedJobs] = useState([
@@ -193,34 +177,19 @@ const CandidateDashboard = () => {
     fetchJobs();
   }, []);
 
-  const [resume, setResume] = useState(null);
-  const [error, setError] = useState("");
+  // useEffect(() => {
+  //   const isLoggedIn = localStorage.getItem("token"); // or "user"
+  //   if (!isLoggedIn) {
+  //     navigate("/login", { replace: true }); // Block back navigation
+  //   }
+  // }, [navigate]);
 
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
+  // ✅ Logout function
+  const handleSignOut = () => {
+    localStorage.removeItem("token"); // clear session
 
-    const allowedTypes = [
-      "application/pdf",
-      "application/msword",
-      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-      "text/plain",
-    ];
-    if (!allowedTypes.includes(file.type)) {
-      setError("Unsupported file format.");
-      return;
-    }
-    if (file.size > 5 * 1024 * 1024) {
-      // 5MB limit
-      setError("File size exceeds 5MB.");
-      return;
-    }
-    setError("");
-    setResume(file);
-  };
-
-  const handleRemove = () => {
-    setResume(null);
+    // Go to login and replace entire history stack
+    window.location.href = "/candidate-auth";
   };
 
   return (
@@ -239,6 +208,14 @@ const CandidateDashboard = () => {
             {item}
           </button>
         ))}
+
+        {/* Sign Out Button */}
+        <button
+          onClick={handleSignOut} // Define this function
+          className="text-left hover:bg-red-600 hover:text-white text-red-500 px-3 py-2 rounded mt-4"
+        >
+          Sign Out
+        </button>
       </div>
 
       {/* Mobile Nav Toggle */}
@@ -266,6 +243,14 @@ const CandidateDashboard = () => {
               {item}
             </button>
           ))}
+
+          {/* Sign Out Button */}
+          <button
+            onClick={handleSignOut} // Define this function
+            className="text-left w-full hover:bg-red-600 hover:text-white text-red-500 px-3 py-2 rounded"
+          >
+            Sign Out
+          </button>
         </div>
       )}
 
@@ -365,11 +350,8 @@ const CandidateDashboard = () => {
 
                   {/* Edit Button */}
                   <button
-                    onClick={() => {
-                      setFormData(profile);
-                      setShowEdit(true);
-                    }}
-                    className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+                    onClick={() => setShowEdit(true)}
+                    className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
                   >
                     Edit Profile
                   </button>
@@ -420,94 +402,94 @@ const CandidateDashboard = () => {
 
             <div className="flex flex-col md:flex-row gap-6 mt-6">
               <div className="w-full md:w-1/2 space-y-6 bg-white p-4 rounded shadow">
-              {/* Skill Section */}
-              <div className="mt-6 bg-gray-100 p-2 rounded">
-                <h4 className="text-lg font-semibold mb-2 flex justify-between items-center">
-                  Skills
-                  <button
-                    onClick={() => setShowSkillModal(true)}
-                    className="text-sm bg-blue-600 hover:bg-blue-700 text-white px-4 py-1 rounded"
-                  >
-                    Edit
-                  </button>
-                </h4>
-                <ul className="text-gray-700 list-disc list-inside space-y-1">
-                  {skills.primary && (
-                    <li>
-                      <strong>Primary Skills:</strong> {skills.primary}
-                    </li>
-                  )}
-                  {skills.secondary && (
-                    <li>
-                      <strong>Secondary Skills:</strong> {skills.secondary}
-                    </li>
-                  )}
-                  {skills.knowledge && (
-                    <li>
-                      <strong>Knowledge Only:</strong> {skills.knowledge}
-                    </li>
-                  )}
-                </ul>
-              </div>
-
-              {/* Projects Section */}
-              <div className="mt-6">
-                <h4 className="text-lg font-semibold mb-2 flex justify-between items-center">
-                  Projects
-                  <button
-                    onClick={() => setShowProjectModal(true)}
-                    className="text-sm bg-blue-600 hover:bg-blue-700 text-white px-4 py-1 mr-2 rounded"
-                  >
-                    Add
-                  </button>
-                </h4>
-
-                <div className="space-y-4">
-                  {projects.map((project, index) => (
-                    <div
-                      key={index}
-                      className="border rounded-lg p-4 shadow-sm bg-white dark:bg-gray-800 relative"
+                {/* Skill Section */}
+                <div className="mt-6 bg-gray-100 p-2 rounded">
+                  <h4 className="text-lg font-semibold mb-2 flex justify-between items-center">
+                    Skills
+                    <button
+                      onClick={() => setShowSkillModal(true)}
+                      className="text-sm bg-blue-600 hover:bg-blue-700 text-white px-4 py-1 rounded"
                     >
-                      {/* Project Title + Actions */}
-                      <div className="flex justify-between items-start">
-                        <h5 className="font-semibold text-base text-gray-800 dark:text-white">
-                          {project.name}
-                        </h5>
-
-                        <div className="flex gap-3 items-center">
-                          {project.link && (
-                            <a
-                              href={project.link}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-blue-600 hover:text-blue-800"
-                              title="Open Project"
-                            >
-                              <FiExternalLink size={18} />
-                            </a>
-                          )}
-                          <button
-                            onClick={() => {
-                              const updatedProjects = [...projects];
-                              updatedProjects.splice(index, 1);
-                              setProjects(updatedProjects);
-                            }}
-                            className="text-red-500 hover:text-red-700"
-                            title="Delete Project"
-                          >
-                            <MdDelete size={20} />
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* Description */}
-                      <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
-                        {project.description}
-                      </p>
-                    </div>
-                  ))}
+                      Edit
+                    </button>
+                  </h4>
+                  <ul className="text-gray-700 list-disc list-inside space-y-1">
+                    {skills.primary && (
+                      <li>
+                        <strong>Primary Skills:</strong> {skills.primary}
+                      </li>
+                    )}
+                    {skills.secondary && (
+                      <li>
+                        <strong>Secondary Skills:</strong> {skills.secondary}
+                      </li>
+                    )}
+                    {skills.knowledge && (
+                      <li>
+                        <strong>Knowledge Only:</strong> {skills.knowledge}
+                      </li>
+                    )}
+                  </ul>
                 </div>
-              </div>
+
+                {/* Projects Section */}
+                <div className="mt-6">
+                  <h4 className="text-lg font-semibold mb-2 flex justify-between items-center">
+                    Projects
+                    <button
+                      onClick={() => setShowProjectModal(true)}
+                      className="text-sm bg-blue-600 hover:bg-blue-700 text-white px-4 py-1 mr-2 rounded"
+                    >
+                      Add
+                    </button>
+                  </h4>
+
+                  <div className="space-y-4">
+                    {projects.map((project, index) => (
+                      <div
+                        key={index}
+                        className="border rounded-lg p-4 shadow-sm bg-white dark:bg-gray-800 relative"
+                      >
+                        {/* Project Title + Actions */}
+                        <div className="flex justify-between items-start">
+                          <h5 className="font-semibold text-base text-gray-800 dark:text-white">
+                            {project.name}
+                          </h5>
+
+                          <div className="flex gap-3 items-center">
+                            {project.link && (
+                              <a
+                                href={project.link}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-blue-600 hover:text-blue-800"
+                                title="Open Project"
+                              >
+                                <FiExternalLink size={18} />
+                              </a>
+                            )}
+                            <button
+                              onClick={() => {
+                                const updatedProjects = [...projects];
+                                updatedProjects.splice(index, 1);
+                                setProjects(updatedProjects);
+                              }}
+                              className="text-red-500 hover:text-red-700"
+                              title="Delete Project"
+                            >
+                              <MdDelete size={20} />
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Description */}
+                        <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
+                          {project.description}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
 
                 {/* Skill Section */}
                 {showSkillModal && (
@@ -680,7 +662,7 @@ const CandidateDashboard = () => {
 
               {/* Resume Section */}
               <div className="w-full md:w-1/2 bg-white p-4 rounded shadow space-y-4">
-                <h4 className="text-lg font-semibold mb-2">Uploaded Resume</h4>
+                <h4 className="text-lg font-semibold mb-2">Resume</h4>
 
                 {resumeFile ? (
                   <div className="space-y-3">
@@ -731,6 +713,32 @@ const CandidateDashboard = () => {
                 )}
               </div>
             </div>
+
+            {/* Edit Modal */}
+            {showEdit && (
+              <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 overflow-auto">
+                <div className="bg-gray-100 mx-4 p-6 rounded-lg w-full max-w-6xl shadow-xl max-h-[90vh] overflow-y-auto">
+                  <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-xl mx-6 font-semibold">Edit Your Profile</h3>
+                    <button
+                      onClick={() => setShowEdit(false)}
+                      className="text-gray-500 mx-6 hover:text-gray-700 text-2xl"
+                    >
+                      &times;
+                    </button>
+                  </div>
+
+                  {/* Your form component */}
+                  <CandidateForm
+                    initialData={profile}
+                    onSave={(updatedData) => {
+                      setProfile(updatedData);
+                      setShowEdit(false);
+                    }}
+                  />
+                </div>
+              </div>
+            )}
 
             {/* Applied Jobs and Suggestions Section */}
             <div className="mt-3">
@@ -804,96 +812,6 @@ const CandidateDashboard = () => {
                 </div>
               </div>
             </div>
-
-            {/* Edit Modal */}
-            {showEdit && (
-              <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-                <div className="bg-white p-6 rounded-lg w-full max-w-xl shadow-xl">
-                  <h3 className="text-xl font-semibold mb-4">Edit Profile</h3>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <input
-                      className="border p-2 rounded"
-                      placeholder="First Name"
-                      name="firstName"
-                      value={formData.firstName}
-                      onChange={handleChange}
-                    />
-                    <input
-                      className="border p-2 rounded"
-                      placeholder="Last Name"
-                      name="lastName"
-                      value={formData.lastName}
-                      onChange={handleChange}
-                    />
-                    <input
-                      className="border p-2 rounded"
-                      placeholder="Email"
-                      name="email"
-                      value={formData.email}
-                      onChange={handleChange}
-                    />
-                    <input
-                      className="border p-2 rounded"
-                      placeholder="Mobile"
-                      name="mobile"
-                      value={formData.mobile}
-                      onChange={handleChange}
-                    />
-                    <input
-                      className="border p-2 rounded"
-                      placeholder="Designation"
-                      name="designation"
-                      value={formData.designation}
-                      onChange={handleChange}
-                    />
-                    <input
-                      className="border p-2 rounded"
-                      placeholder="Experience"
-                      name="totalExperience"
-                      value={formData.totalExperience}
-                      onChange={handleChange}
-                    />
-                    <input
-                      className="border p-2 rounded"
-                      placeholder="Current Company"
-                      name="currentCompany"
-                      value={formData.currentCompany}
-                      onChange={handleChange}
-                    />
-                    <input
-                      className="border p-2 rounded"
-                      placeholder="Primary Skill"
-                      name="primarySkill"
-                      value={formData.primarySkill}
-                      onChange={handleChange}
-                    />
-                    <input
-                      className="border p-2 rounded"
-                      placeholder="LinkedIn"
-                      name="linkedin"
-                      value={formData.linkedin}
-                      onChange={handleChange}
-                    />
-                  </div>
-
-                  <div className="mt-4 flex justify-end gap-2">
-                    <button
-                      onClick={() => setShowEdit(false)}
-                      className="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      className="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700"
-                      onClick={handleSave}
-                    >
-                      Save
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
         )}
 
@@ -1095,41 +1013,6 @@ const CandidateDashboard = () => {
                 </div>
               ))}
             </div>
-          </div>
-        )}
-
-        {selectedNav === "Resume" && (
-          <div className="bg-white p-6 rounded shadow-md max-w-md mx-auto">
-            <h3 className="text-xl font-semibold mb-4">Resume Upload</h3>
-
-            {resume ? (
-              <div className="mb-4">
-                <p>
-                  <strong>Uploaded Resume:</strong> {resume.name} (
-                  {(resume.size / 1024).toFixed(2)} KB)
-                </p>
-                <button
-                  onClick={handleRemove}
-                  className="mt-2 px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600"
-                >
-                  Remove
-                </button>
-              </div>
-            ) : (
-              <p className="mb-4 text-gray-600">No resume uploaded yet.</p>
-            )}
-
-            <input
-              type="file"
-              accept=".pdf,.doc,.docx,.txt"
-              onChange={handleFileChange}
-              className="mb-2"
-            />
-            {error && <p className="text-red-600 mb-2">{error}</p>}
-
-            <p className="text-sm text-gray-500">
-              Supported formats: PDF, DOC, DOCX, TXT (Max 5MB)
-            </p>
           </div>
         )}
 

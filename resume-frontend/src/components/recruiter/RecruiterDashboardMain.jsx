@@ -172,11 +172,14 @@ const RecruiterDashboardMain = () => {
     };
 
     try {
-      const res = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/archived`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
+      const res = await fetch(
+        `${process.env.REACT_APP_API_BASE_URL}/api/archived`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        }
+      );
 
       if (res.ok) {
         alert(`${candidate.name} archived successfully.`);
@@ -225,31 +228,62 @@ const RecruiterDashboardMain = () => {
   return (
     <div className="min-h-screen flex flex-col items-center justify-start bg-gray-50 p-6">
       <div className="max-w-5xl w-full">
-        <h1 className="text-3xl font-bold mb-2 text-center">
-          Welcome to Your Recruiter Dashboard
-        </h1>
-        <p className="mb-8 text-gray-700 max-w-xl mx-auto text-center">
-          To get started, review your current jobs and candidates, or update
-          your profile to better manage your recruitment process.
-        </p>
+        <div className="flex items-center justify-between mb-8 flex-col md:flex-row gap-4">
+          {/* Left: Welcome Message */}
+          <div>
+            <h1 className="text-3xl font-bold mb-2 text-left">
+              Welcome to Your Recruiter Dashboard
+            </h1>
+            <p className="text-gray-700 max-w-xl text-left">
+              To get started, review your current jobs and candidates, or update
+              your profile to better manage your recruitment process.
+            </p>
+          </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-10">
-          {summaryCards.map((card, idx) => (
-            <div
-              key={idx}
-              onClick={() => navigate(card.path)} // 👉 navigate on click
-              className="p-6 border rounded-lg flex justify-between items-center bg-white shadow cursor-pointer hover:shadow-lg transition"
-            >
-              <div>
-                <h3 className="text-lg font-semibold text-gray-800">
-                  {card.title}
-                </h3>
-                <p className="text-3xl font-bold text-blue-700">{card.count}</p>
-                <p className="text-sm text-gray-600">{card.subtitle}</p>
+          {/* Right: Sign Out Button */}
+          <button
+            onClick={handleLogout}
+            className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+          >
+            Sign Out
+          </button>
+        </div>
+
+        <div className="flex flex-col md:flex-row gap-6 mb-6">
+          {/* LEFT - Summary Cards */}
+          <div className="w-full md:w-2/3 grid grid-cols-1 sm:grid-cols-2 gap-6">
+            {summaryCards.map((card, idx) => (
+              <div
+                key={idx}
+                onClick={() => navigate(card.path)}
+                className="p-6 border rounded-lg flex justify-between items-center bg-white shadow cursor-pointer hover:shadow-lg transition"
+              >
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-800">
+                    {card.title}
+                  </h3>
+                  <p className="text-3xl font-bold text-blue-700">
+                    {card.count}
+                  </p>
+                  <p className="text-sm text-gray-600">{card.subtitle}</p>
+                </div>
+                <div>{card.icon}</div>
               </div>
-              <div>{card.icon}</div>
-            </div>
-          ))}
+            ))}
+          </div>
+
+          {/* RIGHT - Current Requirements */}
+          <div className="w-full md:w-1/2 bg-white p-6 rounded-lg shadow">
+            <h3 className="text-lg font-semibold mb-4 text-gray-800">
+              Current Requirements
+            </h3>
+            {/* Add list or data display here */}
+            <ul className="space-y-2 text-sm text-gray-700">
+              <li>Requirement 1: MSH passed by TL</li>
+              <li>Requirement 2: MSH pending</li>
+              {/* You can map dynamic data here too */}
+            </ul>
+          </div>
         </div>
 
         <div className="flex justify-between items-center mb-3">
@@ -408,7 +442,10 @@ const RecruiterDashboardMain = () => {
 
           {/* Right Column Buttons for large screens */}
           <div className="hidden lg:flex lg:w-[25%] flex-col gap-4">
-            <button className="w-full py-3 bg-green-600 text-white text-lg rounded-xl shadow hover:bg-green-700" onClick={() => navigate("/recruiter/pipeline")}>
+            <button
+              className="w-full py-3 bg-green-600 text-white text-lg rounded-xl shadow hover:bg-green-700"
+              onClick={() => navigate("/recruiter/pipeline")}
+            >
               Pipeline
             </button>
             <button
@@ -438,22 +475,8 @@ const RecruiterDashboardMain = () => {
           </ul>
         </div>
       </div>
-      {/* <div>
-        <h2 className="text-lg font-semibold mt-6">Archived Candidates</h2>
-        <ul className="mt-2">
-          {archivedCandidates.map((cand) => (
-            <li key={cand.id} className="text-gray-700">
-              {cand.name} - {cand.status} ({cand.reason})
-            </li>
-          ))}
-        </ul>
-      </div> */}
-      <button
-        onClick={handleLogout}
-        className="bg-red-500 text-white mt-5 px-4 py-2 rounded hover:bg-red-600"
-      >
-        Sign Out
-      </button>
+            
+
     </div>
   );
 };
