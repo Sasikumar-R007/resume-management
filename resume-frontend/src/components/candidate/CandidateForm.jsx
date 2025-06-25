@@ -16,10 +16,12 @@ export default function CandidateForm({ initialData = {}, onSave }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    let resumeLink = profile.resumeLink || ""; // default to existing link if in edit mode
+    let resumeLink = profile.resumeLink || ""; // use existing link if editing
 
-    // 🟡 Upload resume if a new one is selected
-    if (resumeFile) {
+    // ✅ Conditionally skip upload on Vercel (temporary)
+    const isUploadAllowed = process.env.REACT_APP_UPLOAD_ENABLED === "true";
+
+    if (resumeFile && isUploadAllowed) {
       const resumeData = new FormData();
       resumeData.append("resume", resumeFile);
 
@@ -43,11 +45,9 @@ export default function CandidateForm({ initialData = {}, onSave }) {
 
     try {
       if (onSave) {
-        // ✏️ Edit mode
         setProfile(finalData);
         onSave(finalData);
       } else {
-        // 🆕 New submission
         const response = await fetch(
           `${process.env.REACT_APP_API_BASE_URL}/api/candidates`,
           {
@@ -67,6 +67,7 @@ export default function CandidateForm({ initialData = {}, onSave }) {
     } catch (error) {
       console.error("Error submitting form:", error);
     }
+
     console.log("Submitting:", finalData);
   };
 

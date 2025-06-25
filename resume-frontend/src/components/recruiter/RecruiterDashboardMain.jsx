@@ -431,10 +431,16 @@ const RecruiterDashboardMain = () => {
 
             {/* Right Column Buttons for small screens */}
             <div className="block lg:hidden mt-6 flex flex-col gap-3">
-              <button className="w-full py-3 bg-gray-800 text-white rounded-xl shadow hover:bg-gray-700">
+              <button
+                className="w-full py-3 bg-green-600 text-white text-lg rounded-xl shadow hover:bg-green-700"
+                onClick={() => navigate("/funnel")}
+              >
                 Pipeline
               </button>
-              <button className="w-full py-3 bg-gray-500 text-white rounded-xl shadow hover:bg-gray-400">
+              <button
+                className="w-full py-3 bg-yellow-500 text-white text-lg rounded-xl shadow hover:bg-yellow-400"
+                onClick={() => navigate("/archived-candidates")}
+              >
                 Archived
               </button>
             </div>
@@ -444,7 +450,7 @@ const RecruiterDashboardMain = () => {
           <div className="hidden lg:flex lg:w-[25%] flex-col gap-4">
             <button
               className="w-full py-3 bg-green-600 text-white text-lg rounded-xl shadow hover:bg-green-700"
-              onClick={() => navigate("/recruiter/pipeline")}
+              onClick={() => navigate("/funnel")}
             >
               Pipeline
             </button>
@@ -475,8 +481,6 @@ const RecruiterDashboardMain = () => {
           </ul>
         </div>
       </div>
-            
-
     </div>
   );
 };

@@ -52,7 +52,7 @@ function App() {
         <Route path="/upload-resume" element={<ResumeUpload />} />
         <Route path="/all-resumes" element={<AllResumes />} />
         <Route path="/ai-shortlist" element={<AIShortlist />} />
-        <Route path="/recruiter/pipeline" element={<PipelinePage />} />
+        {/* <Route path="/recruiter/pipeline" element={<PipelinePage />} /> */}
         <Route path="/funnel" element={<FunnelPage />} />
 
         <Route path="/officialpage" element={<OfficialLandingPage />} />
