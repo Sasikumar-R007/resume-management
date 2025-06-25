@@ -1,5 +1,3 @@
-// index.js
-
 const express = require("express");
 const cors = require("cors");
 require("dotenv").config();
@@ -12,22 +10,22 @@ const { v4: uuidv4 } = require("uuid");
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// ==================== Middleware ====================
+// ==================== CORS Middleware ====================
 const allowedOrigins = [
-  process.env.FRONTEND_URL,
-  "https://resume-mang-frontend.vercel.app",
+  process.env.FRONTEND_URL || "https://resume-mang-frontend.vercel.app",
 ];
+
+app.use((req, res, next) => {
+  res.setHeader("Access-Control-Allow-Origin", allowedOrigins[0]);
+  res.setHeader("Access-Control-Allow-Methods", "GET,POST,PUT,PATCH,DELETE,OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  res.setHeader("Access-Control-Allow-Credentials", "true");
+  next();
+});
 
 app.use(
   cors({
-    origin: function (origin, callback) {
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error("Not allowed by CORS"));
-      }
-    },
-    methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
+    origin: allowedOrigins[0],
     credentials: true,
   })
 );
@@ -148,7 +146,6 @@ app.post("/api/candidates/upload", upload.single("resume"), (req, res) => {
   const fileUrl = `${process.env.SERVER_BASE_URL}/uploads/${req.file.filename}`;
   res.status(200).json({ fileUrl });
 });
-
 
 // ==================== Default Route ====================
 app.get("/", (req, res) => {
