@@ -1,8 +1,8 @@
-// index.js (or server.js)
+// index.js
 
 const express = require("express");
 const cors = require("cors");
-require('dotenv').config(); // Load .env at the very top
+require("dotenv").config();
 const mongoose = require("mongoose");
 const multer = require("multer");
 const fs = require("fs");
@@ -12,11 +12,10 @@ const { v4: uuidv4 } = require("uuid");
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-
-// Middlewares
+// ==================== Middleware ====================
 const allowedOrigins = [
   process.env.FRONTEND_URL,
-  "https://resume-mang-frontend.vercel.app"
+  "https://resume-mang-frontend.vercel.app",
 ];
 
 app.use(
@@ -33,12 +32,8 @@ app.use(
   })
 );
 
-
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
-// Serve uploaded files statically
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // ==================== MongoDB Connection ====================
 mongoose
@@ -64,6 +59,20 @@ const storage = multer.diskStorage({
   },
 });
 const upload = multer({ storage });
+
+// ==================== Static Files ====================
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
+// ==================== Routes ====================
+const authRoutes = require("./routes/auth.routes");
+const jobRoutes = require("./routes/jobRoutes");
+const candidateRoutes = require("./routes/candidates");
+const archivedRoutes = require("./routes/archived");
+
+app.use("/api/auth", authRoutes);
+app.use("/api/jobs", jobRoutes);
+app.use("/api/candidates", candidateRoutes);
+app.use("/api/archived", archivedRoutes);
 
 // ==================== Resume Upload API ====================
 app.post("/api/upload", upload.array("resumes"), (req, res) => {
@@ -130,9 +139,16 @@ app.get("/api/all-resumes", (req, res) => {
   }
 });
 
-// ==================== Job Routes ====================
-const jobRoutes = require("./routes/jobRoutes");
-app.use("/api/jobs", jobRoutes);
+// ============ Candidate Resume Upload =============
+app.post("/api/candidates/upload", upload.single("resume"), (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ message: "No file uploaded" });
+  }
+
+  const fileUrl = `${process.env.SERVER_BASE_URL}/uploads/${req.file.filename}`;
+  res.status(200).json({ fileUrl });
+});
+
 
 // ==================== Default Route ====================
 app.get("/", (req, res) => {
@@ -142,31 +158,4 @@ app.get("/", (req, res) => {
 // ==================== Start Server ====================
 app.listen(PORT, () => {
   console.log(`🚀 Server running at http://localhost:${PORT}`);
-});
-
-// Stores Candidate data in Master DB
-
-const candidateRoutes = require("./routes/candidates");
-app.use("/api/candidates", require("./routes/candidates"));
-
-// Stores Resume
-
-app.use("/uploads", express.static("uploads")); // Serve files
-
-
-// Archived Candidates
-
-const archivedRoutes = require("./routes/archived");
-
-// ✅ Mount routes AFTER connection
-app.use("/api/archived", archivedRoutes);
-
-// ============ Candidate Resume Upload Route =============
-app.post("/api/candidates/upload", upload.single("resume"), (req, res) => {
-  if (!req.file) {
-    return res.status(400).json({ message: "No file uploaded" });
-  }
-
-  const fileUrl = `${process.env.SERVER_BASE_URL}/uploads/${req.file.filename}`;
-  res.status(200).json({ fileUrl });
 });

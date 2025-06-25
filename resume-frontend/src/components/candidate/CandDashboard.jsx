@@ -663,27 +663,31 @@ const CandidateDashboard = () => {
               {/* Resume Section */}
               <div className="w-full md:w-1/2 bg-white p-4 rounded shadow space-y-4">
                 <h4 className="text-lg font-semibold mb-2">Resume</h4>
-
                 {resumeFile || profile.resumeLink ? (
                   <div className="space-y-3">
                     {(() => {
                       const file = resumeFile
                         ? URL.createObjectURL(resumeFile)
                         : profile.resumeLink;
-                      const isImage = file.match(/\.(jpg|jpeg|png)$/i);
 
-                      return isImage ? (
-                        <img
-                          src={file}
-                          alt="Resume Preview"
-                          className="w-full h-auto max-h-[400px] rounded border"
-                        />
+                      const isImage = file && file.match(/\.(jpg|jpeg|png)$/i);
+
+                      return file ? (
+                        isImage ? (
+                          <img
+                            src={file}
+                            alt="Resume Preview"
+                            className="w-full h-auto max-h-[400px] rounded border"
+                          />
+                        ) : (
+                          <iframe
+                            src={file}
+                            title="Resume"
+                            className="w-full h-96 rounded border"
+                          />
+                        )
                       ) : (
-                        <iframe
-                          src={file}
-                          title="Resume"
-                          className="w-full h-96 rounded border"
-                        />
+                        <p className="text-gray-500">No resume uploaded</p>
                       );
                     })()}
 
@@ -692,7 +696,7 @@ const CandidateDashboard = () => {
                         onClick={() => {
                           setResumeFile(null);
                           setProfile({ ...profile, resumeLink: "" }); // clear from UI
-                          // Optional: Also update in backend using PATCH
+                          // You can optionally send a PATCH request here to remove it from DB
                         }}
                         className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
                       >

@@ -16,8 +16,9 @@ export default function CandidateForm({ initialData = {}, onSave }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    let resumeLink = "";
+    let resumeLink = profile.resumeLink || ""; // default to existing link if in edit mode
 
+    // 🟡 Upload resume if a new one is selected
     if (resumeFile) {
       const resumeData = new FormData();
       resumeData.append("resume", resumeFile);
@@ -32,21 +33,41 @@ export default function CandidateForm({ initialData = {}, onSave }) {
         );
 
         const result = await res.json();
-        resumeLink = result.fileUrl; // ✅ this should hold the uploaded file link
+        resumeLink = result.fileUrl;
       } catch (err) {
         console.error("Resume upload failed:", err);
       }
     }
 
-    const finalData = { ...formData, resumeLink }; // ✅ include this in submitted data
+    const finalData = { ...formData, resumeLink };
 
-    await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/candidates`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(finalData),
-    });
+    try {
+      if (onSave) {
+        // ✏️ Edit mode
+        setProfile(finalData);
+        onSave(finalData);
+      } else {
+        // 🆕 New submission
+        const response = await fetch(
+          `${process.env.REACT_APP_API_BASE_URL}/api/candidates`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(finalData),
+          }
+        );
 
-    navigate("/candidate-dashboard");
+        if (response.ok) {
+          setProfile(finalData);
+          navigate("/candidate-dashboard");
+        } else {
+          console.error("Failed to submit candidate data");
+        }
+      }
+    } catch (error) {
+      console.error("Error submitting form:", error);
+    }
+    console.log("Submitting:", finalData);
   };
 
   useEffect(() => {
@@ -145,14 +166,50 @@ export default function CandidateForm({ initialData = {}, onSave }) {
             name="companySector"
             value={formData.companySector}
             onChange={handleChange}
-            options={["IT", "Finance", "Healthcare", "Education", "Other"]}
+            options={[
+              "Aerospace & Defense",
+              "Healthcare",
+              "Oil and Gas",
+              "Agriculture",
+              "High Technology",
+              "Private Equity",
+              "Automotive",
+              "Industrial Manufacturing",
+              "Professional Services",
+              "Chemical Manufacturing",
+              "Information Services & Publishing",
+              "Public Sector",
+              "Communication Services",
+              "Insurance",
+              "Retail",
+              "Consumer Packaged Goods",
+              "Life Sciences",
+              "Semiconductor",
+              "Education",
+              "Logistics & Distribution",
+              "Travel and Hospitality",
+              "Engineering Procurement & Construction",
+              "Media and Entertainment",
+              "Utilities",
+              "Financial Services",
+              "Mining",
+              "Waste Management",
+              "Other",
+            ]}
           />
           <Select
             label="Company Level"
             name="companyLevel"
             value={formData.companyLevel}
             onChange={handleChange}
-            options={["Startup", "SME", "MNC"]}
+            options={[
+              "Startup - Bootstrapped",
+              "Startup - Funded",
+              "Medium Enterprise - PAN India",
+              "Medium Enterprise - MNC",
+              "Large Enterprise - PAN India",
+              "Large Enterprise - MNC",
+            ]}
           />
           <Select
             label="Product/Services"
@@ -173,7 +230,7 @@ export default function CandidateForm({ initialData = {}, onSave }) {
             name="productCategory"
             value={formData.productCategory}
             onChange={handleChange}
-            options={["B2B", "B2C", "Marketplace", "Other"]}
+            options={["B2B", "B2C"]}
           />
           <Input
             label="Current Role"
@@ -181,12 +238,11 @@ export default function CandidateForm({ initialData = {}, onSave }) {
             value={formData.currentRole}
             onChange={handleChange}
           />
-          <Select
+          <Input
             label="Total Experience"
             name="totalExperience"
             value={formData.totalExperience}
             onChange={handleChange}
-            options={["Fresher", "1-2 years", "3-5 years", "5+ years"]}
           />
           <Input
             label="Relevant Experience"
@@ -230,6 +286,20 @@ export default function CandidateForm({ initialData = {}, onSave }) {
             name="preferredLocation"
             value={formData.preferredLocation}
             onChange={handleChange}
+          />
+          <Select
+            label="Notice Period"
+            name="noticePeriod"
+            value={formData.noticePeriod}
+            onChange={handleChange}
+            options={[
+              "15 Days",
+              "30 Days",
+              "45 Days",
+              "60 Days",
+              "90 Days / Above",
+              "Currently Serving Notice",
+            ]}
           />
 
           <div className="col-span-2">

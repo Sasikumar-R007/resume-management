@@ -4,7 +4,6 @@
 // const RecruiterProfileSetup = () => {
 //   const navigate = useNavigate();
 
-
 //   const handleSubmit = (e) => {
 //     e.preventDefault();
 //     // Form submission logic here...
@@ -125,7 +124,6 @@
 
 // export default RecruiterProfileSetup;
 
-
 import React, { useEffect, useState } from "react";
 
 export default function CandidatesApplied() {
@@ -158,17 +156,31 @@ export default function CandidatesApplied() {
           <tbody>
             {candidates.map((cand, idx) => (
               <tr key={idx} className="text-sm text-center">
-                <td className="border p-2">{cand.firstName} {cand.lastName}</td>
+                <td className="border p-2">
+                  {cand.firstName} {cand.lastName}
+                </td>
                 <td className="border p-2">{cand.mobile}</td>
                 <td className="border p-2">{cand.primaryEmail}</td>
                 <td className="border p-2">
-                  <a href={cand.linkedin} target="_blank" className="text-blue-600 underline">View</a>
+                  <a
+                    href={cand.linkedin}
+                    target="_blank"
+                    className="text-blue-600 underline"
+                  >
+                    View
+                  </a>
                 </td>
                 <td className="border p-2">{cand.totalExperience}</td>
                 <td className="border p-2">{cand.primarySkill}</td>
                 <td className="border p-2">
                   {cand.resumeLink ? (
-                    <a href={cand.resumeLink} target="_blank" className="text-blue-600 underline">View Resume</a>
+                    <a
+                      href={cand.resumeLink}
+                      target="_blank"
+                      className="text-blue-600 underline"
+                    >
+                      View Resume
+                    </a>
                   ) : (
                     "N/A"
                   )}

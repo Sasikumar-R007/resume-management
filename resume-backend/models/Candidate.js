@@ -5,8 +5,20 @@ const candidateSchema = new mongoose.Schema({
   lastName: String,
   mobile: String,
   altMobile: String,
-  primaryEmail: String,
+
+  primaryEmail: {
+    type: String,
+    required: true,
+    unique: true,
+  },
+
   secondaryEmail: String,
+
+  password: {
+    type: String,
+    required: false,
+  },
+
   linkedin: String,
   portfolio: String,
   website: String,
@@ -27,21 +39,28 @@ const candidateSchema = new mongoose.Schema({
   knowledgeOnly: String,
   currentLocation: String,
   preferredLocation: String,
-  resumeLink: String, // 👈 add later when uploading/resume feature is added
-  profileImage: String,
+  noticePeriod: String,
+
   resumeLink: {
     type: String,
     default: "",
   },
 
+  profileImage: String,
+
+  resetOTP: Number,
+  otpExpires: Date,
+
   appliedBy: {
     type: String,
     default: "candidate", // or "recruiter"
   },
+
   createdAt: {
     type: Date,
     default: Date.now,
   },
+
   isArchived: {
     type: Boolean,
     default: false,
