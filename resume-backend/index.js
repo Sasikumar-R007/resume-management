@@ -1,13 +1,13 @@
+// index.js
+
 const express = require("express");
 const cors = require("cors");
 require("dotenv").config();
 const mongoose = require("mongoose");
-
-// ========== Temporarily Disabled for Vercel Deployment ==========
-// const multer = require("multer");
-// const fs = require("fs");
-// const path = require("path");
-// const { v4: uuidv4 } = require("uuid");
+const multer = require("multer");
+const fs = require("fs");
+const path = require("path");
+const { v4: uuidv4 } = require("uuid");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -44,8 +44,7 @@ mongoose
   .then(() => console.log("✅ MongoDB connected"))
   .catch((err) => console.error("❌ MongoDB connection error:", err));
 
-// ==================== Multer Setup (Disabled for Vercel) ====================
-/*
+// ==================== Multer Config ====================
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     const dir = path.join(__dirname, "uploads");
@@ -60,10 +59,9 @@ const storage = multer.diskStorage({
   },
 });
 const upload = multer({ storage });
-*/
 
-// ==================== Static Uploads (Disabled for Vercel) ====================
-// app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+// ==================== Static Files ====================
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // ==================== Routes ====================
 const authRoutes = require("./routes/auth.routes");
@@ -76,8 +74,7 @@ app.use("/api/jobs", jobRoutes);
 app.use("/api/candidates", candidateRoutes);
 app.use("/api/archived", archivedRoutes);
 
-// ==================== Resume Upload API (Commented) ====================
-/*
+// ==================== Resume Upload API ====================
 app.post("/api/upload", upload.array("resumes"), (req, res) => {
   const name = req.body.name;
   const files = req.files;
@@ -113,6 +110,7 @@ app.post("/api/upload", upload.array("resumes"), (req, res) => {
   res.status(200).json({ message: "Upload successful", data: newRecord });
 });
 
+// Fetch recent 10 uploads
 app.get("/api/records", (req, res) => {
   const filePath = path.join(__dirname, "records.json");
   if (!fs.existsSync(filePath)) return res.json([]);
@@ -128,6 +126,7 @@ app.get("/api/records", (req, res) => {
   }
 });
 
+// Fetch all uploads
 app.get("/api/all-resumes", (req, res) => {
   const filePath = path.join(__dirname, "records.json");
   if (!fs.existsSync(filePath)) return res.json([]);
@@ -140,6 +139,7 @@ app.get("/api/all-resumes", (req, res) => {
   }
 });
 
+// ============ Candidate Resume Upload =============
 app.post("/api/candidates/upload", upload.single("resume"), (req, res) => {
   if (!req.file) {
     return res.status(400).json({ message: "No file uploaded" });
@@ -148,7 +148,7 @@ app.post("/api/candidates/upload", upload.single("resume"), (req, res) => {
   const fileUrl = `${process.env.SERVER_BASE_URL}/uploads/${req.file.filename}`;
   res.status(200).json({ fileUrl });
 });
-*/
+
 
 // ==================== Default Route ====================
 app.get("/", (req, res) => {

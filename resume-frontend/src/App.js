@@ -29,6 +29,8 @@ import ArchivedCandidates from "./components/ArchivedCandidates";
 import AddJob from "./components/AddJob";
 import JobBoard from "./components/JobBoard";
 
+import SourceResume from "./components/common/SourceResume";
+
 function App() {
   return (
     <Router>
@@ -65,6 +67,8 @@ function App() {
 
         <Route path="/recruiter/add-job" element={<AddJob />} />
         <Route path="/job-board" element={<JobBoard />} />
+
+        <Route path="/source-resume" element={<SourceResume />} />
 
         {/* Add more routes as needed */}
       </Routes>

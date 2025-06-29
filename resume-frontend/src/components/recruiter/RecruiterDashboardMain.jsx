@@ -11,7 +11,8 @@ import { useNavigate } from "react-router-dom";
 const RecruiterDashboardMain = () => {
   const navigate = useNavigate();
   const handleUploadClick = () => {
-    navigate("/upload-resume");
+    // navigate("/upload-resume");
+    navigate("/candidate-form");
   };
 
   const summaryCards = [
@@ -130,12 +131,41 @@ const RecruiterDashboardMain = () => {
   const [desc, setDesc] = useState("");
   const [showAll, setShowAll] = useState(false);
 
+  //Rec Profile session data
+
+  const [recruiter, setRecruiter] = useState({
+    recruiterId: "STTA01",
+    reportingTo: "Prakash Raj Raja",
+    designedIn: "HR Department",
+    joiningDate: "2023-06-15",
+    email: "recruiter@example.com",
+    mobile: "+91 9876543210",
+    profilePic: "/assets/recruiter.jpg",
+  });
+
+  const handleRemovePic = () => {
+    setRecruiter({ ...recruiter, profilePic: "" });
+  };
+
+  const handleChangePic = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const imageUrl = URL.createObjectURL(file);
+      setRecruiter({ ...recruiter, profilePic: imageUrl });
+    }
+  };
+
+  // ends...
+
   const statuses = [
-    "Processing",
+    "Shortlisted",
+    "In-Process",
     "Interview Scheduled",
+    "Interview On-Going",
+    "Final Round",
+    "HR Round",
     "Selected",
-    "Screened out",
-    "Rejected",
+    "Screened Out",
   ];
   const rejectionReasons = [
     "Skill mismatch",
@@ -150,7 +180,7 @@ const RecruiterDashboardMain = () => {
     : activeCandidates.slice(0, 10);
 
   const handleStatusChange = (cand, value) => {
-    if (value === "Rejected" || value === "Screened out") {
+    if (value === "Screened Out") {
       const confirmReject = window.confirm(
         `Are you sure you want to mark ${cand.name} as ${value}?`
       );
@@ -249,6 +279,71 @@ const RecruiterDashboardMain = () => {
           </button>
         </div>
 
+        {/* Rec Profile Session starts */}
+
+        <div className="bg-white dark:bg-gray-800 shadow p-6 rounded-lg w-full max-w-full mx-auto mt-6 mb-6 relative">
+          {/* Profile Picture */}
+          <div className="absolute right-6 top-1/2 transform -translate-y-1/2 flex flex-col items-center">
+            {recruiter.profilePic && (
+              <img
+                src={recruiter.profilePic}
+                alt="Profile"
+                className="w-32 h-32 rounded-full object-cover border"
+              />
+            )}
+            <div className="flex gap-2 mt-2">
+              <label className="text-xs text-blue-500 cursor-pointer">
+                Change
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleChangePic}
+                />
+              </label>
+              {recruiter.profilePic && (
+                <button
+                  onClick={handleRemovePic}
+                  className="text-xs text-red-500"
+                >
+                  Remove
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Info */}
+          <div className="mb-6">
+            <h2 className="text-xl font-semibold text-gray-800 dark:text-white mb-4">
+              Recruiter Profile
+            </h2>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-4 text-sm text-gray-700 dark:text-gray-300 mr-20">
+              <p>
+                <strong>ID:</strong> {recruiter.recruiterId}
+              </p>
+              <p>
+                <strong>Reporting To:</strong> {recruiter.reportingTo}
+              </p>
+              <p>
+                <strong>Designed In:</strong> {recruiter.designedIn}
+              </p>
+              <p>
+                <strong>Joining Date:</strong>{" "}
+                {new Date(recruiter.joiningDate).toLocaleDateString("en-IN")}
+              </p>
+              <p>
+                <strong>Email:</strong> {recruiter.email}
+              </p>
+              <p>
+                <strong>Mobile:</strong> {recruiter.mobile}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Rec Profile Session ends */}
+
         <div className="flex flex-col md:flex-row gap-6 mb-6">
           {/* LEFT - Summary Cards */}
           <div className="w-full md:w-2/3 grid grid-cols-1 sm:grid-cols-2 gap-6">
@@ -290,10 +385,18 @@ const RecruiterDashboardMain = () => {
           <div>
             <button
               onClick={handleUploadClick}
-              className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition"
+              className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition mr-5"
             >
               Upload Resume
             </button>
+
+            <button
+              onClick={() => navigate("/source-resume")}
+              className="mt-6 bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition"
+            >
+              Source Resume
+            </button>
+
             {/* <button
               onClick={() => navigate("/all-resumes")}
               className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition ml-4"
