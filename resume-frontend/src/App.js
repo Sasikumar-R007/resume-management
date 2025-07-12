@@ -24,12 +24,16 @@ import CandAuth from "./components/candidate/CandAuth";
 import CandDashboard from "./components/candidate/CandDashboard";
 import CandidateForm from "./components/candidate/CandidateForm";
 
-import ArchivedCandidates from "./components/ArchivedCandidates";
+import ArchivedCandidates from "./components/ArchivedPage";
 
 import AddJob from "./components/AddJob";
 import JobBoard from "./components/JobBoard";
 
-import SourceResume from "./components/common/SourceResume";
+import CandidateDetails from "./components/common/CandidateDetails";
+import JobDetails from "./components/common/JobDetails";
+
+import { SourceResume } from "./components/sourceresume/SourceResume";
+import CurrentRequirementsPage from "./components/CurrentRequirementsPage";
 
 function App() {
   return (
@@ -68,7 +72,11 @@ function App() {
         <Route path="/recruiter/add-job" element={<AddJob />} />
         <Route path="/job-board" element={<JobBoard />} />
 
+        <Route path="/candidate-details/:candidateId" element={<CandidateDetails />} />
+        <Route path="/job-details/:jobId" element={<JobDetails />} />
+
         <Route path="/source-resume" element={<SourceResume />} />
+        <Route path="/current-requirements" element={<CurrentRequirementsPage />} />
 
         {/* Add more routes as needed */}
       </Routes>

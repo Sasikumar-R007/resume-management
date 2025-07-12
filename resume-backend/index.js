@@ -149,6 +149,14 @@ app.post("/api/candidates/upload", upload.single("resume"), (req, res) => {
   res.status(200).json({ fileUrl });
 });
 
+// ==================== Recruiter Routes ====================
+const recruiterRoutes = require("./routes/recruiterRoutes");
+app.use("/api/recruiters", recruiterRoutes);
+
+// ==================== Team Leader Routes ====================
+const teamLeaderRoutes = require("./routes/teamLeaders");
+app.use("/api/team-leaders", teamLeaderRoutes);
+
 
 // ==================== Default Route ====================
 app.get("/", (req, res) => {

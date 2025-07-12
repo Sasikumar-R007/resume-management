@@ -16,7 +16,9 @@ const JobBoard = () => {
 
   const handleDelete = async (id) => {
     try {
-      await axios.delete(`${process.env.REACT_APP_API_BASE_URL}/api/jobs/${id}`);
+      await axios.delete(
+        `${process.env.REACT_APP_API_BASE_URL}/api/jobs/${id}`
+      );
       alert("Job deleted successfully!");
 
       // Optional: Refresh job list after delete
@@ -82,7 +84,7 @@ const JobBoard = () => {
               </div>
             </div>
 
-            <div className="flex gap-5">
+            <div className="flex flex-col gap-3 items-end">
               <button
                 onClick={() => handleEdit(job)}
                 className="text-blue-600 hover:text-blue-800"
@@ -94,7 +96,14 @@ const JobBoard = () => {
                 onClick={() => handleDelete(job._id)}
                 className="text-red-600 hover:text-red-800"
               >
-                <Trash2 size={20} /> {/* You can use any icon here */}
+                <Trash2 size={20} />
+              </button>
+
+              <button
+                onClick={() => navigate(`/job-details/${job.jobId}`)}
+                className="text-green-600 underline text-sm"
+              >
+                View Details
               </button>
             </div>
           </div>

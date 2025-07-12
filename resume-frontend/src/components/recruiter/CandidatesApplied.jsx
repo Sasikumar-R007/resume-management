@@ -125,6 +125,11 @@
 // export default RecruiterProfileSetup;
 
 import React, { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import { ExternalLink, ArrowRight } from "lucide-react";
+import { MdRemoveRedEye } from "react-icons/md"; 
+import { FaArrowRight } from "react-icons/fa";     // Font Awesome
+
 
 export default function CandidatesApplied() {
   const [candidates, setCandidates] = useState([]);
@@ -151,6 +156,7 @@ export default function CandidatesApplied() {
               <th className="p-2 border">Experience</th>
               <th className="p-2 border">Primary Skill</th>
               <th className="p-2 border">Resume</th>
+              <th className="p-2 border">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -165,9 +171,10 @@ export default function CandidatesApplied() {
                   <a
                     href={cand.linkedin}
                     target="_blank"
-                    className="text-blue-600 underline"
+                    rel="noreferrer"
+                    className="text-blue-600 inline-block"
                   >
-                    View
+                    <ExternalLink size={20} className="text-blue-600" />
                   </a>
                 </td>
                 <td className="border p-2">{cand.totalExperience}</td>
@@ -177,13 +184,21 @@ export default function CandidatesApplied() {
                     <a
                       href={cand.resumeLink}
                       target="_blank"
-                      className="text-blue-600 underline"
+                      rel="noreferrer"
+                      className="text-blue-600 inline-block"
                     >
-                      View Resume
+                      <MdRemoveRedEye size={20} className="text-blue-600" />  
                     </a>
                   ) : (
                     "N/A"
                   )}
+                </td>
+                <td className="border p-2">
+                  <Link to={`/candidate-details/${cand.candidateId}`}>
+                    <button className="text-blue-600 inline-block">
+                      <FaArrowRight size={18} className="text-blue-600 hover:scale-110 transition-transform duration-200" />
+                    </button>
+                  </Link>
                 </td>
               </tr>
             ))}

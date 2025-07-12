@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   FaBriefcase,
   FaUserCheck,
@@ -7,6 +7,7 @@ import {
   FaEdit,
 } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
+import { ClipboardList, AlertCircle, CheckCircle } from "lucide-react";
 
 const RecruiterDashboardMain = () => {
   const navigate = useNavigate();
@@ -18,16 +19,16 @@ const RecruiterDashboardMain = () => {
   const summaryCards = [
     {
       icon: <FaBriefcase size={28} className="text-black" />,
-      title: "Total Jobs Posted",
+      title: "Active jobs",
       count: 12,
-      subtitle: "Active jobs: 5",
+      subtitle: "Total Jobs Posted: 25",
       path: "/recruiter/total-jobs",
     },
     {
       icon: <FaUserCheck size={28} className="text-black" />,
-      title: "Candidates Applied",
-      count: 89,
-      subtitle: "New applications: 12",
+      title: "New applications:",
+      count: 12,
+      subtitle: "Candidates Applied: 82",
       path: "/recruiter/candidates-applied",
     },
     {
@@ -43,6 +44,15 @@ const RecruiterDashboardMain = () => {
       subtitle: "Pending: 1",
     },
   ];
+
+  const [recruiter, setRecruiter] = useState({});
+
+  useEffect(() => {
+    const stored = localStorage.getItem("recruiterProfile");
+    if (stored) {
+      setRecruiter(JSON.parse(stored));
+    }
+  }, []);
 
   const [activeCandidates, setActiveCandidates] = useState([
     {
@@ -133,15 +143,15 @@ const RecruiterDashboardMain = () => {
 
   //Rec Profile session data
 
-  const [recruiter, setRecruiter] = useState({
-    recruiterId: "STTA01",
-    reportingTo: "Prakash Raj Raja",
-    designedIn: "HR Department",
-    joiningDate: "2023-06-15",
-    email: "recruiter@example.com",
-    mobile: "+91 9876543210",
-    profilePic: "/assets/recruiter.jpg",
-  });
+  // const [recruiter, setRecruiter] = useState({
+  //   recruiterId: "STTA01",
+  //   reportingTo: "Prakash Raj Raja",
+  //   designedIn: "HR Department",
+  //   joiningDate: "2023-06-15",
+  //   email: "recruiter@example.com",
+  //   mobile: "+91 9876543210",
+  //   profilePic: "/assets/recruiter.jpg",
+  // });
 
   const handleRemovePic = () => {
     setRecruiter({ ...recruiter, profilePic: "" });
@@ -155,7 +165,32 @@ const RecruiterDashboardMain = () => {
     }
   };
 
+  const [confirmId, setConfirmId] = useState(null);
+
+  const handleMarkDone = (id) => {
+    setConfirmId(id);
+  };
+
+  const archiveRequirement = (id) => {
+    const req = activeRequirements.find((r) => r.id === id);
+    const updatedArchived = [
+      ...archivedRequirements,
+      { ...req, archivedAt: new Date() },
+    ];
+    const updatedActive = activeRequirements.filter((r) => r.id !== id);
+
+    setArchivedRequirements(updatedArchived);
+    setActiveRequirements(updatedActive);
+    localStorage.setItem(
+      "archivedRequirements",
+      JSON.stringify(updatedArchived)
+    );
+    setConfirmId(null);
+  };
+
   // ends...
+
+  const [showModal, setShowModal] = useState(false);
 
   const statuses = [
     "Shortlisted",
@@ -224,6 +259,42 @@ const RecruiterDashboardMain = () => {
     }
   };
 
+  const [activeRequirements, setActiveRequirements] = useState([
+    {
+      id: 1,
+      position: "Full Stack Engineer",
+      criticality: "Medium",
+      company: "StartupXYZ",
+      contactPerson: "David Wilson",
+      talentAdvisor: "Lisa Wang",
+    },
+    {
+      id: 2,
+      position: "Backend Developer",
+      criticality: "Low",
+      company: "DataTech Solutions",
+      contactPerson: "Tom Anderson",
+      talentAdvisor: "Lisa Wang",
+    },
+    {
+      id: 3,
+      position: "Data Scientist",
+      criticality: "High",
+      company: "AI Innovations",
+      contactPerson: "Robert Kim",
+      talentAdvisor: "Lisa Wang",
+    },
+    {
+      id: 4,
+      position: "Quality Assurance Engineer",
+      criticality: "Low",
+      company: "TestPro Solutions",
+      contactPerson: "Kevin Brown",
+      talentAdvisor: "Lisa Wang",
+    },
+  ]);
+  const [archivedRequirements, setArchivedRequirements] = useState([]);
+
   const handleSubmitReason = () => {
     if (!reason.trim()) {
       alert("Please enter a reason.");
@@ -262,7 +333,7 @@ const RecruiterDashboardMain = () => {
           {/* Left: Welcome Message */}
           <div>
             <h1 className="text-3xl font-bold mb-2 text-left">
-              Welcome to Your Recruiter Dashboard
+              Welcome {recruiter.name}
             </h1>
             <p className="text-gray-700 max-w-xl text-left">
               To get started, review your current jobs and candidates, or update
@@ -279,8 +350,7 @@ const RecruiterDashboardMain = () => {
           </button>
         </div>
 
-        {/* Rec Profile Session starts */}
-
+        {/* Recruiter Profile Section */}
         <div className="bg-white dark:bg-gray-800 shadow p-6 rounded-lg w-full max-w-full mx-auto mt-6 mb-6 relative">
           {/* Profile Picture */}
           <div className="absolute right-6 top-1/2 transform -translate-y-1/2 flex flex-col items-center">
@@ -312,25 +382,18 @@ const RecruiterDashboardMain = () => {
             </div>
           </div>
 
-          {/* Info */}
-          <div className="mb-6">
+          {/* Profile Info */}
+          <div className="mb-6 pr-40">
             <h2 className="text-xl font-semibold text-gray-800 dark:text-white mb-4">
               Recruiter Profile
             </h2>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-4 text-sm text-gray-700 dark:text-gray-300 mr-20">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-4 text-sm text-gray-700 dark:text-gray-300">
               <p>
                 <strong>ID:</strong> {recruiter.recruiterId}
               </p>
               <p>
-                <strong>Reporting To:</strong> {recruiter.reportingTo}
-              </p>
-              <p>
-                <strong>Designed In:</strong> {recruiter.designedIn}
-              </p>
-              <p>
-                <strong>Joining Date:</strong>{" "}
-                {new Date(recruiter.joiningDate).toLocaleDateString("en-IN")}
+                <strong>Name:</strong> {recruiter.name}
               </p>
               <p>
                 <strong>Email:</strong> {recruiter.email}
@@ -338,6 +401,22 @@ const RecruiterDashboardMain = () => {
               <p>
                 <strong>Mobile:</strong> {recruiter.mobile}
               </p>
+              <p>
+                <strong>Designation:</strong> {recruiter.designation}
+              </p>
+              <p>
+                <strong>Reporting To:</strong> {recruiter.reportingTo}
+              </p>
+              <p>
+                <strong>Joining Date:</strong>{" "}
+                {new Date(recruiter.joiningDate).toLocaleDateString("en-IN")}
+              </p>
+              {/* Optional: Show password change button */}
+              {/* <p>
+        <button className="text-blue-600 underline text-sm">
+          Change Password
+        </button>
+      </p> */}
             </div>
           </div>
         </div>
@@ -372,14 +451,129 @@ const RecruiterDashboardMain = () => {
             <h3 className="text-lg font-semibold mb-4 text-gray-800">
               Current Requirements
             </h3>
-            {/* Add list or data display here */}
-            <ul className="space-y-2 text-sm text-gray-700">
-              <li>Requirement 1: MSH passed by TL</li>
-              <li>Requirement 2: MSH pending</li>
-              {/* You can map dynamic data here too */}
-            </ul>
+            <div className="space-y-2 mt-4">
+              <div className="flex justify-between items-center bg-gray-100 px-4 py-4 rounded shadow-sm">
+                <div className="flex items-center gap-2">
+                  <ClipboardList className="text-blue-600 w-4 h-4" />
+                  <p className="text-sm text-gray-600">Assigned Requirements</p>
+                </div>
+                <h4 className="text-sm font-semibold text-gray-800">4</h4>
+              </div>
+
+              <div className="flex justify-between items-center bg-gray-100 px-4 py-4 rounded shadow-sm">
+                <div className="flex items-center gap-2">
+                  <AlertCircle className="text-red-600 w-4 h-4" />
+                  <p className="text-sm text-gray-600">High Priority</p>
+                </div>
+                <h4 className="text-sm font-semibold text-gray-800">1</h4>
+              </div>
+
+              <div className="flex justify-between items-center bg-gray-100 px-4 py-4 rounded shadow-sm">
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="text-green-600 w-4 h-4" />
+                  <p className="text-sm text-gray-600">Active Positions</p>
+                </div>
+                <h4 className="text-sm font-semibold text-gray-800">4</h4>
+              </div>
+            </div>
+
+            <button
+              onClick={() => setShowModal(true)}
+              className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            >
+              View All Requirements
+            </button>
           </div>
         </div>
+
+        {showModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50">
+            <div className="bg-white p-6 rounded-lg max-w-4xl w-full min-h-[80vh] overflow-y-auto">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-bold">Your Requirements</h2>
+                <button
+                  onClick={() => setShowModal(false)}
+                  className="text-red-500 font-bold text-lg"
+                >
+                  X
+                </button>
+              </div>
+              <p className="text-sm text-gray-500 mb-2">
+                Read-only view of requirements assigned to you for recruitment
+              </p>
+              <table className="min-w-full text-sm text-left border">
+                <thead className="bg-gray-100">
+                  <tr>
+                    <th className="p-2 border">Position</th>
+                    <th className="p-2 border">Criticality</th>
+                    <th className="p-2 border">Company</th>
+                    <th className="p-2 border">Contact Person</th>
+                    <th className="p-2 border">Talent Advisor</th>
+                    <th className="p-2 border">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {activeRequirements.map((req) => (
+                    <tr key={req.id} className="border">
+                      <td className="p-2 text-blue-600 font-medium">
+                        {req.position}
+                      </td>
+                      <td className="p-2">
+                        <span
+                          className={`px-2 py-1 rounded text-xs ${
+                            req.criticality === "High"
+                              ? "bg-red-100 text-red-700"
+                              : req.criticality === "Medium"
+                              ? "bg-blue-100 text-blue-700"
+                              : "bg-gray-200 text-gray-700"
+                          }`}
+                        >
+                          {req.criticality}
+                        </span>
+                      </td>
+                      <td className="p-2">{req.company}</td>
+                      <td className="p-2">{req.contactPerson}</td>
+                      <td className="p-2">{req.talentAdvisor}</td>
+                      <td className="p-2 border text-center">
+                        <button
+                          onClick={() => handleMarkDone(req.id)}
+                          className="text-xs bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded"
+                        >
+                          Mark Done
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {confirmId && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+            <div className="bg-white p-4 rounded shadow-lg max-w-sm w-full">
+              <h3 className="text-lg font-semibold mb-2">Are you sure?</h3>
+              <p className="text-sm text-gray-600 mb-4">
+                Do you want to mark this requirement as completed?
+              </p>
+              <div className="flex justify-end gap-2">
+                <button
+                  onClick={() => setConfirmId(null)}
+                  className="px-3 py-1 text-gray-700 hover:text-black"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => archiveRequirement(confirmId)}
+                  className="px-4 py-1 bg-green-600 text-white rounded hover:bg-green-700"
+                >
+                  Confirm
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="flex justify-between items-center mb-3">
           <div>
@@ -571,9 +765,9 @@ const RecruiterDashboardMain = () => {
         <div className="bg-white p-6 rounded-lg shadow max-w-full mx-auto">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-2xl font-semibold">Recent Activity</h2>
-            <button className="text-blue-600 hover:underline flex items-center gap-1">
+            {/* <button className="text-blue-600 hover:underline flex items-center gap-1">
               <FaEdit /> Edit Profile
-            </button>
+            </button> */}
           </div>
           <ul className="list-disc list-inside text-gray-700">
             {recentActivities.map((item, idx) => (

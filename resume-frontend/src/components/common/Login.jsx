@@ -1,6 +1,8 @@
+// src/pages/Login.jsx
 import React, { useState } from "react";
 import { FaUserTie, FaUsersCog, FaUserShield } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
 const roles = [
   { id: "recruiter", label: "Recruiter", icon: <FaUserTie size={24} /> },
@@ -14,28 +16,62 @@ const EmpAuth = () => {
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+
     if (!selectedRole) {
       alert("Please select a role!");
       return;
     }
 
-    switch (selectedRole) {
-      case "recruiter":
-        navigate("/recruiter/home");
-        break;
-      case "teamlead":
-        navigate("/team-leader/home");
-        break;
-      case "admin":
-        navigate("/admin");
-        break;
-      default:
-        alert("Invalid role selected!");
-    }
+    try {
+      if (selectedRole === "recruiter") {
+        const res = await axios.post(
+          `${process.env.REACT_APP_API_BASE_URL}/api/recruiters/login`,
+          { email, password }
+        );
 
-    console.log({ role: selectedRole, email, password });
+        const recruiterData = res.data.recruiter;
+
+        if (recruiterData) {
+          localStorage.setItem("userRole", "recruiter");
+          localStorage.setItem("userEmail", recruiterData.email);
+          localStorage.setItem(
+            "recruiterProfile",
+            JSON.stringify(recruiterData)
+          );
+          navigate("/recruiter/home");
+        } else {
+          alert("Recruiter not found or invalid credentials");
+        }
+      } else if (selectedRole === "teamlead") {
+        const res = await axios.post(
+          `${process.env.REACT_APP_API_BASE_URL}/api/team-leaders/login`,
+          { email, password }
+        );
+
+        const teamLeadData = res.data.teamLeader;
+
+        if (teamLeadData) {
+          localStorage.setItem("userRole", "teamlead");
+          localStorage.setItem("userEmail", teamLeadData.email);
+          localStorage.setItem(
+            "teamLeaderProfile",
+            JSON.stringify(teamLeadData)
+          );
+          navigate("/team-leader/home");
+        } else {
+          alert("Team Leader not found or invalid credentials");
+        }
+      } else if (selectedRole === "admin") {
+        localStorage.setItem("userRole", "admin");
+        localStorage.setItem("userEmail", email);
+        navigate("/admin");
+      }
+    } catch (error) {
+      console.error("Login error:", error);
+      alert("Invalid credentials or login error.");
+    }
   };
 
   return (
@@ -43,7 +79,7 @@ const EmpAuth = () => {
       {/* Left Illustration */}
       <div className="hidden md:flex w-1/2 bg-gray-100 items-center justify-center border-r-2 border-gray-200">
         <img
-          src="/assets/signup.jpg" // 🔁 Change to your SVG/illustration
+          src="/assets/signup.jpg"
           alt="Recruitment Illustration"
           className="w-full h-full object-cover"
         />
@@ -150,8 +186,6 @@ const EmpAuth = () => {
 };
 
 export default EmpAuth;
-
-
 
 // import React, { useState } from "react";
 // import { useNavigate } from "react-router-dom";

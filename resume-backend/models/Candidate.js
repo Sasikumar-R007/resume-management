@@ -1,6 +1,13 @@
 const mongoose = require("mongoose");
 
 const candidateSchema = new mongoose.Schema({
+  candidateId: {
+    type: String,
+    unique: true,
+    required: true
+  },
+  
+
   firstName: String,
   lastName: String,
   mobile: String,

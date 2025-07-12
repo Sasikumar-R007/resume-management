@@ -272,6 +272,12 @@ const CandidateDashboard = () => {
               <div className="flex flex-col md:flex-row gap-6">
                 {/* Left: Profile Details */}
                 <div className="md:w-2/3 space-y-2 text-sm">
+                <div className="flex">
+                    <span className="w-48 font-semibold">Candidate ID:</span>
+                    <span>
+                      {profile.candidateId}
+                    </span>
+                  </div>
                   <div className="flex">
                     <span className="w-48 font-semibold">Name:</span>
                     <span>
@@ -489,6 +495,14 @@ const CandidateDashboard = () => {
                       </div>
                     ))}
                   </div>
+                  {/* <div className="mt-4">
+                    <button
+                      onClick={() => navigate("/candidate-details")}
+                      className="text-sm bg-blue-600 hover:bg-blue-700 text-white px-4 py-1 rounded"
+                    >
+                      View Candidate
+                    </button>
+                  </div> */}
                 </div>
 
                 {/* Skill Section */}

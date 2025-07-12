@@ -28,14 +28,27 @@ router.post("/upload", upload.single("resume"), (req, res) => {
 // =================== POST: New Candidate ===================
 router.post("/", async (req, res) => {
   try {
+    // Step 1: Generate Candidate ID
+    const year = new Date().getFullYear().toString().slice(-2); // "25"
+    const count = await Candidate.countDocuments({
+      createdAt: {
+        $gte: new Date(`${new Date().getFullYear()}-01-01T00:00:00Z`),
+        $lte: new Date(),
+      },
+    });
+    const serial = (count + 1).toString().padStart(4, "0"); // "0001"
+    const candidateId = `STC${year}${serial}`; // e.g., STC250001
+
+    // Step 2: Save new candidate
     const newCandidate = new Candidate({
       ...req.body,
-      resumeLink: req.body.resumeLink || "", // ✅ Ensure resume link is saved
+      candidateId,
       appliedBy: "candidate",
+      resumeLink: req.body.resumeLink || "",
     });
 
     await newCandidate.save();
-    res.status(201).json({ message: "Candidate profile saved successfully" });
+    res.status(201).json({ message: "Candidate profile saved", candidateId });
   } catch (error) {
     console.error("Error saving candidate:", error);
     res.status(500).json({ error: "Server error" });
@@ -78,7 +91,9 @@ router.put("/profile-image", async (req, res) => {
       return res.status(404).json({ message: "Candidate not found" });
     }
 
-    res.status(200).json({ message: "Profile image updated", candidate: updatedCandidate });
+    res
+      .status(200)
+      .json({ message: "Profile image updated", candidate: updatedCandidate });
   } catch (error) {
     console.error("Error updating profile image:", error);
     res.status(500).json({ error: "Server error" });
@@ -105,9 +120,13 @@ router.patch("/:id/archive", async (req, res) => {
       return res.status(404).json({ message: "Candidate not found" });
     }
 
-    res.status(200).json({ message: "Candidate archived successfully", data: updated });
+    res
+      .status(200)
+      .json({ message: "Candidate archived successfully", data: updated });
   } catch (err) {
-    res.status(500).json({ message: "Error archiving candidate", error: err.message });
+    res
+      .status(500)
+      .json({ message: "Error archiving candidate", error: err.message });
   }
 });
 
@@ -133,3 +152,21 @@ router.patch("/:id/restore", async (req, res) => {
 });
 
 module.exports = router;
+
+// =================== GET: Candidate by candidateId ===================
+router.get("/:candidateId", async (req, res) => {
+  try {
+    const { candidateId } = req.params;
+    const candidate = await Candidate.findOne({ candidateId });
+
+    if (!candidate) {
+      return res.status(404).json({ message: "Candidate not found" });
+    }
+
+    res.status(200).json(candidate);
+  } catch (error) {
+    console.error("Error fetching candidate:", error);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
