@@ -8,17 +8,23 @@ const JobBoard = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    const API_BASE_URL =
+      process.env.REACT_APP_API_BASE_URL ||
+      "https://resume-mang-backend-22bv9x6fs-sasikumar-rs-projects-68a78fda.vercel.app";
+
     axios
-      .get(`${process.env.REACT_APP_API_BASE_URL}/api/jobs`)
+      .get(`${API_BASE_URL}/api/jobs`)
       .then((res) => setJobs(res.data))
       .catch((err) => console.error("Error fetching jobs:", err));
   }, []);
 
   const handleDelete = async (id) => {
     try {
-      await axios.delete(
-        `${process.env.REACT_APP_API_BASE_URL}/api/jobs/${id}`
-      );
+      const API_BASE_URL =
+        process.env.REACT_APP_API_BASE_URL ||
+        "https://resume-mang-backend-22bv9x6fs-sasikumar-rs-projects-68a78fda.vercel.app";
+
+      await axios.delete(`${API_BASE_URL}/api/jobs/${id}`);
       alert("Job deleted successfully!");
 
       // Optional: Refresh job list after delete

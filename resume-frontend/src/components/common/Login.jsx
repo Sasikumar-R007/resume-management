@@ -24,12 +24,17 @@ const EmpAuth = () => {
       return;
     }
 
+    // Define the API base URL - use the deployed backend URL
+    const API_BASE_URL =
+      process.env.REACT_APP_API_BASE_URL ||
+      "https://resume-mang-backend-22bv9x6fs-sasikumar-rs-projects-68a78fda.vercel.app";
+
     try {
       if (selectedRole === "recruiter") {
-        const res = await axios.post(
-          `${process.env.REACT_APP_API_BASE_URL}/api/recruiters/login`,
-          { email, password }
-        );
+        const res = await axios.post(`${API_BASE_URL}/api/recruiters/login`, {
+          email,
+          password,
+        });
 
         const recruiterData = res.data.recruiter;
 
@@ -45,10 +50,10 @@ const EmpAuth = () => {
           alert("Recruiter not found or invalid credentials");
         }
       } else if (selectedRole === "teamlead") {
-        const res = await axios.post(
-          `${process.env.REACT_APP_API_BASE_URL}/api/team-leaders/login`,
-          { email, password }
-        );
+        const res = await axios.post(`${API_BASE_URL}/api/team-leaders/login`, {
+          email,
+          password,
+        });
 
         const teamLeadData = res.data.teamLeader;
 
@@ -64,13 +69,36 @@ const EmpAuth = () => {
           alert("Team Leader not found or invalid credentials");
         }
       } else if (selectedRole === "admin") {
-        localStorage.setItem("userRole", "admin");
-        localStorage.setItem("userEmail", email);
-        navigate("/admin");
+        // For admin, we'll use a simple check - you can modify this based on your admin authentication needs
+        // For now, we'll use a basic check - you might want to create an admin API endpoint later
+        if (email === "admin@example.com" && password === "admin123") {
+          localStorage.setItem("userRole", "admin");
+          localStorage.setItem("userEmail", email);
+          navigate("/admin");
+        } else {
+          alert("Invalid admin credentials");
+        }
       }
     } catch (error) {
       console.error("Login error:", error);
-      alert("Invalid credentials or login error.");
+      if (error.response) {
+        // Server responded with error status
+        if (error.response.status === 401) {
+          alert("Invalid credentials. Please check your email and password.");
+        } else if (error.response.status === 404) {
+          alert("User not found. Please check your email.");
+        } else {
+          alert(
+            `Login failed: ${error.response.data.message || "Server error"}`
+          );
+        }
+      } else if (error.request) {
+        // Network error
+        alert("Network error. Please check your internet connection.");
+      } else {
+        // Other error
+        alert("Login error. Please try again.");
+      }
     }
   };
 

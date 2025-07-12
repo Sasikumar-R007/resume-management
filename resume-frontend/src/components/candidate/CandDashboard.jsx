@@ -46,8 +46,12 @@ const CandidateDashboard = () => {
 
       try {
         // 2. Update the backend with the image
+        const API_BASE_URL =
+          process.env.REACT_APP_API_BASE_URL ||
+          "https://resume-mang-backend-22bv9x6fs-sasikumar-rs-projects-68a78fda.vercel.app";
+
         const res = await axios.put(
-          `${process.env.REACT_APP_API_BASE_URL}/api/candidates/profile-image`,
+          `${API_BASE_URL}/api/candidates/profile-image`,
           {
             email: profile.email, // assuming email is used to identify user
             profileImage: base64Image,
@@ -67,8 +71,12 @@ const CandidateDashboard = () => {
 
   const handleRemoveImage = async () => {
     try {
+      const API_BASE_URL =
+        process.env.REACT_APP_API_BASE_URL ||
+        "https://resume-mang-backend-22bv9x6fs-sasikumar-rs-projects-68a78fda.vercel.app";
+
       const res = await axios.put(
-        `${process.env.REACT_APP_API_BASE_URL}/api/candidates/profile-image`,
+        `${API_BASE_URL}/api/candidates/profile-image`,
         {
           email: profile.email,
           profileImage: "", // remove image
@@ -165,9 +173,11 @@ const CandidateDashboard = () => {
   useEffect(() => {
     const fetchJobs = async () => {
       try {
-        const res = await axios.get(
-          `${process.env.REACT_APP_API_BASE_URL}/api/jobs`
-        );
+        const API_BASE_URL =
+          process.env.REACT_APP_API_BASE_URL ||
+          "https://resume-mang-backend-22bv9x6fs-sasikumar-rs-projects-68a78fda.vercel.app";
+
+        const res = await axios.get(`${API_BASE_URL}/api/jobs`);
         setJobs(res.data);
       } catch (err) {
         console.error("Error fetching jobs", err);
@@ -272,11 +282,9 @@ const CandidateDashboard = () => {
               <div className="flex flex-col md:flex-row gap-6">
                 {/* Left: Profile Details */}
                 <div className="md:w-2/3 space-y-2 text-sm">
-                <div className="flex">
+                  <div className="flex">
                     <span className="w-48 font-semibold">Candidate ID:</span>
-                    <span>
-                      {profile.candidateId}
-                    </span>
+                    <span>{profile.candidateId}</span>
                   </div>
                   <div className="flex">
                     <span className="w-48 font-semibold">Name:</span>

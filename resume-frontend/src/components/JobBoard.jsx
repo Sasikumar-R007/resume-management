@@ -5,10 +5,14 @@ const JobBoard = () => {
   const [jobs, setJobs] = useState([]);
 
   useEffect(() => {
-  axios.get(`${process.env.REACT_APP_API_BASE_URL}/api/jobs`).then((res) => {
-    setJobs(res.data);
-  });
-}, []);
+    const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || "https://resume-mang-backend-22bv9x6fs-sasikumar-rs-projects-68a78fda.vercel.app";
+    
+    axios.get(`${API_BASE_URL}/api/jobs`).then((res) => {
+      setJobs(res.data);
+    }).catch((error) => {
+      console.error("Error fetching jobs:", error);
+    });
+  }, []);
 
 
   return (
