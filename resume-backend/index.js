@@ -157,7 +157,6 @@ app.use("/api/recruiters", recruiterRoutes);
 const teamLeaderRoutes = require("./routes/teamLeaders");
 app.use("/api/team-leaders", teamLeaderRoutes);
 
-
 // ==================== Default Route ====================
 app.get("/", (req, res) => {
   res.send("🟢 Resume & Job Backend is running");

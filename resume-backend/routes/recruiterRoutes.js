@@ -2,6 +2,17 @@ const express = require("express");
 const router = express.Router();
 const Recruiter = require("../models/Recruiter");
 
+// 🔹 GET all recruiters
+router.get("/", async (req, res) => {
+  try {
+    const recruiters = await Recruiter.find();
+    res.json(recruiters);
+  } catch (error) {
+    console.error("Error fetching recruiters:", error);
+    res.status(500).json({ message: "Failed to fetch recruiters" });
+  }
+});
+
 // 🔹 Login / Get Recruiter by Email
 router.post("/login", async (req, res) => {
   const { email, password } = req.body;

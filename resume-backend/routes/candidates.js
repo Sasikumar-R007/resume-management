@@ -5,15 +5,13 @@ const multer = require("multer");
 const path = require("path");
 
 // =================== Multer Config ===================
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, "uploads/"),
-  filename: (req, file, cb) => {
-    const uniqueName = Date.now() + "-" + file.originalname;
-    cb(null, uniqueName);
+// For Vercel serverless, use memory storage
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB limit
   },
 });
-
-const upload = multer({ storage });
 
 // =================== Upload Resume ===================
 router.post("/upload", upload.single("resume"), (req, res) => {
@@ -21,8 +19,16 @@ router.post("/upload", upload.single("resume"), (req, res) => {
     return res.status(400).json({ message: "No file uploaded" });
   }
 
-  const fileUrl = `${process.env.SERVER_BASE_URL}/uploads/${req.file.filename}`;
-  res.status(200).json({ fileUrl });
+  // For serverless, return file info instead of URL
+  res.status(200).json({
+    message: "File uploaded successfully",
+    fileInfo: {
+      originalname: req.file.originalname,
+      size: req.file.size,
+      mimetype: req.file.mimetype,
+    },
+    note: "File processed in memory (serverless environment)",
+  });
 });
 
 // =================== POST: New Candidate ===================
@@ -169,4 +175,3 @@ router.get("/:candidateId", async (req, res) => {
     res.status(500).json({ error: "Server error" });
   }
 });
-

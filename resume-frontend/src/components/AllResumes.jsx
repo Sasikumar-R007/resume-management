@@ -15,7 +15,9 @@ const AllResumes = () => {
 
   return (
     <div className="max-w-5xl mx-auto mt-10 p-4">
-      <h2 className="text-2xl font-bold mb-6 text-center">All Uploaded Resumes</h2>
+      <h2 className="text-2xl font-bold mb-6 text-center">
+        All Uploaded Resumes
+      </h2>
 
       {/* Stats Boxes */}
       <div className="flex justify-around mb-6">
@@ -51,7 +53,7 @@ const AllResumes = () => {
               <td className="border px-3 py-2 text-center">
                 {res.files && res.files.length > 0 ? (
                   <a
-                    href={`${process.env.REACT_APP_API_BASE_URL}/api/uploads/${res.files[0]}`}
+                    href={res.files[0].fileUrl}
                     target="_blank"
                     rel="noreferrer"
                     className="text-blue-600 underline"

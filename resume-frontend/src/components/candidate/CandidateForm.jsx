@@ -28,7 +28,7 @@ export default function MultiStepCandidateForm({ initialData = {}, onSave }) {
         { method: "POST", body: resumeData }
       );
       const result = await res.json();
-      return result.fileUrl;
+      return result.fileUrl || "";
     } catch (err) {
       console.error("Resume upload failed:", err);
       return "";
@@ -37,8 +37,17 @@ export default function MultiStepCandidateForm({ initialData = {}, onSave }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Check if primary email is filled
+    if (!formData.primaryEmail || formData.primaryEmail.trim() === "") {
+      alert("Please fill in your Primary Email address");
+      return;
+    }
+
     const resumeLink = await handleResumeUpload();
     const finalData = { ...formData, resumeLink };
+
+    console.log("Sending candidate data:", finalData);
 
     try {
       if (onSave) {
@@ -57,7 +66,17 @@ export default function MultiStepCandidateForm({ initialData = {}, onSave }) {
           setProfile(finalData);
           setStep(steps.length + 1);
           setTimeout(() => navigate("/candidate-dashboard"), 2000);
-        } else console.error("Failed to submit candidate data");
+        } else {
+          const errorData = await response.json();
+          console.error("Failed to submit candidate data:", errorData);
+          alert(
+            `Error: ${
+              errorData.message ||
+              errorData.error ||
+              "Failed to submit candidate data"
+            }`
+          );
+        }
       }
     } catch (err) {
       console.error("Submission error:", err);
