@@ -10,7 +10,7 @@ const JobBoard = () => {
   useEffect(() => {
     const API_BASE_URL =
       process.env.REACT_APP_API_BASE_URL ||
-      "https://resume-mang-backend-22bv9x6fs-sasikumar-rs-projects-68a78fda.vercel.app";
+      "https://resume-mang-backend.vercel.app";
 
     axios
       .get(`${API_BASE_URL}/api/jobs`)
@@ -22,7 +22,7 @@ const JobBoard = () => {
     try {
       const API_BASE_URL =
         process.env.REACT_APP_API_BASE_URL ||
-        "https://resume-mang-backend-22bv9x6fs-sasikumar-rs-projects-68a78fda.vercel.app";
+        "https://resume-mang-backend.vercel.app";
 
       await axios.delete(`${API_BASE_URL}/api/jobs/${id}`);
       alert("Job deleted successfully!");

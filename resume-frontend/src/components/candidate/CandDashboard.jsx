@@ -48,7 +48,7 @@ const CandidateDashboard = () => {
         // 2. Update the backend with the image
         const API_BASE_URL =
           process.env.REACT_APP_API_BASE_URL ||
-          "https://resume-mang-backend-22bv9x6fs-sasikumar-rs-projects-68a78fda.vercel.app";
+          "https://resume-mang-backend.vercel.app";
 
         const res = await axios.put(
           `${API_BASE_URL}/api/candidates/profile-image`,
@@ -73,7 +73,7 @@ const CandidateDashboard = () => {
     try {
       const API_BASE_URL =
         process.env.REACT_APP_API_BASE_URL ||
-        "https://resume-mang-backend-22bv9x6fs-sasikumar-rs-projects-68a78fda.vercel.app";
+        "https://resume-mang-backend.vercel.app";
 
       const res = await axios.put(
         `${API_BASE_URL}/api/candidates/profile-image`,
@@ -175,7 +175,7 @@ const CandidateDashboard = () => {
       try {
         const API_BASE_URL =
           process.env.REACT_APP_API_BASE_URL ||
-          "https://resume-mang-backend-22bv9x6fs-sasikumar-rs-projects-68a78fda.vercel.app";
+          "https://resume-mang-backend.vercel.app";
 
         const res = await axios.get(`${API_BASE_URL}/api/jobs`);
         setJobs(res.data);

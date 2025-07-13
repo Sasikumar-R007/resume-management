@@ -36,23 +36,10 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // ==================== MongoDB Connection ====================
-const connectDB = async () => {
-  try {
-    const conn = await mongoose.connect(process.env.MONGO_URI, {
-      serverSelectionTimeoutMS: 5000, // Timeout after 5s instead of 30s
-      socketTimeoutMS: 45000, // Close sockets after 45s
-    });
-    console.log("✅ MongoDB connected");
-  } catch (error) {
-    console.error("❌ MongoDB connection error:", error.message);
-    console.log("💡 Make sure to:");
-    console.log("   1. Check your MONGO_URI environment variable");
-    console.log("   2. Whitelist Vercel IPs in MongoDB Atlas");
-    console.log("   3. Use correct connection string format");
-  }
-};
+const connectDB = require("./db");
 
-connectDB();
+// Connect to MongoDB
+connectDB().catch(console.error);
 
 // ==================== Multer Config ====================
 const storage = multer.diskStorage({
@@ -156,10 +143,10 @@ app.post("/api/candidates/upload", upload.single("resume"), (req, res) => {
   }
 
   // For Vercel deployment, return file info instead of URL
-  res.status(200).json({ 
+  res.status(200).json({
     fileUrl: `uploads/${req.file.filename}`,
     message: "File uploaded successfully",
-    filename: req.file.filename
+    filename: req.file.filename,
   });
 });
 
@@ -296,9 +283,42 @@ app.post("/api/seed", async (req, res) => {
   }
 });
 
-// ==================== Default Route ====================
+// ==================== Health Check Route ====================
 app.get("/", (req, res) => {
   res.send("🟢 Resume & Job Backend is running");
+});
+
+app.get("/health", async (req, res) => {
+  try {
+    // Check MongoDB connection
+    const dbState = mongoose.connection.readyState;
+    const dbStatus = {
+      0: "disconnected",
+      1: "connected", 
+      2: "connecting",
+      3: "disconnecting"
+    };
+    
+    res.json({
+      status: "ok",
+      timestamp: new Date().toISOString(),
+      database: {
+        status: dbStatus[dbState] || "unknown",
+        readyState: dbState
+      },
+      environment: {
+        nodeEnv: process.env.NODE_ENV || "development",
+        hasMongoUri: !!process.env.MONGO_URI,
+        hasMongoUrl: !!process.env.MONGO_URL
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: "error",
+      message: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
 });
 
 // ==================== Start Server ====================

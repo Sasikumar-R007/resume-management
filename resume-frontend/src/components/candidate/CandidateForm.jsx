@@ -24,7 +24,10 @@ export default function MultiStepCandidateForm({ initialData = {}, onSave }) {
 
     try {
       const res = await fetch(
-        `${process.env.REACT_APP_API_BASE_URL}/api/candidates/upload`,
+        `${
+          process.env.REACT_APP_API_BASE_URL ||
+          "https://resume-mang-backend.vercel.app"
+        }/api/candidates/upload`,
         { method: "POST", body: resumeData }
       );
       const result = await res.json();
@@ -55,7 +58,10 @@ export default function MultiStepCandidateForm({ initialData = {}, onSave }) {
         onSave(finalData);
       } else {
         const response = await fetch(
-          `${process.env.REACT_APP_API_BASE_URL}/api/candidates`,
+          `${
+            process.env.REACT_APP_API_BASE_URL ||
+            "https://resume-mang-backend.vercel.app"
+          }/api/candidates`,
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },

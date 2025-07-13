@@ -1,5 +1,6 @@
 const express = require("express");
 const router = express.Router();
+const mongoose = require("mongoose");
 const TeamLeader = require("../models/teamLeader");
 
 // Add a new team leader (for seeding or admin use)
@@ -21,6 +22,15 @@ router.post("/login", async (req, res) => {
     const { email, password } = req.body;
   
     try {
+      // Check if database is connected
+      if (mongoose.connection.readyState !== 1) {
+        console.error("Database not connected. ReadyState:", mongoose.connection.readyState);
+        return res.status(500).json({
+          message: "Database connection not available. Please try again.",
+          error: "Database connection issue"
+        });
+      }
+
       const teamLeader = await TeamLeader.findOne({ email });
   
       if (!teamLeader || teamLeader.password !== password) {
@@ -30,7 +40,31 @@ router.post("/login", async (req, res) => {
       res.status(200).json({ teamLeader });
     } catch (err) {
       console.error("Login error:", err);
-      res.status(500).json({ message: "Server error during login" });
+      
+      // Handle specific MongoDB errors
+      if (err.name === "MongooseError" || err.name === "MongoError") {
+        if (err.message.includes("buffering timed out")) {
+          return res.status(500).json({
+            message: "Database connection timeout. Please check MongoDB Atlas configuration.",
+            error: "MongoDB connection timeout"
+          });
+        } else if (err.message.includes("ECONNREFUSED")) {
+          return res.status(500).json({
+            message: "Cannot connect to database. Please check your MongoDB Atlas settings.",
+            error: "Database connection refused"
+          });
+        } else if (err.message.includes("ENOTFOUND")) {
+          return res.status(500).json({
+            message: "Database host not found. Please verify your MongoDB connection string.",
+            error: "Database host not found"
+          });
+        }
+      }
+      
+      res.status(500).json({ 
+        message: "Server error during login",
+        error: err.message 
+      });
     }
   });
   

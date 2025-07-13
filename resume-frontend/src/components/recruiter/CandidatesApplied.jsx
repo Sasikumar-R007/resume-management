@@ -135,7 +135,7 @@ export default function CandidatesApplied() {
   const [candidates, setCandidates] = useState([]);
 
   useEffect(() => {
-    fetch(`${process.env.REACT_APP_API_BASE_URL}/api/candidates`)
+          fetch(`${process.env.REACT_APP_API_BASE_URL || "https://resume-mang-backend.vercel.app"}/api/candidates`)
       .then((res) => res.json())
       .then((data) => setCandidates(data))
       .catch((err) => console.error("Error:", err));

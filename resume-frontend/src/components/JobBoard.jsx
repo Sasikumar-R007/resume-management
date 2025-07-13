@@ -5,7 +5,7 @@ const JobBoard = () => {
   const [jobs, setJobs] = useState([]);
 
   useEffect(() => {
-    const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || "https://resume-mang-backend-22bv9x6fs-sasikumar-rs-projects-68a78fda.vercel.app";
+    const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || "https://resume-mang-backend.vercel.app";
     
     axios.get(`${API_BASE_URL}/api/jobs`).then((res) => {
       setJobs(res.data);

@@ -7,7 +7,7 @@ export default function JobDetails() {
   const [job, setJob] = useState(null);
 
   useEffect(() => {
-    fetch(`${process.env.REACT_APP_API_BASE_URL}/api/jobs/${jobId}`)
+    fetch(`${process.env.REACT_APP_API_BASE_URL || "https://resume-mang-backend.vercel.app"}/api/jobs/${jobId}`)
       .then((res) => res.json())
       .then((data) => setJob(data))
       .catch((err) => console.error("Error fetching job:", err));

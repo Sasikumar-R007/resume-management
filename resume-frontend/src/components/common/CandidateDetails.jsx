@@ -6,7 +6,7 @@ export default function CandidateDetails() {
   const [data, setData] = useState(null);
 
   useEffect(() => {
-    fetch(`${process.env.REACT_APP_API_BASE_URL}/api/candidates/${candidateId}`)
+    fetch(`${process.env.REACT_APP_API_BASE_URL || "https://resume-mang-backend.vercel.app"}/api/candidates/${candidateId}`)
       .then((res) => res.json())
       .then((data) => setData(data))
       .catch((err) => console.error("Error fetching candidate:", err));
