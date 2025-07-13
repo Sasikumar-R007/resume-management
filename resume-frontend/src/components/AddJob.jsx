@@ -39,9 +39,7 @@ const AddJob = () => {
     };
 
     try {
-      const API_BASE_URL =
-        process.env.REACT_APP_API_BASE_URL ||
-        "https://resume-mang-backend.vercel.app";
+      const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
       const res = await axios.post(`${API_BASE_URL}/api/jobs`, jobData);
       alert("Job added successfully!");

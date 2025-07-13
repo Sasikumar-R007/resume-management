@@ -8,9 +8,7 @@ const JobBoard = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const API_BASE_URL =
-      process.env.REACT_APP_API_BASE_URL ||
-      "https://resume-mang-backend.vercel.app";
+    const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
     axios
       .get(`${API_BASE_URL}/api/jobs`)
@@ -20,9 +18,7 @@ const JobBoard = () => {
 
   const handleDelete = async (id) => {
     try {
-      const API_BASE_URL =
-        process.env.REACT_APP_API_BASE_URL ||
-        "https://resume-mang-backend.vercel.app";
+      const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
       await axios.delete(`${API_BASE_URL}/api/jobs/${id}`);
       alert("Job deleted successfully!");

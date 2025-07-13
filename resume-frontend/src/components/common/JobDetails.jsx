@@ -7,14 +7,18 @@ export default function JobDetails() {
   const [job, setJob] = useState(null);
 
   useEffect(() => {
-    fetch(`${process.env.REACT_APP_API_BASE_URL || "https://resume-mang-backend.vercel.app"}/api/jobs/${jobId}`)
+    fetch(`${process.env.REACT_APP_API_BASE_URL}/api/jobs/${jobId}`)
       .then((res) => res.json())
       .then((data) => setJob(data))
       .catch((err) => console.error("Error fetching job:", err));
   }, [jobId]);
 
   if (!job) {
-    return <div className="text-center text-gray-500 mt-10">Loading job details...</div>;
+    return (
+      <div className="text-center text-gray-500 mt-10">
+        Loading job details...
+      </div>
+    );
   }
 
   const Section = ({ title, children }) => (
@@ -27,7 +31,9 @@ export default function JobDetails() {
   const Field = ({ label, value }) => (
     <div>
       <label className="block text-sm font-medium text-gray-500">{label}</label>
-      <div className="mt-1 px-4 py-2 bg-gray-100 rounded text-gray-800">{value || "—"}</div>
+      <div className="mt-1 px-4 py-2 bg-gray-100 rounded text-gray-800">
+        {value || "—"}
+      </div>
     </div>
   );
 
@@ -44,12 +50,21 @@ export default function JobDetails() {
         </Section>
 
         <Section title="Responsibilities">
-          <Field label="Key Responsibilities" value={job.keyResponsibilities?.join(", ")} />
+          <Field
+            label="Key Responsibilities"
+            value={job.keyResponsibilities?.join(", ")}
+          />
         </Section>
 
         <Section title="Qualifications">
-          <Field label="Must Have" value={job.mustHaveQualifications?.join(", ")} />
-          <Field label="Nice to Have" value={job.niceToHaveQualifications?.join(", ")} />
+          <Field
+            label="Must Have"
+            value={job.mustHaveQualifications?.join(", ")}
+          />
+          <Field
+            label="Nice to Have"
+            value={job.niceToHaveQualifications?.join(", ")}
+          />
         </Section>
 
         <Section title="Other Info">

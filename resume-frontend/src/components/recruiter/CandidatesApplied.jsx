@@ -127,15 +127,14 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { ExternalLink, ArrowRight } from "lucide-react";
-import { MdRemoveRedEye } from "react-icons/md"; 
-import { FaArrowRight } from "react-icons/fa";     // Font Awesome
-
+import { MdRemoveRedEye } from "react-icons/md";
+import { FaArrowRight } from "react-icons/fa"; // Font Awesome
 
 export default function CandidatesApplied() {
   const [candidates, setCandidates] = useState([]);
 
   useEffect(() => {
-          fetch(`${process.env.REACT_APP_API_BASE_URL || "https://resume-mang-backend.vercel.app"}/api/candidates`)
+    fetch(`${process.env.REACT_APP_API_BASE_URL}/api/candidates`)
       .then((res) => res.json())
       .then((data) => setCandidates(data))
       .catch((err) => console.error("Error:", err));
@@ -187,7 +186,7 @@ export default function CandidatesApplied() {
                       rel="noreferrer"
                       className="text-blue-600 inline-block"
                     >
-                      <MdRemoveRedEye size={20} className="text-blue-600" />  
+                      <MdRemoveRedEye size={20} className="text-blue-600" />
                     </a>
                   ) : (
                     "N/A"
@@ -196,7 +195,10 @@ export default function CandidatesApplied() {
                 <td className="border p-2">
                   <Link to={`/candidate-details/${cand.candidateId}`}>
                     <button className="text-blue-600 inline-block">
-                      <FaArrowRight size={18} className="text-blue-600 hover:scale-110 transition-transform duration-200" />
+                      <FaArrowRight
+                        size={18}
+                        className="text-blue-600 hover:scale-110 transition-transform duration-200"
+                      />
                     </button>
                   </Link>
                 </td>

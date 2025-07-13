@@ -25,7 +25,7 @@ const EmpAuth = () => {
     }
 
     // Define the API base URL - use the deployed backend URL
-    const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || "https://resume-mang-backend.vercel.app";
+    const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
     try {
       if (selectedRole === "recruiter") {

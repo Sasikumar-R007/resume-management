@@ -14,10 +14,7 @@ const ArchivedPage = () => {
   const fetchArchivedCandidates = async () => {
     try {
       const res = await fetch(
-        `${
-          process.env.REACT_APP_API_BASE_URL ||
-          "https://resume-mang-backend.vercel.app"
-        }/api/archived`
+        `${process.env.REACT_APP_API_BASE_URL}/api/archived`
       );
       const data = await res.json();
       setArchivedCandidates(data);

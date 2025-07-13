@@ -6,14 +6,18 @@ export default function CandidateDetails() {
   const [data, setData] = useState(null);
 
   useEffect(() => {
-    fetch(`${process.env.REACT_APP_API_BASE_URL || "https://resume-mang-backend.vercel.app"}/api/candidates/${candidateId}`)
+    fetch(`${process.env.REACT_APP_API_BASE_URL}/api/candidates/${candidateId}`)
       .then((res) => res.json())
       .then((data) => setData(data))
       .catch((err) => console.error("Error fetching candidate:", err));
   }, [candidateId]);
 
   if (!data) {
-    return <div className="text-center mt-10 text-gray-500">Loading candidate details...</div>;
+    return (
+      <div className="text-center mt-10 text-gray-500">
+        Loading candidate details...
+      </div>
+    );
   }
 
   const Section = ({ title, children }) => (
@@ -26,14 +30,18 @@ export default function CandidateDetails() {
   const Field = ({ label, value }) => (
     <div>
       <label className="block text-sm font-medium text-gray-500">{label}</label>
-      <div className="mt-1 px-4 py-2 bg-gray-100 rounded text-gray-800">{value || "—"}</div>
+      <div className="mt-1 px-4 py-2 bg-gray-100 rounded text-gray-800">
+        {value || "—"}
+      </div>
     </div>
   );
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-5xl mx-auto bg-white shadow rounded-lg p-8">
-        <h2 className="text-2xl font-bold mb-6 text-gray-800">Candidate Details</h2>
+        <h2 className="text-2xl font-bold mb-6 text-gray-800">
+          Candidate Details
+        </h2>
 
         {/* 🔽 Use all fields as you posted earlier */}
         <Section title="1) Personal Information">
@@ -75,7 +83,9 @@ export default function CandidateDetails() {
 
         {data.resumeLink && (
           <div className="mt-10">
-            <h3 className="text-lg font-semibold text-blue-600 mb-2">Resume Preview</h3>
+            <h3 className="text-lg font-semibold text-blue-600 mb-2">
+              Resume Preview
+            </h3>
             <iframe
               src={data.resumeLink}
               title="Resume"
