@@ -9,7 +9,18 @@ router.get("/", async (req, res) => {
     res.json(recruiters);
   } catch (error) {
     console.error("Error fetching recruiters:", error);
-    res.status(500).json({ message: "Failed to fetch recruiters" });
+    if (
+      error.name === "MongooseError" &&
+      error.message.includes("buffering timed out")
+    ) {
+      res.status(500).json({
+        message:
+          "Database connection timeout. Please check MongoDB Atlas configuration.",
+        error: "MongoDB connection issue",
+      });
+    } else {
+      res.status(500).json({ message: "Failed to fetch recruiters" });
+    }
   }
 });
 
@@ -31,14 +42,27 @@ router.post("/login", async (req, res) => {
     res.status(200).json({ message: "Login successful", recruiter });
   } catch (error) {
     console.error("Login error:", error);
-    res.status(500).json({ message: "Server error" });
+    if (
+      error.name === "MongooseError" &&
+      error.message.includes("buffering timed out")
+    ) {
+      res.status(500).json({
+        message:
+          "Database connection timeout. Please check MongoDB Atlas configuration.",
+        error: "MongoDB connection issue",
+      });
+    } else {
+      res.status(500).json({ message: "Server error" });
+    }
   }
 });
 
 // 🔹 Get recruiter details by ID
 router.get("/:recruiterId", async (req, res) => {
   try {
-    const recruiter = await Recruiter.findOne({ recruiterId: req.params.recruiterId });
+    const recruiter = await Recruiter.findOne({
+      recruiterId: req.params.recruiterId,
+    });
 
     if (!recruiter) {
       return res.status(404).json({ message: "Recruiter not found" });

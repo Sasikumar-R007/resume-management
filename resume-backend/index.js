@@ -36,13 +36,23 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // ==================== MongoDB Connection ====================
-mongoose
-  .connect(process.env.MONGO_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  })
-  .then(() => console.log("✅ MongoDB connected"))
-  .catch((err) => console.error("❌ MongoDB connection error:", err));
+const connectDB = async () => {
+  try {
+    const conn = await mongoose.connect(process.env.MONGO_URI, {
+      serverSelectionTimeoutMS: 5000, // Timeout after 5s instead of 30s
+      socketTimeoutMS: 45000, // Close sockets after 45s
+    });
+    console.log("✅ MongoDB connected");
+  } catch (error) {
+    console.error("❌ MongoDB connection error:", error.message);
+    console.log("💡 Make sure to:");
+    console.log("   1. Check your MONGO_URI environment variable");
+    console.log("   2. Whitelist Vercel IPs in MongoDB Atlas");
+    console.log("   3. Use correct connection string format");
+  }
+};
+
+connectDB();
 
 // ==================== Multer Config ====================
 const storage = multer.diskStorage({
