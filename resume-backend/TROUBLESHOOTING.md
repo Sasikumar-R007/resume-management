@@ -188,3 +188,21 @@ If you're getting `Socket 'secureConnect' timed out` errors:
    - Use a different MongoDB Atlas cluster region
    - Check if your network has firewall restrictions
    - Try connecting from a different network
+
+### For Login-Specific Issues (Your Current Problem)
+
+If other routes work but login fails with "Database not connected":
+
+1. **Root Cause**: Redundant database connection checks in login routes
+2. **Solution**: Removed redundant checks from login routes
+3. **Test**: Deploy the updated code and try login again
+
+**What was fixed**:
+- Removed `mongoose.connection.readyState` checks from login routes
+- Middleware now handles all database connection management
+- Login routes rely on middleware for connection state
+
+**Test the fix**:
+```bash
+node test-login-fix.js
+```

@@ -30,19 +30,8 @@ router.post("/login", async (req, res) => {
   const { email, password } = req.body;
 
   try {
-    // Check if database is connected
-    if (mongoose.connection.readyState !== 1) {
-      console.error(
-        "Database not connected. ReadyState:",
-        mongoose.connection.readyState
-      );
-      return res.status(500).json({
-        message: "Database connection not available. Please try again.",
-        error: "Database connection issue",
-      });
-    }
-
     console.log("🔍 Attempting to find recruiter with email:", email);
+    console.log("Database readyState:", mongoose.connection.readyState);
 
     const recruiter = await Recruiter.findOne({ email });
 

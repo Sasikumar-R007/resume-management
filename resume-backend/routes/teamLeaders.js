@@ -19,55 +19,53 @@ router.post("/", async (req, res) => {
 
 // POST login route for team leader
 router.post("/login", async (req, res) => {
-    const { email, password } = req.body;
-  
-    try {
-      // Check if database is connected
-      if (mongoose.connection.readyState !== 1) {
-        console.error("Database not connected. ReadyState:", mongoose.connection.readyState);
+  const { email, password } = req.body;
+
+  try {
+    console.log("🔍 Attempting to find team leader with email:", email);
+    console.log("Database readyState:", mongoose.connection.readyState);
+
+    const teamLeader = await TeamLeader.findOne({ email });
+
+    if (!teamLeader || teamLeader.password !== password) {
+      console.log("❌ Invalid credentials for team leader:", email);
+      return res.status(401).json({ message: "Invalid credentials" });
+    }
+
+    console.log("✅ Login successful for team leader:", email);
+    res.status(200).json({ teamLeader });
+  } catch (err) {
+    console.error("Login error:", err);
+
+    // Handle specific MongoDB errors
+    if (err.name === "MongooseError" || err.name === "MongoError") {
+      if (err.message.includes("buffering timed out")) {
         return res.status(500).json({
-          message: "Database connection not available. Please try again.",
-          error: "Database connection issue"
+          message:
+            "Database connection timeout. Please check MongoDB Atlas configuration.",
+          error: "MongoDB connection timeout",
+        });
+      } else if (err.message.includes("ECONNREFUSED")) {
+        return res.status(500).json({
+          message:
+            "Cannot connect to database. Please check your MongoDB Atlas settings.",
+          error: "Database connection refused",
+        });
+      } else if (err.message.includes("ENOTFOUND")) {
+        return res.status(500).json({
+          message:
+            "Database host not found. Please verify your MongoDB connection string.",
+          error: "Database host not found",
         });
       }
-
-      const teamLeader = await TeamLeader.findOne({ email });
-  
-      if (!teamLeader || teamLeader.password !== password) {
-        return res.status(401).json({ message: "Invalid credentials" });
-      }
-  
-      res.status(200).json({ teamLeader });
-    } catch (err) {
-      console.error("Login error:", err);
-      
-      // Handle specific MongoDB errors
-      if (err.name === "MongooseError" || err.name === "MongoError") {
-        if (err.message.includes("buffering timed out")) {
-          return res.status(500).json({
-            message: "Database connection timeout. Please check MongoDB Atlas configuration.",
-            error: "MongoDB connection timeout"
-          });
-        } else if (err.message.includes("ECONNREFUSED")) {
-          return res.status(500).json({
-            message: "Cannot connect to database. Please check your MongoDB Atlas settings.",
-            error: "Database connection refused"
-          });
-        } else if (err.message.includes("ENOTFOUND")) {
-          return res.status(500).json({
-            message: "Database host not found. Please verify your MongoDB connection string.",
-            error: "Database host not found"
-          });
-        }
-      }
-      
-      res.status(500).json({ 
-        message: "Server error during login",
-        error: err.message 
-      });
     }
-  });
-  
+
+    res.status(500).json({
+      message: "Server error during login",
+      error: err.message,
+    });
+  }
+});
 
 // GET all team leaders
 router.get("/", async (req, res) => {
