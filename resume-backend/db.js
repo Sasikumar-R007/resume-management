@@ -14,12 +14,20 @@ const connectDB = async (retries = 3) => {
 
     console.log("🔗 Attempting to connect to MongoDB...");
 
+    // Check if already connected
+    if (mongoose.connection.readyState === 1) {
+      console.log("✅ Already connected to MongoDB");
+      return mongoose.connection;
+    }
+
     const conn = await mongoose.connect(mongoUri, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
-      serverSelectionTimeoutMS: 15000, // 15 seconds
+      serverSelectionTimeoutMS: 30000, // 30 seconds for serverless
       socketTimeoutMS: 45000, // 45 seconds
-      maxPoolSize: 10, // Maintain up to 10 socket connections
+      maxPoolSize: 5, // Reduced for serverless
+      minPoolSize: 1, // Minimum connections
+      maxIdleTimeMS: 30000, // Close connections after 30 seconds of inactivity
       serverApi: {
         version: "1",
         strict: true,

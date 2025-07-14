@@ -35,11 +35,48 @@ app.use(
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// ==================== Database Connection Middleware ====================
+app.use((req, res, next) => {
+  // Skip database check for health endpoint
+  if (req.path === "/health" || req.path === "/") {
+    return next();
+  }
+
+  // Check if database is connected
+  if (mongoose.connection.readyState !== 1) {
+    console.error(
+      `Database not connected. ReadyState: ${mongoose.connection.readyState}`
+    );
+    return res.status(500).json({
+      message: "Database connection not available. Please try again.",
+      error: "Database connection issue",
+    });
+  }
+
+  next();
+});
+
 // ==================== MongoDB Connection ====================
 const connectDB = require("./db");
 
-// Connect to MongoDB
-connectDB().catch(console.error);
+// Connect to MongoDB and start server only after connection
+let server;
+
+const startServer = async () => {
+  try {
+    await connectDB();
+    console.log("✅ Database connected, starting server...");
+
+    server = app.listen(PORT, () => {
+      console.log(`🚀 Server running on port ${PORT}`);
+    });
+  } catch (error) {
+    console.error("❌ Failed to start server:", error);
+    process.exit(1);
+  }
+};
+
+startServer();
 
 // ==================== Multer Config ====================
 const storage = multer.diskStorage({
@@ -294,34 +331,32 @@ app.get("/health", async (req, res) => {
     const dbState = mongoose.connection.readyState;
     const dbStatus = {
       0: "disconnected",
-      1: "connected", 
+      1: "connected",
       2: "connecting",
-      3: "disconnecting"
+      3: "disconnecting",
     };
-    
+
     res.json({
       status: "ok",
       timestamp: new Date().toISOString(),
       database: {
         status: dbStatus[dbState] || "unknown",
-        readyState: dbState
+        readyState: dbState,
       },
       environment: {
         nodeEnv: process.env.NODE_ENV || "development",
         hasMongoUri: !!process.env.MONGO_URI,
-        hasMongoUrl: !!process.env.MONGO_URL
-      }
+        hasMongoUrl: !!process.env.MONGO_URL,
+      },
     });
   } catch (error) {
     res.status(500).json({
       status: "error",
       message: error.message,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   }
 });
 
 // ==================== Start Server ====================
-app.listen(PORT, () => {
-  console.log(`🚀 Server running at http://localhost:${PORT}`);
-});
+// Server will be started after database connection in startServer function
