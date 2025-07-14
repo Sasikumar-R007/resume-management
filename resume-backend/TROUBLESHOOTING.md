@@ -117,10 +117,15 @@ Expected response:
 - **Cause**: Wrong username/password
 - **Solution**: Verify credentials in connection string
 
-#### "buffering timed out"
+#### "buffering timed out" or "Socket 'secureConnect' timed out"
 
-- **Cause**: Network timeout
-- **Solution**: Check internet connection and increase timeout values
+- **Cause**: Network timeout or MongoDB Atlas connectivity issues
+- **Solution**: 
+  - Check MongoDB Atlas cluster is not paused
+  - Add `0.0.0.0/0` to IP Access List in MongoDB Atlas
+  - Increase timeout values in connection options
+  - Check if your MongoDB Atlas cluster is in a different region
+  - Try using a different network or VPN
 
 ### Prevention
 
@@ -154,3 +159,32 @@ Expected response:
 - [ ] Test connection locally with production env vars
 - [ ] Check Vercel function logs for errors
 - [ ] Verify health endpoint returns connected status
+
+### For Socket Timeout Issues (Your Current Problem)
+
+If you're getting `Socket 'secureConnect' timed out` errors:
+
+1. **Check MongoDB Atlas Cluster Status**:
+   - Go to MongoDB Atlas dashboard
+   - Ensure your cluster is not paused
+   - Check if cluster is in maintenance mode
+
+2. **Update IP Access List**:
+   - Go to Network Access in MongoDB Atlas
+   - Add `0.0.0.0/0` to allow all IPs
+   - Or add Vercel's IP ranges if you prefer
+
+3. **Test Connection String**:
+   ```bash
+   node test-mongo-atlas.js
+   ```
+
+4. **Check Connection String Format**:
+   - Should start with `mongodb+srv://`
+   - Include `retryWrites=true&w=majority`
+   - URL-encode special characters in password
+
+5. **Try Alternative Solutions**:
+   - Use a different MongoDB Atlas cluster region
+   - Check if your network has firewall restrictions
+   - Try connecting from a different network

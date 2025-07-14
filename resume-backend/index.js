@@ -36,47 +36,80 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // ==================== Database Connection Middleware ====================
-app.use((req, res, next) => {
+app.use(async (req, res, next) => {
   // Skip database check for health endpoint
   if (req.path === "/health" || req.path === "/") {
     return next();
   }
 
-  // Check if database is connected
-  if (mongoose.connection.readyState !== 1) {
-    console.error(
-      `Database not connected. ReadyState: ${mongoose.connection.readyState}`
-    );
+  try {
+    // Ensure database connection for each request in serverless environment
+    await ensureConnection();
+
+    // Double-check connection state
+    if (mongoose.connection.readyState !== 1) {
+      console.error(
+        `Database not connected. ReadyState: ${mongoose.connection.readyState}`
+      );
+      return res.status(500).json({
+        message: "Database connection not available. Please try again.",
+        error: "Database connection issue",
+      });
+    }
+
+    next();
+  } catch (error) {
+    console.error("Database connection error in middleware:", error);
     return res.status(500).json({
-      message: "Database connection not available. Please try again.",
-      error: "Database connection issue",
+      message: "Database connection failed. Please try again.",
+      error: "Database connection error",
     });
   }
-
-  next();
 });
 
 // ==================== MongoDB Connection ====================
 const connectDB = require("./db");
 
-// Connect to MongoDB and start server only after connection
-let server;
+// For serverless environments, we need to handle connections differently
+let isConnected = false;
 
-const startServer = async () => {
-  try {
-    await connectDB();
-    console.log("✅ Database connected, starting server...");
-
-    server = app.listen(PORT, () => {
-      console.log(`🚀 Server running on port ${PORT}`);
-    });
-  } catch (error) {
-    console.error("❌ Failed to start server:", error);
-    process.exit(1);
+const ensureConnection = async () => {
+  if (!isConnected) {
+    try {
+      await connectDB();
+      isConnected = true;
+      console.log("✅ Database connection ensured");
+    } catch (error) {
+      console.error("❌ Database connection failed:", error.message);
+      throw error;
+    }
   }
+  return isConnected;
 };
 
-startServer();
+// Initialize connection on startup
+ensureConnection().catch(console.error);
+
+// For traditional server deployment
+if (process.env.NODE_ENV !== "production" || process.env.VERCEL !== "1") {
+  let server;
+
+  const startServer = async () => {
+    try {
+      await ensureConnection();
+      console.log("✅ Database connected, starting server...");
+
+      server = app.listen(PORT, () => {
+        console.log(`🚀 Server running on port ${PORT}`);
+      });
+    } catch (error) {
+      console.error("❌ Failed to start server:", error);
+      process.exit(1);
+    }
+  };
+
+  startServer();
+}
 
 // ==================== Multer Config ====================
 const storage = multer.diskStorage({

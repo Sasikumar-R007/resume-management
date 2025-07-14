@@ -13,6 +13,7 @@ const connectDB = async (retries = 3) => {
     }
 
     console.log("🔗 Attempting to connect to MongoDB...");
+    console.log("Environment:", process.env.NODE_ENV || "development");
 
     // Check if already connected
     if (mongoose.connection.readyState === 1) {
@@ -20,20 +21,32 @@ const connectDB = async (retries = 3) => {
       return mongoose.connection;
     }
 
-    const conn = await mongoose.connect(mongoUri, {
+    // Parse connection string to check format
+    let connectionOptions = {
       useNewUrlParser: true,
       useUnifiedTopology: true,
-      serverSelectionTimeoutMS: 30000, // 30 seconds for serverless
-      socketTimeoutMS: 45000, // 45 seconds
-      maxPoolSize: 5, // Reduced for serverless
-      minPoolSize: 1, // Minimum connections
-      maxIdleTimeMS: 30000, // Close connections after 30 seconds of inactivity
+      serverSelectionTimeoutMS: 60000, // Increased to 60 seconds
+      socketTimeoutMS: 60000, // Increased to 60 seconds
+      connectTimeoutMS: 60000, // Explicit connect timeout
+      maxPoolSize: 1, // Single connection for serverless
+      minPoolSize: 0, // No minimum connections
+      maxIdleTimeMS: 10000, // Close connections quickly
       serverApi: {
         version: "1",
         strict: true,
         deprecationErrors: true,
       },
-    });
+    };
+
+    // Add retryWrites and w=majority if not present
+    let finalMongoUri = mongoUri;
+    if (!mongoUri.includes('retryWrites=true')) {
+      finalMongoUri += (mongoUri.includes('?') ? '&' : '?') + 'retryWrites=true&w=majority';
+    }
+
+    console.log("Using connection string format:", finalMongoUri.substring(0, 50) + "...");
+
+    const conn = await mongoose.connect(finalMongoUri, connectionOptions);
 
     console.log("✅ MongoDB Connected Successfully");
     return conn;
