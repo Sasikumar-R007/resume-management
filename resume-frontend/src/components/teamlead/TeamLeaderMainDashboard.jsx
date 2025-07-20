@@ -10,6 +10,7 @@ import {
 } from "react-icons/fa";
 import { FiRepeat } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
+import { Moon, Sun } from "lucide-react";
 
 const TeamLeaderDashboard = () => {
   const navigate = useNavigate();
@@ -21,6 +22,15 @@ const TeamLeaderDashboard = () => {
   const [showAssignPopup, setShowAssignPopup] = useState(false);
   const [dummyRecruiters, setDummyRecruiters] = useState([]);
   const [selectedRecruiter, setSelectedRecruiter] = useState("");
+  const [darkMode, setDarkMode] = useState(false);
+
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+  }, [darkMode]);
 
   useEffect(() => {
     const stored = localStorage.getItem("teamLeaderProfile");
@@ -151,26 +161,39 @@ const TeamLeaderDashboard = () => {
   const assigned = requirements.filter((req) => req.recruiter);
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6 flex flex-col items-center">
+    <div className="min-h-screen bg-gray-50 p-6 flex flex-col items-center dark:bg-gray-900">
       <div className="max-w-6xl w-full">
-        <div className="flex justify-between items-center mb-6">
+        <div className="flex justify-between items-center mb-6 flex-col md:flex-row gap-4">
           <div>
-            <h1 className="text-3xl font-bold mb-1">
+            <h1 className="text-3xl font-bold mb-1 text-gray-800 dark:text-gray-100">
               Welcome {teamLeader.name}
             </h1>
-            <p className="text-gray-700">
+            <p className="text-gray-700 dark:text-gray-300">
               Manage your team and monitor recruitments.
             </p>
           </div>
-          <button
-            onClick={handleLogout}
-            className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
-          >
-            Sign Out
-          </button>
+          <div className="flex items-center gap-4">
+            <div
+              onClick={() => setDarkMode(!darkMode)}
+              className="cursor-pointer p-2 rounded-full bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition"
+              title="Toggle dark mode"
+            >
+              {darkMode ? (
+                <Sun className="w-5 h-5 text-yellow-400" />
+              ) : (
+                <Moon className="w-5 h-5 text-gray-800" />
+              )}
+            </div>
+            <button
+              onClick={handleLogout}
+              className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 dark:bg-red-600 dark:hover:bg-red-700"
+            >
+              Sign Out
+            </button>
+          </div>
         </div>
 
-        <div className="bg-white shadow p-6 rounded-lg relative mb-6">
+        <div className="bg-white shadow p-6 rounded-lg relative mb-6 dark:bg-gray-800 dark:border-gray-700 dark:shadow-gray-700">
           <div className="absolute right-6 top-1/2 transform -translate-y-1/2 flex flex-col items-center">
             {teamLeader.profilePic && (
               <img
@@ -201,31 +224,17 @@ const TeamLeaderDashboard = () => {
           </div>
 
           <div className="pr-40">
-            <h2 className="text-xl font-semibold mb-4">Profile Details</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-3 text-sm text-gray-800">
-              <p>
-                <strong>ID:</strong> {teamLeader.teamLeadId}
-              </p>
-              <p>
-                <strong>Name:</strong> {teamLeader.name}
-              </p>
-              <p>
-                <strong>Email:</strong> {teamLeader.email}
-              </p>
-              <p>
-                <strong>Mobile:</strong> {teamLeader.mobile}
-              </p>
-              <p>
-                <strong>Department:</strong> {teamLeader.department}
-              </p>
-              <p>
-                <strong>Reporting To:</strong> {teamLeader.reportingTo}
-              </p>
-              <p>
-                <strong>Joining Date:</strong>{" "}
-                {teamLeader.joiningDate &&
-                  new Date(teamLeader.joiningDate).toLocaleDateString("en-IN")}
-              </p>
+            <h2 className="text-xl font-semibold mb-4 text-gray-800 dark:text-gray-100">
+              Profile Details
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-3 text-sm text-gray-800 dark:text-gray-100">
+              <p><span className="font-semibold text-gray-700 dark:text-gray-200">ID:</span> {teamLeader.teamLeadId}</p>
+              <p><span className="font-semibold text-gray-700 dark:text-gray-200">Name:</span> {teamLeader.name}</p>
+              <p><span className="font-semibold text-gray-700 dark:text-gray-200">Email:</span> {teamLeader.email}</p>
+              <p><span className="font-semibold text-gray-700 dark:text-gray-200">Mobile:</span> {teamLeader.mobile}</p>
+              <p><span className="font-semibold text-gray-700 dark:text-gray-200">Department:</span> {teamLeader.department}</p>
+              <p><span className="font-semibold text-gray-700 dark:text-gray-200">Reporting To:</span> {teamLeader.reportingTo}</p>
+              <p><span className="font-semibold text-gray-700 dark:text-gray-200">Joining Date:</span> {teamLeader.joiningDate && new Date(teamLeader.joiningDate).toLocaleDateString("en-IN")}</p>
             </div>
           </div>
         </div>
@@ -239,13 +248,17 @@ const TeamLeaderDashboard = () => {
           ].map((title, idx) => (
             <div
               key={idx}
-              className="bg-white p-5 rounded-lg shadow hover:shadow-md transition cursor-pointer"
+              className="bg-white p-5 rounded-lg shadow hover:shadow-md transition cursor-pointer dark:bg-gray-800 dark:border-gray-700 dark:shadow-gray-700"
             >
-              <h3 className="font-semibold text-lg">{title}</h3>
-              <p className="text-blue-700 text-2xl font-bold">
+              <h3 className="font-semibold text-lg text-gray-900 dark:text-gray-100">
+                {title}
+              </h3>
+              <p className="text-blue-700 text-2xl font-bold dark:text-blue-400">
                 {idx === 3 ? "88%" : idx + 2}
               </p>
-              <p className="text-gray-500 text-sm">Subtitle {idx + 1}</p>
+              <p className="text-gray-500 text-sm dark:text-gray-400">
+                Subtitle {idx + 1}
+              </p>
             </div>
           ))}
         </div>
@@ -253,8 +266,8 @@ const TeamLeaderDashboard = () => {
         {/* Assigned Recruiters + Priority Distribution */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
           {/* Assigned Recruiters - Wider (md:col-span-3) */}
-          <div className="md:col-span-3 bg-white p-5 rounded-lg shadow">
-            <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+          <div className="md:col-span-3 bg-white p-5 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700 dark:shadow-gray-700">
+            <h2 className="text-lg font-semibold mb-4 flex items-center gap-2 text-gray-900 dark:text-gray-100">
               <FaUserTie className="text-blue-500" />
               Assigned Recruiters
             </h2>
@@ -268,13 +281,15 @@ const TeamLeaderDashboard = () => {
                 return (
                   <div
                     key={i}
-                    className="border border-gray-200 rounded-md p-4 flex items-center justify-between cursor-pointer hover:shadow-sm"
+                    className="border border-gray-200 dark:border-gray-700 rounded-md p-4 flex items-center justify-between cursor-pointer hover:shadow-sm dark:bg-gray-900"
                     onClick={() => navigate(`/recruiter-profile/${rec.id}`)}
                   >
                     {/* Left: Name + Req Count */}
                     <div className="w-1/4">
-                      <p className="font-medium text-gray-900">{rec.name}</p>
-                      <p className="text-sm text-gray-500">
+                      <p className="font-medium text-gray-900 dark:text-gray-100">
+                        {rec.name}
+                      </p>
+                      <p className="text-sm text-gray-500 dark:text-gray-300">
                         {rec.count}{" "}
                         {rec.count === 1 ? "requirement" : "requirements"}
                       </p>
@@ -308,47 +323,41 @@ const TeamLeaderDashboard = () => {
           </div>
 
           {/* Priority Distribution - Narrower (md:col-span-1) */}
-          <div className="bg-white p-5 rounded-lg shadow">
-            <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+          <div className="bg-white p-5 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700 dark:shadow-gray-700">
+            <h2 className="text-lg font-semibold mb-4 flex items-center gap-2 text-gray-900 dark:text-gray-100">
               <FaChartPie className="text-purple-500" />
               Priority Distribution
             </h2>
             <ul className="space-y-3 text-sm">
-              <li className="flex justify-between items-center">
+              <li className="flex justify-between items-center text-gray-700 dark:text-gray-300">
                 <span>High Priority</span>
-                <span className="text-white bg-red-500 rounded-full px-3 py-1 text-xs font-bold">
-                  1
-                </span>
+                <span className="text-white bg-red-500 rounded-full px-3 py-1 text-xs font-bold">1</span>
               </li>
-              <li className="flex justify-between items-center">
+              <li className="flex justify-between items-center text-gray-700 dark:text-gray-300">
                 <span>Medium Priority</span>
-                <span className="text-white bg-blue-500 rounded-full px-3 py-1 text-xs font-bold">
-                  3
-                </span>
+                <span className="text-white bg-blue-500 rounded-full px-3 py-1 text-xs font-bold">3</span>
               </li>
-              <li className="flex justify-between items-center">
+              <li className="flex justify-between items-center text-gray-700 dark:text-gray-300">
                 <span>Low Priority</span>
-                <span className="text-white bg-gray-400 rounded-full px-3 py-1 text-xs font-bold">
-                  0
-                </span>
+                <span className="text-white bg-gray-400 rounded-full px-3 py-1 text-xs font-bold">0</span>
               </li>
             </ul>
           </div>
         </div>
 
         {/* Your Requirements */}
-        <div className="max-w-6xl mx-auto bg-white rounded-xl shadow p-6 mb-8">
-          <h2 className="text-xl font-semibold mb-1 flex items-center gap-2">
+        <div className="max-w-6xl mx-auto bg-white rounded-xl shadow p-6 mb-8 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100">
+          <h2 className="text-xl font-semibold mb-1 flex items-center gap-2 text-gray-900 dark:text-gray-100">
             <FaUserPlus className="text-blue-500" />
             Your Requirements
           </h2>
-          <p className="text-sm text-gray-500 mb-4">
+          <p className="text-sm text-gray-500 mb-4 dark:text-gray-300">
             Assign recruiters to newly received requirements.
           </p>
 
           <table className="w-full text-sm border-separate border-spacing-y-2">
             <thead>
-              <tr className="bg-gray-100 text-left text-sm text-gray-700">
+              <tr className="bg-gray-100 text-left text-sm text-gray-700 dark:bg-gray-800 dark:text-gray-200">
                 <th className="p-3 rounded-l-md">Position</th>
                 <th className="p-3">Criticality</th>
                 <th className="p-3">Company</th>
@@ -362,9 +371,9 @@ const TeamLeaderDashboard = () => {
               {[...unassigned, ...assigned].map((r, i) => (
                 <tr
                   key={r.id}
-                  className="bg-white shadow-sm rounded-md transition"
+                  className="bg-white shadow-sm rounded-md transition dark:bg-gray-900 dark:text-gray-100"
                 >
-                  <td className="p-3 font-medium text-blue-700">
+                  <td className="p-3 font-medium text-blue-700 dark:text-blue-400">
                     {r.position}
                   </td>
                   <td className="p-3">
@@ -372,28 +381,30 @@ const TeamLeaderDashboard = () => {
                       className={`px-2 py-1 rounded-md text-sm font-medium
     ${
       r.criticality === "High"
-        ? "bg-red-100 text-red-600"
+        ? "bg-red-100 text-red-600 dark:bg-red-900 dark:text-red-200"
         : r.criticality === "Medium"
-        ? "bg-blue-100 text-blue-600"
-        : "bg-gray-100 text-gray-600"
+        ? "bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-200"
+        : "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-200"
     }
   `}
                     >
                       {r.criticality}
                     </span>
                   </td>
-                  <td className="p-3 font-semibold">{r.company}</td>
-                  <td className="p-3">{r.contact}</td>
-                  <td className="p-3">{r.advisor}</td>
+                  <td className="p-3 font-semibold text-gray-800 dark:text-gray-100">
+                    {r.company}
+                  </td>
+                  <td className="p-3 dark:text-gray-100">{r.contact}</td>
+                  <td className="p-3 dark:text-gray-100">{r.advisor}</td>
                   <td className="p-3">
                     {r.recruiter ? (
-                      <span className="font-semibold text-green-700">
+                      <span className="font-semibold text-green-700 dark:text-green-400">
                         {r.recruiter}
                       </span>
                     ) : (
                       <button
                         onClick={() => handleAssignClick(r)}
-                        className="bg-blue-500 text-white text-xs px-3 py-1 rounded hover:bg-blue-600"
+                        className="bg-blue-500 text-white text-xs px-3 py-1 rounded hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700"
                       >
                         Assign
                       </button>
@@ -408,7 +419,7 @@ const TeamLeaderDashboard = () => {
                           setSelectedRecruiter(r.recruiter);
                           setShowAssignModal(true);
                         }}
-                        className="text-blue-600 hover:text-blue-800"
+                        className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-200"
                       >
                         <FiRepeat size={18} />
                       </button>
@@ -430,9 +441,9 @@ const TeamLeaderDashboard = () => {
 
         {showAssignPopup && selectedReq && (
           <div className="fixed inset-0 bg-black bg-opacity-40 z-50 flex items-center justify-center">
-            <div className="bg-white p-6 rounded-lg shadow-lg w-[90%] max-w-md">
+            <div className="bg-white p-6 rounded-lg shadow-lg w-[90%] max-w-md dark:bg-gray-800 dark:text-gray-100">
               <h3 className="text-lg font-semibold mb-3">Assign Requirement</h3>
-              <div className="text-sm space-y-1 mb-3 text-gray-700">
+              <div className="text-sm space-y-1 mb-3 text-gray-700 dark:text-gray-200">
                 <p>
                   <strong>Position:</strong> {selectedReq.position}
                 </p>
@@ -449,7 +460,7 @@ const TeamLeaderDashboard = () => {
                   Assign to:
                 </label>
                 <select
-                  className="border rounded px-3 py-1 mt-1 w-full"
+                  className="border rounded px-3 py-1 mt-1 w-full dark:bg-gray-900 dark:text-gray-100 dark:border-gray-700"
                   value={selectedRecruiter}
                   onChange={(e) => setSelectedRecruiter(e.target.value)}
                 >
@@ -467,13 +478,13 @@ const TeamLeaderDashboard = () => {
               <div className="flex justify-end gap-2">
                 <button
                   onClick={() => setShowAssignPopup(false)}
-                  className="text-gray-600 border px-4 py-1.5 rounded hover:bg-gray-100"
+                  className="text-gray-600 border px-4 py-1.5 rounded hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={confirmAssign}
-                  className="bg-blue-600 text-white px-4 py-1.5 rounded hover:bg-blue-700"
+                  className="bg-blue-600 text-white px-4 py-1.5 rounded hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800"
                 >
                   Confirm Assign
                 </button>

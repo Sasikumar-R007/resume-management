@@ -7,7 +7,18 @@ import {
   FaEdit,
 } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
-import { ClipboardList, AlertCircle, CheckCircle } from "lucide-react";
+import {
+  ClipboardList,
+  AlertCircle,
+  CheckCircle,
+  Moon,
+  Sun,
+} from "lucide-react";
+
+const getToday = () => {
+  const today = new Date();
+  return today.toISOString().split("T")[0];
+};
 
 const RecruiterDashboardMain = () => {
   const navigate = useNavigate();
@@ -15,6 +26,17 @@ const RecruiterDashboardMain = () => {
     // navigate("/upload-resume");
     navigate("/candidate-form");
   };
+
+  // Dark Mode
+  const [darkMode, setDarkMode] = useState(false);
+
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+  }, [darkMode]);
 
   const summaryCards = [
     {
@@ -30,18 +52,6 @@ const RecruiterDashboardMain = () => {
       count: 12,
       subtitle: "Candidates Applied: 82",
       path: "/recruiter/candidates-applied",
-    },
-    {
-      icon: <FaCalendarCheck size={28} className="text-black" />,
-      title: "Interviews Scheduled",
-      count: 7,
-      subtitle: "This week: 3",
-    },
-    {
-      icon: <FaHandshake size={28} className="text-black" />,
-      title: "Offers Made",
-      count: 3,
-      subtitle: "Pending: 1",
     },
   ];
 
@@ -167,25 +177,60 @@ const RecruiterDashboardMain = () => {
 
   const [confirmId, setConfirmId] = useState(null);
 
-  const handleMarkDone = (id) => {
-    setConfirmId(id);
+  // Interview Tracker Modal States
+  const [showInterviewModal, setShowInterviewModal] = useState(false);
+  const [interviewForm, setInterviewForm] = useState({
+    candidateName: "",
+    position: "",
+    client: "",
+    interviewDate: "",
+    interviewTime: "",
+    interviewType: "",
+    interviewRound: "",
+    interviewFeedback: "",
+    finalStatus: "",
+  });
+
+  const handleInterviewChange = (e) => {
+    const { name, value } = e.target;
+    setInterviewForm({ ...interviewForm, [name]: value });
   };
 
-  const archiveRequirement = (id) => {
-    const req = activeRequirements.find((r) => r.id === id);
-    const updatedArchived = [
-      ...archivedRequirements,
-      { ...req, archivedAt: new Date() },
-    ];
-    const updatedActive = activeRequirements.filter((r) => r.id !== id);
+  // Add state for interviews and modal
+  const [interviews, setInterviews] = useState([]); // {candidateName, position, client, interviewDate, ...}
+  const [showTodayInterviewsModal, setShowTodayInterviewsModal] =
+    useState(false);
 
-    setArchivedRequirements(updatedArchived);
-    setActiveRequirements(updatedActive);
-    localStorage.setItem(
-      "archivedRequirements",
-      JSON.stringify(updatedArchived)
-    );
-    setConfirmId(null);
+  // Helper to get today's date string
+  const todayStr = getToday();
+
+  // Filter today's interviews
+  const todaysInterviews = interviews.filter(
+    (i) => i.interviewDate === todayStr
+  );
+
+  // Update handleInterviewSubmit to add to interviews state
+  const handleInterviewSubmit = (e) => {
+    e.preventDefault();
+    setInterviews((prev) => [...prev, { ...interviewForm }]);
+    // RESET form
+    setInterviewForm({
+      candidateName: "",
+      position: "",
+      client: "",
+      interviewDate: "",
+      interviewTime: "",
+      interviewType: "",
+      interviewRound: "",
+      interviewFeedback: "",
+      finalStatus: "",
+    });
+    setShowInterviewModal(false); // close modal
+  };
+
+  // Remove interview by index
+  const removeInterview = (idx) => {
+    setInterviews((prev) => prev.filter((_, i) => i !== idx));
   };
 
   // ends...
@@ -266,6 +311,7 @@ const RecruiterDashboardMain = () => {
       criticality: "Medium",
       company: "StartupXYZ",
       contactPerson: "David Wilson",
+      contactPersonEmail: "david@example.com",
       talentAdvisor: "Lisa Wang",
     },
     {
@@ -274,6 +320,7 @@ const RecruiterDashboardMain = () => {
       criticality: "Low",
       company: "DataTech Solutions",
       contactPerson: "Tom Anderson",
+      contactPersonEmail: "tom@example.com",
       talentAdvisor: "Lisa Wang",
     },
     {
@@ -282,6 +329,7 @@ const RecruiterDashboardMain = () => {
       criticality: "High",
       company: "AI Innovations",
       contactPerson: "Robert Kim",
+      contactPersonEmail: "robert@example.com",
       talentAdvisor: "Lisa Wang",
     },
     {
@@ -290,10 +338,95 @@ const RecruiterDashboardMain = () => {
       criticality: "Low",
       company: "TestPro Solutions",
       contactPerson: "Kevin Brown",
+      contactPersonEmail: "kevin@example.com",
       talentAdvisor: "Lisa Wang",
     },
   ]);
   const [archivedRequirements, setArchivedRequirements] = useState([]);
+  const [requirementCounts, setRequirementCounts] = useState({}); // { [reqId]: { [date]: count } }
+  const [openCalendarId, setOpenCalendarId] = useState(null); // reqId of open calendar
+  const [selectedDate, setSelectedDate] = useState(getToday());
+  const [inputCount, setInputCount] = useState("");
+  const [calendarStep, setCalendarStep] = useState("calendar"); // 'calendar' or 'input'
+
+  // Helper to get count for a requirement/date
+  const getCountForReq = (reqId, date) => {
+    return requirementCounts[reqId]?.[date] || "-";
+  };
+
+  // Helper to get the most recent date with a count for a requirement
+  const getMostRecentDateForReq = (reqId) => {
+    const counts = requirementCounts[reqId];
+    if (!counts) return null;
+    const dates = Object.keys(counts);
+    if (dates.length === 0) return null;
+    // Sort dates descending (latest first)
+    dates.sort((a, b) => b.localeCompare(a));
+    return dates[0];
+  };
+
+  // Simple calendar for current month
+  const Calendar = ({ onDateClick, selected }) => {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = today.getMonth();
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const daysInMonth = lastDay.getDate();
+    const startDay = firstDay.getDay();
+    const weeks = [];
+    let day = 1 - startDay;
+    for (let w = 0; w < 6; w++) {
+      const week = [];
+      for (let d = 0; d < 7; d++, day++) {
+        if (day < 1 || day > daysInMonth) {
+          week.push(null);
+        } else {
+          week.push(day);
+        }
+      }
+      weeks.push(week);
+    }
+    return (
+      <div className="bg-white dark:bg-gray-800 border rounded shadow p-4">
+        <div className="text-center font-semibold mb-2 dark:text-gray-200">
+          {today.toLocaleString("default", { month: "long" })} {year}
+        </div>
+        <div className="grid grid-cols-7 gap-1 text-xs mb-1">
+          {["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"].map((d) => (
+            <div key={d} className="text-center font-bold dark:text-gray-200">
+              {d}
+            </div>
+          ))}
+        </div>
+        {weeks.map((week, i) => (
+          <div key={i} className="grid grid-cols-7 gap-1">
+            {week.map((d, j) => {
+              if (!d) return <div key={j}></div>;
+              const dateStr = `${year}-${String(month + 1).padStart(
+                2,
+                "0"
+              )}-${String(d).padStart(2, "0")}`;
+              const isSelected = selected === dateStr;
+              return (
+                <button
+                  key={j}
+                  className={`w-7 h-7 rounded-full text-center ${
+                    isSelected
+                      ? "bg-blue-600 text-white"
+                      : "hover:bg-blue-100 dark:hover:bg-blue-700 dark:text-gray-200"
+                  } ${dateStr === getToday() ? "border border-blue-400" : ""}`}
+                  onClick={() => onDateClick(dateStr)}
+                >
+                  {d}
+                </button>
+              );
+            })}
+          </div>
+        ))}
+      </div>
+    );
+  };
 
   const handleSubmitReason = () => {
     if (!reason.trim()) {
@@ -326,28 +459,49 @@ const RecruiterDashboardMain = () => {
     navigate("/login");
   };
 
+  const handleOpenAddInterview = () => {
+    setInterviewForm((form) => ({
+      ...form,
+      interviewDate: getToday(),
+    }));
+    setShowInterviewModal(true);
+  };
+
   return (
-    <div className="min-h-screen flex flex-col items-center justify-start bg-gray-50 p-6">
+    <div className="min-h-screen flex flex-col items-center justify-start bg-gray-50 p-6 dark:bg-gray-900">
       <div className="max-w-5xl w-full">
         <div className="flex items-center justify-between mb-8 flex-col md:flex-row gap-4">
           {/* Left: Welcome Message */}
           <div>
-            <h1 className="text-3xl font-bold mb-2 text-left">
+            <h1 className="text-3xl font-bold mb-2 text-left text-gray-800 dark:text-white">
               Welcome {recruiter.name}
             </h1>
-            <p className="text-gray-700 max-w-xl text-left">
+            <p className="text-gray-700 max-w-xl text-left dark:text-gray-300">
               To get started, review your current jobs and candidates, or update
               your profile to better manage your recruitment process.
             </p>
           </div>
 
           {/* Right: Sign Out Button */}
-          <button
-            onClick={handleLogout}
-            className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
-          >
-            Sign Out
-          </button>
+          <div className="flex items-center gap-4">
+            <div
+              onClick={() => setDarkMode(!darkMode)}
+              className="cursor-pointer p-2 rounded-full bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition"
+              title="Toggle dark mode"
+            >
+              {darkMode ? (
+                <Sun className="w-5 h-5 text-yellow-400" />
+              ) : (
+                <Moon className="w-5 h-5 text-gray-800" />
+              )}
+            </div>
+            <button
+              onClick={handleLogout}
+              className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 dark:bg-red-600 dark:hover:bg-red-700"
+            >
+              Sign Out
+            </button>
+          </div>
         </div>
 
         {/* Recruiter Profile Section */}
@@ -358,11 +512,11 @@ const RecruiterDashboardMain = () => {
               <img
                 src={recruiter.profilePic}
                 alt="Profile"
-                className="w-32 h-32 rounded-full object-cover border"
+                className="w-32 h-32 rounded-full object-cover border dark:border-gray-700"
               />
             )}
             <div className="flex gap-2 mt-2">
-              <label className="text-xs text-blue-500 cursor-pointer">
+              <label className="text-xs text-blue-500 cursor-pointer dark:text-blue-400">
                 Change
                 <input
                   type="file"
@@ -374,7 +528,7 @@ const RecruiterDashboardMain = () => {
               {recruiter.profilePic && (
                 <button
                   onClick={handleRemovePic}
-                  className="text-xs text-red-500"
+                  className="text-xs text-red-500 dark:text-red-400"
                 >
                   Remove
                 </button>
@@ -384,11 +538,11 @@ const RecruiterDashboardMain = () => {
 
           {/* Profile Info */}
           <div className="mb-6 pr-40">
-            <h2 className="text-xl font-semibold text-gray-800 dark:text-white mb-4">
+            <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-4">
               Recruiter Profile
             </h2>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-4 text-sm text-gray-700 dark:text-gray-300">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-4 text-sm text-gray-700 dark:text-gray-200">
               <p>
                 <strong>ID:</strong> {recruiter.recruiterId}
               </p>
@@ -423,123 +577,438 @@ const RecruiterDashboardMain = () => {
 
         {/* Rec Profile Session ends */}
 
-        <div className="flex flex-col md:flex-row gap-6 mb-6">
-          {/* LEFT - Summary Cards */}
-          <div className="w-full md:w-2/3 grid grid-cols-1 sm:grid-cols-2 gap-6">
-            {summaryCards.map((card, idx) => (
-              <div
-                key={idx}
-                onClick={() => navigate(card.path)}
-                className="p-6 border rounded-lg flex justify-between items-center bg-white shadow cursor-pointer hover:shadow-lg transition"
-              >
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-800">
-                    {card.title}
-                  </h3>
-                  <p className="text-3xl font-bold text-blue-700">
-                    {card.count}
-                  </p>
-                  <p className="text-sm text-gray-600">{card.subtitle}</p>
-                </div>
-                <div>{card.icon}</div>
-              </div>
-            ))}
-          </div>
+        {/* Recruiter Dashboard Layout Fixed */}
 
-          {/* RIGHT - Current Requirements */}
-          <div className="w-full md:w-1/2 bg-white p-6 rounded-lg shadow">
-            <h3 className="text-lg font-semibold mb-4 text-gray-800">
-              Current Requirements
-            </h3>
-            <div className="space-y-2 mt-4">
-              <div className="flex justify-between items-center bg-gray-100 px-4 py-4 rounded shadow-sm">
-                <div className="flex items-center gap-2">
-                  <ClipboardList className="text-blue-600 w-4 h-4" />
-                  <p className="text-sm text-gray-600">Assigned Requirements</p>
-                </div>
-                <h4 className="text-sm font-semibold text-gray-800">4</h4>
+        <div className="flex flex-col gap-6 mb-6">
+          {/* Top Row - 3 Summary Boxes */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Active Jobs */}
+            <div
+              className="p-6 border rounded-2xl bg-white shadow cursor-pointer hover:shadow-xl transition-all duration-300 flex flex-col justify-between dark:bg-gray-800 dark:border-gray-700 dark:shadow-gray-700"
+              onClick={() => navigate(summaryCards[0]?.path)}
+            >
+              <div>
+                <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200">
+                  {summaryCards[0]?.title}
+                </h3>
+                <p className="text-3xl font-bold text-blue-700">
+                  {summaryCards[0]?.count}
+                </p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  {summaryCards[0]?.subtitle}
+                </p>
               </div>
-
-              <div className="flex justify-between items-center bg-gray-100 px-4 py-4 rounded shadow-sm">
-                <div className="flex items-center gap-2">
-                  <AlertCircle className="text-red-600 w-4 h-4" />
-                  <p className="text-sm text-gray-600">High Priority</p>
-                </div>
-                <h4 className="text-sm font-semibold text-gray-800">1</h4>
-              </div>
-
-              <div className="flex justify-between items-center bg-gray-100 px-4 py-4 rounded shadow-sm">
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="text-green-600 w-4 h-4" />
-                  <p className="text-sm text-gray-600">Active Positions</p>
-                </div>
-                <h4 className="text-sm font-semibold text-gray-800">4</h4>
-              </div>
+              <div className="mt-2">{summaryCards[0]?.icon}</div>
             </div>
 
-            <button
-              onClick={() => setShowModal(true)}
-              className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            {/* Second Summary Card */}
+            <div
+              className="p-6 border rounded-2xl bg-white shadow cursor-pointer hover:shadow-xl transition-all duration-300 flex flex-col justify-between dark:bg-gray-800 dark:border-gray-700 dark:shadow-gray-700"
+              onClick={() => navigate(summaryCards[1]?.path)}
             >
-              View All Requirements
-            </button>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200">
+                  {summaryCards[1]?.title}
+                </h3>
+                <p className="text-3xl font-bold text-blue-700">
+                  {summaryCards[1]?.count}
+                </p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  {summaryCards[1]?.subtitle}
+                </p>
+              </div>
+              <div className="mt-2">{summaryCards[1]?.icon}</div>
+            </div>
+
+            {/* Interview Tracker */}
+            <div className="p-6 h-full border rounded-2xl bg-white shadow hover:shadow-xl transition flex flex-col justify-between dark:bg-gray-800 dark:border-gray-700 dark:shadow-gray-700">
+              <h3 className="text-lg font-semibold text-gray-800 text-center mb-3 dark:text-gray-200">
+                Interview Tracker
+              </h3>
+              <div className="flex justify-between items-start text-center pb-1">
+                <div className="flex-1">
+                  <p className="text-sm text-gray-600 underline dark:text-gray-400">
+                    Today's Schedule
+                  </p>
+                  <button
+                    className="text-4xl font-bold text-blue-700 mt-1 focus:outline-none hover:underline"
+                    onClick={() => setShowTodayInterviewsModal(true)}
+                    style={{
+                      background: "none",
+                      border: "none",
+                      padding: 0,
+                      margin: 0,
+                    }}
+                  >
+                    {todaysInterviews.length}
+                  </button>
+                  <button
+                    className="mt-2 text-sm px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700"
+                    onClick={handleOpenAddInterview}
+                  >
+                    Add Interview
+                  </button>
+                </div>
+                <div className="border-l h-16 mx-4"></div>
+                <div className="flex-1">
+                  <p className="text-sm text-gray-600 underline dark:text-gray-400">
+                    Pending Cases
+                  </p>
+                  <p className="text-4xl font-bold text-blue-700 mt-1">12</p>
+                  <button className="mt-2 text-sm px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700">
+                    View Tracker
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {showInterviewModal && (
+            <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+              <div className="bg-white rounded-xl shadow-lg w-full max-w-3xl p-6 dark:bg-gray-800">
+                <h2 className="text-xl font-semibold mb-4 dark:text-gray-200">
+                  Add Interview
+                </h2>
+                <form
+                  onSubmit={handleInterviewSubmit}
+                  className="grid grid-cols-1 md:grid-cols-2 gap-4"
+                >
+                  <input
+                    name="candidateName"
+                    value={interviewForm.candidateName}
+                    onChange={handleInterviewChange}
+                    placeholder="Candidate Name"
+                    className="border p-2 rounded dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200"
+                    required
+                  />
+                  <input
+                    name="position"
+                    value={interviewForm.position}
+                    onChange={handleInterviewChange}
+                    placeholder="Position"
+                    className="border p-2 rounded dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200"
+                    required
+                  />
+                  <input
+                    name="client"
+                    value={interviewForm.client}
+                    onChange={handleInterviewChange}
+                    placeholder="Client"
+                    className="border p-2 rounded dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200"
+                    required
+                  />
+                  <div className="flex gap-2">
+                    <input
+                      type="date"
+                      name="interviewDate"
+                      value={interviewForm.interviewDate}
+                      onChange={handleInterviewChange}
+                      className="border p-2 rounded w-1/2 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200"
+                      required
+                    />
+                    <input
+                      type="time"
+                      name="interviewTime"
+                      value={interviewForm.interviewTime}
+                      onChange={handleInterviewChange}
+                      className="border p-2 rounded w-1/2 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200"
+                      required
+                    />
+                  </div>
+
+                  <select
+                    name="interviewType"
+                    value={interviewForm.interviewType}
+                    onChange={handleInterviewChange}
+                    className="border p-2 rounded dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200"
+                    required
+                  >
+                    <option value="">Interview Type</option>
+                    <option>Telephonic</option>
+                    <option>Face 2 Face</option>
+                    <option>Video Conference</option>
+                    <option>Assignment</option>
+                  </select>
+
+                  <select
+                    name="interviewRound"
+                    value={interviewForm.interviewRound}
+                    onChange={handleInterviewChange}
+                    className="border p-2 rounded dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200"
+                    required
+                  >
+                    <option value="">Interview Round</option>
+                    <option>Intro</option>
+                    <option>Assignment</option>
+                    <option>L1</option>
+                    <option>L2</option>
+                    <option>L3</option>
+                    <option>L4</option>
+                    <option>L5</option>
+                    <option>L6</option>
+                    <option>L7</option>
+                    <option>HR Round</option>
+                    <option>Final Round</option>
+                    <option>Offer Discussion</option>
+                    <option>Additional Discussion</option>
+                  </select>
+
+                  <select
+                    name="interviewFeedback"
+                    value={interviewForm.interviewFeedback}
+                    onChange={handleInterviewChange}
+                    className="border p-2 rounded dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200"
+                    required
+                  >
+                    <option value="">Interview Feedback</option>
+                    <option>Intro Scheduled</option>
+                    <option>Intro Reject</option>
+                    <option>Assignment Scheduled</option>
+                    <option>Assignment Reject</option>
+                    <option>L1 Scheduled</option>
+                    <option>L1 Reject</option>
+                    <option>L2 Scheduled</option>
+                    <option>L2 Reject</option>
+                    <option>L3 Scheduled</option>
+                    <option>L3 Reject</option>
+                    <option>L4 Scheduled</option>
+                    <option>L4 Reject</option>
+                    <option>L5 Scheduled</option>
+                    <option>L5 Reject</option>
+                    <option>L6 Scheduled</option>
+                    <option>L6 Reject</option>
+                    <option>L7 Scheduled</option>
+                    <option>L7 Reject</option>
+                    <option>HR Round Scheduled</option>
+                    <option>HR Round Reject</option>
+                    <option>Final Round Scheduled</option>
+                    <option>Final Round Reject</option>
+                    <option>Offer Discussion Scheduled</option>
+                    <option>Offer Discussion Reject</option>
+                    <option>Additional Discussion Scheduled</option>
+                    <option>Additional Discussion Reject</option>
+                    <option>Next Round Schedule Pending</option>
+                  </select>
+
+                  <select
+                    name="finalStatus"
+                    value={interviewForm.finalStatus}
+                    onChange={handleInterviewChange}
+                    className="border p-2 rounded dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200"
+                    required
+                  >
+                    <option value="">Final Status</option>
+                    <option>Rejected</option>
+                    <option>Position On-Hold</option>
+                    <option>Schedule Pending</option>
+                    <option>Offer Roll Out</option>
+                    <option>Offer Signing Pending</option>
+                    <option>Offer & Joining Pending</option>
+                    <option>Joined/Closure</option>
+                  </select>
+
+                  <div className="col-span-2 flex justify-end gap-2 mt-4">
+                    <button
+                      type="button"
+                      onClick={() => setShowInterviewModal(false)}
+                      className="bg-gray-300 px-4 py-2 rounded hover:bg-gray-400 dark:bg-gray-700 dark:hover:bg-gray-600"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 dark:bg-green-600 dark:hover:bg-green-700"
+                    >
+                      Submit
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
+
+          {/* Bottom Row - Requirements + Contributions */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Current Requirements */}
+            <div className="bg-white p-6 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700 dark:shadow-gray-700">
+              <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-200">
+                Current Requirements
+              </h3>
+              <div className="space-y-2 mt-4">
+                <div className="flex justify-between items-center bg-gray-100 px-4 py-4 rounded shadow-sm dark:bg-gray-700 dark:border-gray-600 dark:shadow-gray-600">
+                  <div className="flex items-center gap-2">
+                    <ClipboardList className="text-blue-600 w-4 h-4" />
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      Assigned Requirements
+                    </p>
+                  </div>
+                  <h4 className="text-sm font-semibold text-gray-800">4</h4>
+                </div>
+
+                <div className="flex justify-between items-center bg-gray-100 px-4 py-4 rounded shadow-sm dark:bg-gray-700 dark:border-gray-600 dark:shadow-gray-600">
+                  <div className="flex items-center gap-2">
+                    <AlertCircle className="text-red-600 w-4 h-4" />
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      High Priority
+                    </p>
+                  </div>
+                  <h4 className="text-sm font-semibold text-gray-800">1</h4>
+                </div>
+
+                <div className="flex justify-between items-center bg-gray-100 px-4 py-4 rounded shadow-sm dark:bg-gray-700 dark:border-gray-600 dark:shadow-gray-600">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="text-green-600 w-4 h-4" />
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      Active Positions
+                    </p>
+                  </div>
+                  <h4 className="text-sm font-semibold text-gray-800">4</h4>
+                </div>
+
+                {/* wate space */}
+                <div className="flex justify-between items-center bg-white px-4 pb-12 dark:bg-gray-800 dark:border-gray-700 dark:shadow-gray-700 dark:text-gray-200">
+                  <div className="flex items-center"></div>
+                </div>
+              </div>
+
+              <button
+                onClick={() => setShowModal(true)}
+                className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700"
+              >
+                View All Requirements
+              </button>
+            </div>
+
+            {/* Overall Contributions with shaded blocks */}
+            <div className="bg-white p-6 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700 dark:shadow-gray-700">
+              <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-200">
+                Overall Contribution
+              </h3>
+              <div className="space-y-2 mt-4">
+                <div className="flex justify-between items-center bg-gray-100 px-4 py-4 rounded shadow-sm dark:bg-gray-700 dark:border-gray-600 dark:shadow-gray-600">
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    Tenure
+                  </p>
+                  <p className="text-sm font-semibold text-gray-800">
+                    4 Quarters
+                  </p>
+                </div>
+
+                <div className="flex justify-between items-center bg-gray-100 px-4 py-4 rounded shadow-sm dark:bg-gray-700 dark:border-gray-600 dark:shadow-gray-600">
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    Total Closures
+                  </p>
+                  <p className="text-sm font-semibold text-gray-800">3</p>
+                </div>
+
+                <div className="flex justify-between items-center bg-gray-100 px-4 py-4 rounded shadow-sm dark:bg-gray-700 dark:border-gray-600 dark:shadow-gray-600">
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    Recent Closure
+                  </p>
+                  <p className="text-sm font-semibold text-gray-800">
+                    Adhitya – Tracx
+                  </p>
+                </div>
+
+                <div className="flex justify-between items-center bg-gray-100 px-4 py-4 rounded shadow-sm dark:bg-gray-700 dark:border-gray-600 dark:shadow-gray-600">
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    Last Closure
+                  </p>
+                  <p className="text-sm font-semibold text-gray-800">
+                    1M 15 Days
+                  </p>
+                </div>
+              </div>
+
+              <button className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700">
+                View Contribution
+              </button>
+            </div>
           </div>
         </div>
 
         {showModal && (
           <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50">
-            <div className="bg-white p-6 rounded-lg max-w-4xl w-full min-h-[80vh] overflow-y-auto">
+            <div className="bg-white p-6 rounded-lg max-w-4xl w-full min-h-[80vh] overflow-y-auto dark:bg-gray-800">
               <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-bold">Your Requirements</h2>
+                <h2 className="text-xl font-bold dark:text-gray-200">
+                  Your Requirements
+                </h2>
                 <button
                   onClick={() => setShowModal(false)}
-                  className="text-red-500 font-bold text-lg"
+                  className="text-red-500 font-bold text-lg dark:text-red-500"
                 >
                   X
                 </button>
               </div>
-              <p className="text-sm text-gray-500 mb-2">
+              <p className="text-sm text-gray-500 mb-2 dark:text-gray-400">
                 Read-only view of requirements assigned to you for recruitment
               </p>
               <table className="min-w-full text-sm text-left border">
-                <thead className="bg-gray-100">
+                <thead className="bg-gray-100 dark:bg-gray-700 dark:border-gray-600 dark:shadow-gray-600">
                   <tr>
-                    <th className="p-2 border">Position</th>
-                    <th className="p-2 border">Criticality</th>
-                    <th className="p-2 border">Company</th>
-                    <th className="p-2 border">Contact Person</th>
-                    <th className="p-2 border">Talent Advisor</th>
-                    <th className="p-2 border">Action</th>
+                    <th className="p-2 border dark:text-gray-200">Position</th>
+                    <th className="p-2 border dark:text-gray-200">
+                      Criticality
+                    </th>
+                    <th className="p-2 border dark:text-gray-200">Company</th>
+                    <th className="p-2 border dark:text-gray-200">SPOC</th>
+                    <th className="p-2 border dark:text-gray-200">
+                      SPOC Email
+                    </th>
+                    <th className="p-2 border dark:text-gray-200">Count</th>
                   </tr>
                 </thead>
                 <tbody>
                   {activeRequirements.map((req) => (
-                    <tr key={req.id} className="border">
-                      <td className="p-2 text-blue-600 font-medium">
+                    <tr key={req.id} className="border dark:border-gray-600">
+                      <td className="p-2 text-blue-600 font-medium dark:text-blue-400">
                         {req.position}
                       </td>
                       <td className="p-2">
                         <span
-                          className={`px-2 py-1 rounded text-xs ${
+                          className={`px-2 py-1 rounded text-xs dark:text-gray-200 ${
                             req.criticality === "High"
-                              ? "bg-red-100 text-red-700"
+                              ? "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-100"
                               : req.criticality === "Medium"
-                              ? "bg-blue-100 text-blue-700"
-                              : "bg-gray-200 text-gray-700"
+                              ? "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-100"
+                              : "bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-200"
                           }`}
                         >
                           {req.criticality}
                         </span>
                       </td>
-                      <td className="p-2">{req.company}</td>
-                      <td className="p-2">{req.contactPerson}</td>
-                      <td className="p-2">{req.talentAdvisor}</td>
-                      <td className="p-2 border text-center">
+                      <td className="p-2 dark:text-gray-200">{req.company}</td>
+                      <td className="p-2 dark:text-gray-200">
+                        {req.contactPerson}
+                      </td>
+                      <td className="p-2 dark:text-gray-200">
+                        {req.contactPersonEmail}
+                      </td>
+                      <td className="p-2">
                         <button
-                          onClick={() => handleMarkDone(req.id)}
-                          className="text-xs bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded"
+                          className="px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-xs"
+                          onClick={() => {
+                            setOpenCalendarId(req.id);
+                            const mostRecentDate = getMostRecentDateForReq(
+                              req.id
+                            );
+                            setSelectedDate(mostRecentDate || getToday());
+                            setInputCount(
+                              requirementCounts[req.id]?.[mostRecentDate] || ""
+                            );
+                            setCalendarStep("calendar");
+                          }}
                         >
-                          Mark Done
+                          {getCountForReq(
+                            req.id,
+                            getMostRecentDateForReq(req.id)
+                          ) === "-"
+                            ? "Set"
+                            : `${getCountForReq(
+                                req.id,
+                                getMostRecentDateForReq(req.id)
+                              )} (${getMostRecentDateForReq(req.id)})`}
                         </button>
                       </td>
                     </tr>
@@ -550,7 +1019,84 @@ const RecruiterDashboardMain = () => {
           </div>
         )}
 
-        {confirmId && (
+        {openCalendarId && (
+          <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-30">
+            <div className="bg-white dark:bg-gray-800 border rounded-xl shadow-2xl p-8 relative w-full max-w-md flex flex-col items-center">
+              <button
+                className="absolute top-4 right-4 text-2xl text-gray-500 hover:text-red-500 focus:outline-none"
+                onClick={() => {
+                  setOpenCalendarId(null);
+                  setCalendarStep("calendar");
+                }}
+                aria-label="Close"
+              >
+                ×
+              </button>
+              <div className="w-full flex flex-col items-center">
+                <div className="mb-6 text-xl font-bold text-center dark:text-gray-100">
+                  Select a Date for Count
+                </div>
+                {calendarStep === "calendar" ? (
+                  <>
+                    <div className="mb-4 w-full flex justify-center">
+                      <Calendar
+                        selected={selectedDate}
+                        onDateClick={(dateStr) => {
+                          setSelectedDate(dateStr);
+                          setInputCount(
+                            requirementCounts[openCalendarId]?.[dateStr] || ""
+                          );
+                          setCalendarStep("input");
+                        }}
+                      />
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="mb-4 text-lg font-semibold dark:text-gray-200">
+                      Set Count for {selectedDate}
+                    </div>
+                    <input
+                      type="number"
+                      min="0"
+                      className="border px-3 py-2 rounded w-full dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200 mb-4"
+                      value={inputCount}
+                      onChange={(e) => setInputCount(e.target.value)}
+                      placeholder="Count"
+                      autoFocus
+                    />
+                    <div className="flex gap-4 mt-2 w-full justify-center">
+                      <button
+                        className="bg-gray-400 text-white px-5 py-2 rounded hover:bg-gray-500 text-sm font-semibold"
+                        onClick={() => setCalendarStep("calendar")}
+                      >
+                        Back
+                      </button>
+                      <button
+                        className="bg-green-600 text-white px-5 py-2 rounded hover:bg-green-700 text-sm font-semibold"
+                        onClick={() => {
+                          setRequirementCounts((prev) => ({
+                            ...prev,
+                            [openCalendarId]: {
+                              ...(prev[openCalendarId] || {}),
+                              [selectedDate]: inputCount,
+                            },
+                          }));
+                          setOpenCalendarId(null);
+                          setCalendarStep("calendar");
+                        }}
+                      >
+                        Save
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* {confirmId && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
             <div className="bg-white p-4 rounded shadow-lg max-w-sm w-full">
               <h3 className="text-lg font-semibold mb-2">Are you sure?</h3>
@@ -573,20 +1119,20 @@ const RecruiterDashboardMain = () => {
               </div>
             </div>
           </div>
-        )}
+        )} */}
 
-        <div className="flex justify-between items-center mb-3">
+        <div className="flex justify-between items-center mb-3 dark:text-gray-200">
           <div>
             <button
               onClick={handleUploadClick}
-              className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition mr-5"
+              className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition mr-5 dark:bg-green-600 dark:hover:bg-green-700"
             >
               Upload Resume
             </button>
 
             <button
               onClick={() => navigate("/source-resume")}
-              className="mt-6 bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition"
+              className="mt-6 bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition dark:bg-blue-600 dark:hover:bg-blue-700  "
             >
               Source Resume
             </button>
@@ -601,7 +1147,7 @@ const RecruiterDashboardMain = () => {
 
           <button
             onClick={() => navigate("/recruiter/add-job")}
-            className="bg-blue-600 text-white ml-4 px-4 py-2 rounded-lg hover:bg-blue-700 transition"
+            className="bg-blue-600 text-white ml-4 px-4 py-2 rounded-lg hover:bg-blue-700 transition dark:bg-blue-600 dark:hover:bg-blue-700"
           >
             Add Job
           </button>
@@ -611,25 +1157,30 @@ const RecruiterDashboardMain = () => {
 
         <div className="flex flex-col lg:flex-row gap-4 my-5 w-full">
           {/* Left Column */}
-          <div className="lg:w-[75%] w-full bg-white rounded-2xl shadow p-4">
-            <h2 className="text-xl font-semibold mb-4">Candidate Status</h2>
+          <div className="lg:w-[75%] w-full bg-white rounded-2xl shadow p-4 dark:bg-gray-800 dark:border-gray-700 dark:shadow-gray-700">
+            <h2 className="text-xl font-semibold mb-4 dark:text-gray-200">
+              Candidate Status
+            </h2>
             <div className="overflow-x-auto">
               <table className="min-w-full table-auto border-collapse">
                 <thead>
-                  <tr className="text-left bg-gray-100">
-                    <th className="p-2">S.No.</th>
-                    <th className="p-2">Name</th>
-                    <th className="p-2">Job Title</th>
-                    <th className="p-2">Company</th>
-                    <th className="p-2">Status</th>
+                  <tr className="text-left bg-gray-100 dark:bg-gray-700 dark:border-gray-600 dark:shadow-gray-600">
+                    <th className="p-2 dark:text-gray-200">S.No.</th>
+                    <th className="p-2 dark:text-gray-200">Name</th>
+                    <th className="p-2 dark:text-gray-200">Job Title</th>
+                    <th className="p-2 dark:text-gray-200">Company</th>
+                    <th className="p-2 dark:text-gray-200">Status</th>
                   </tr>
                 </thead>
                 <tbody>
                   {visibleCandidates.map((cand, index) => (
-                    <tr key={cand.id} className="border-b hover:bg-gray-50">
-                      <td className="p-2">{index + 1}</td>
+                    <tr
+                      key={cand.id}
+                      className="border-b hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-700"
+                    >
+                      <td className="p-2 dark:text-gray-200">{index + 1}</td>
                       <td
-                        className="p-2 text-blue-600 cursor-pointer hover:underline"
+                        className="p-2 text-blue-600 cursor-pointer hover:underline dark:text-blue-400"
                         onClick={() =>
                           navigate(`/recruiter/candidate/${cand.id}`)
                         }
@@ -642,10 +1193,10 @@ const RecruiterDashboardMain = () => {
                       >
                         {cand.job}
                       </td>
-                      <td className="p-2">{cand.company}</td>
+                      <td className="p-2 dark:text-gray-200">{cand.company}</td>
                       <td className="p-2">
                         <select
-                          className="border px-2 py-1 rounded"
+                          className="border px-2 py-1 rounded dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200"
                           defaultValue="Processing"
                           onChange={(e) =>
                             handleStatusChange(cand, e.target.value)
@@ -662,8 +1213,8 @@ const RecruiterDashboardMain = () => {
               </table>
               {showReasonModal && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                  <div className="bg-white w-full max-w-md p-6 rounded-2xl shadow-xl">
-                    <h3 className="text-lg font-semibold mb-4 text-center">
+                  <div className="bg-white w-full max-w-md p-6 rounded-2xl shadow-xl dark:bg-gray-800 dark:border-gray-700 dark:shadow-gray-700">
+                    <h3 className="text-lg font-semibold mb-4 text-center dark:text-gray-200">
                       Reason for Screening Out
                     </h3>
 
@@ -672,7 +1223,7 @@ const RecruiterDashboardMain = () => {
                         Select Reason
                       </label>
                       <select
-                        className="w-full border px-3 py-2 rounded"
+                        className="w-full border px-3 py-2 rounded dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200"
                         value={reason}
                         onChange={(e) => setReason(e.target.value)}
                       >
@@ -691,7 +1242,7 @@ const RecruiterDashboardMain = () => {
                       </label>
                       <textarea
                         rows="3"
-                        className="w-full border px-3 py-2 rounded"
+                        className="w-full border px-3 py-2 rounded dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200"
                         value={desc}
                         onChange={(e) => setDesc(e.target.value)}
                         placeholder="Write more details (optional)..."
@@ -762,14 +1313,16 @@ const RecruiterDashboardMain = () => {
 
         {/* Recent Activities */}
 
-        <div className="bg-white p-6 rounded-lg shadow max-w-full mx-auto">
+        <div className="bg-white p-6 rounded-lg shadow max-w-full mx-auto dark:bg-gray-800 dark:border-gray-700 dark:shadow-gray-700">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-2xl font-semibold">Recent Activity</h2>
+            <h2 className="text-2xl font-semibold dark:text-gray-200">
+              Recent Activity
+            </h2>
             {/* <button className="text-blue-600 hover:underline flex items-center gap-1">
               <FaEdit /> Edit Profile
             </button> */}
           </div>
-          <ul className="list-disc list-inside text-gray-700">
+          <ul className="list-disc list-inside text-gray-700 dark:text-gray-200">
             {recentActivities.map((item, idx) => (
               <li key={idx} className="mb-2">
                 {item}
@@ -777,6 +1330,76 @@ const RecruiterDashboardMain = () => {
             ))}
           </ul>
         </div>
+
+        {showTodayInterviewsModal && (
+          <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-40">
+            <div className="bg-white dark:bg-gray-800 border rounded-xl shadow-2xl p-8 w-full max-w-2xl relative">
+              <button
+                className="absolute top-4 right-4 text-2xl text-gray-500 hover:text-red-500 focus:outline-none"
+                onClick={() => setShowTodayInterviewsModal(false)}
+                aria-label="Close"
+              >
+                ×
+              </button>
+              <div className="mb-6 text-xl font-bold text-center dark:text-gray-100">
+                Today's Interviews
+              </div>
+              {todaysInterviews.length === 0 ? (
+                <div className="text-center text-gray-500 dark:text-gray-300">
+                  No interviews scheduled for today.
+                </div>
+              ) : (
+                <table className="min-w-full text-sm text-left border mb-4">
+                  <thead className="bg-gray-100 dark:bg-gray-700 dark:border-gray-600 dark:shadow-gray-600">
+                    <tr>
+                      <th className="p-2 border dark:text-gray-200">
+                        Candidate
+                      </th>
+                      <th className="p-2 border dark:text-gray-200">
+                        Position
+                      </th>
+                      <th className="p-2 border dark:text-gray-200">Client</th>
+                      <th className="p-2 border dark:text-gray-200">Time</th>
+                      <th className="p-2 border dark:text-gray-200">Type</th>
+                      <th className="p-2 border dark:text-gray-200">Remove</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {todaysInterviews.map((i, idx) => (
+                      <tr key={idx} className="border dark:border-gray-600">
+                        <td className="p-2">{i.candidateName}</td>
+                        <td className="p-2">{i.position}</td>
+                        <td className="p-2">{i.client}</td>
+                        <td className="p-2">{i.interviewTime}</td>
+                        <td className="p-2">{i.interviewType}</td>
+                        <td className="p-2">
+                          <button
+                            className="text-red-600 hover:underline"
+                            onClick={() =>
+                              removeInterview(
+                                interviews.findIndex((intv) => intv === i)
+                              )
+                            }
+                          >
+                            Remove
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+              <div className="flex justify-end">
+                <button
+                  className="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500"
+                  onClick={() => setShowTodayInterviewsModal(false)}
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

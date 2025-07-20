@@ -1,8 +1,8 @@
 module.exports = {
-  content: ["./src/**/*.{js,jsx,ts,tsx}"],
-  darkMode: "class", // ✅ Add this line
+  darkMode: 'class', // or 'media' (but use 'class' for toggle)
+  content: ['./src/**/*.{js,jsx,ts,tsx}'],
   theme: {
     extend: {},
   },
   plugins: [],
-};
+}

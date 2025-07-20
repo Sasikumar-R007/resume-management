@@ -129,6 +129,10 @@ const upload = multer({ storage });
 
 // ==================== Static Files ====================
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+app.use(
+  "/uploads/profiles",
+  express.static(path.join(__dirname, "uploads/profiles"))
+);
 
 // ==================== Routes ====================
 const authRoutes = require("./routes/auth.routes");
@@ -228,15 +232,21 @@ app.use("/api/recruiters", recruiterRoutes);
 const teamLeaderRoutes = require("./routes/teamLeaders");
 app.use("/api/team-leaders", teamLeaderRoutes);
 
+// ==================== Admin Routes ====================
+const adminRoutes = require("./routes/adminRoutes");
+app.use("/api/admins", adminRoutes);
+
 // ==================== Seed Database Route ====================
 app.post("/api/seed", async (req, res) => {
   try {
     const Recruiter = require("./models/Recruiter");
     const TeamLeader = require("./models/teamLeader");
+    const Admin = require("./models/Admin");
 
     // Clear existing data
     await Recruiter.deleteMany();
     await TeamLeader.deleteMany();
+    await Admin.deleteMany();
 
     // Seed recruiters
     const recruiters = [
@@ -339,13 +349,36 @@ app.post("/api/seed", async (req, res) => {
       },
     ];
 
+    // Seed admins
+    const admins = [
+      {
+        adminId: "ADM001",
+        name: "Kumaran",
+        email: "kumaran@scaling.com",
+        password: "kumaran777",
+        mobile: "9999999999",
+        designation: "System Administrator",
+        department: "IT",
+        permissions: [
+          "user_management",
+          "system_settings",
+          "data_export",
+          "analytics",
+          "full_access",
+        ],
+        isActive: true,
+      },
+    ];
+
     await Recruiter.insertMany(recruiters);
     await TeamLeader.insertMany(teamLeaders);
+    await Admin.insertMany(admins);
 
     res.json({
       message: "Database seeded successfully",
       recruiters: recruiters.length,
       teamLeaders: teamLeaders.length,
+      admins: admins.length,
     });
   } catch (error) {
     console.error("Seeding error:", error);

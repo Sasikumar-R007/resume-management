@@ -67,14 +67,20 @@ const EmpAuth = () => {
           alert("Team Leader not found or invalid credentials");
         }
       } else if (selectedRole === "admin") {
-        // For admin, we'll use a simple check - you can modify this based on your admin authentication needs
-        // For now, we'll use a basic check - you might want to create an admin API endpoint later
-        if (email === "admin@example.com" && password === "admin123") {
+        const res = await axios.post(`${API_BASE_URL}/api/admins/login`, {
+          email,
+          password,
+        });
+
+        const adminData = res.data.admin;
+
+        if (adminData) {
           localStorage.setItem("userRole", "admin");
-          localStorage.setItem("userEmail", email);
+          localStorage.setItem("userEmail", adminData.email);
+          localStorage.setItem("adminProfile", JSON.stringify(adminData));
           navigate("/admin");
         } else {
-          alert("Invalid admin credentials");
+          alert("Admin not found or invalid credentials");
         }
       }
     } catch (error) {
