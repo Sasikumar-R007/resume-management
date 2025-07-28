@@ -139,11 +139,13 @@ const authRoutes = require("./routes/auth.routes");
 const jobRoutes = require("./routes/jobRoutes");
 const candidateRoutes = require("./routes/candidates");
 const archivedRoutes = require("./routes/archived");
+const interviewRoutes = require("./routes/interviewRoutes");
 
 app.use("/api/auth", authRoutes);
 app.use("/api/jobs", jobRoutes);
 app.use("/api/candidates", candidateRoutes);
 app.use("/api/archived", archivedRoutes);
+app.use("/api/interviews", interviewRoutes);
 
 // ==================== Resume Upload API ====================
 app.post("/api/upload", upload.array("resumes"), (req, res) => {

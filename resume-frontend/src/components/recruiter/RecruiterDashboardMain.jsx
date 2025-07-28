@@ -150,6 +150,7 @@ const RecruiterDashboardMain = () => {
   const [reason, setReason] = useState("");
   const [desc, setDesc] = useState("");
   const [showAll, setShowAll] = useState(false);
+  const [showTrackerModal, setShowTrackerModal] = useState(false);
 
   //Rec Profile session data
 
@@ -197,40 +198,68 @@ const RecruiterDashboardMain = () => {
   };
 
   // Add state for interviews and modal
-  const [interviews, setInterviews] = useState([]); // {candidateName, position, client, interviewDate, ...}
+  const [allInterviews, setAllInterviews] = useState([]);
   const [showTodayInterviewsModal, setShowTodayInterviewsModal] =
     useState(false);
+
+  // Backend API base URL
+  const API_BASE =
+    process.env.REACT_APP_API_BASE_URL || "http://localhost:5000";
 
   // Helper to get today's date string
   const todayStr = getToday();
 
-  // Filter today's interviews
-  const todaysInterviews = interviews.filter(
+  // Filter today's interviews from allInterviews
+  const todaysInterviews = allInterviews.filter(
     (i) => i.interviewDate === todayStr
   );
 
-  // Update handleInterviewSubmit to add to interviews state
-  const handleInterviewSubmit = (e) => {
+  // Add interview (update backend and re-fetch)
+  const handleInterviewSubmit = async (e) => {
     e.preventDefault();
-    setInterviews((prev) => [...prev, { ...interviewForm }]);
-    // RESET form
-    setInterviewForm({
-      candidateName: "",
-      position: "",
-      client: "",
-      interviewDate: "",
-      interviewTime: "",
-      interviewType: "",
-      interviewRound: "",
-      interviewFeedback: "",
-      finalStatus: "",
-    });
-    setShowInterviewModal(false); // close modal
+    const payload = { recruiterId: recruiter.recruiterId, ...interviewForm };
+    try {
+      const res = await fetch(`${API_BASE}/api/interviews`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (res.ok) {
+        setInterviewForm({
+          candidateName: "",
+          position: "",
+          client: "",
+          interviewDate: "",
+          interviewTime: "",
+          interviewType: "",
+          interviewRound: "",
+          interviewFeedback: "",
+          finalStatus: "",
+        });
+        setShowInterviewModal(false);
+        fetchAllInterviews();
+      }
+    } catch {}
+  };
+
+  // Update interview (PUT and re-fetch)
+  const handleEditInterview = async (updated) => {
+    try {
+      const res = await fetch(`${API_BASE}/api/interviews/${updated._id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updated),
+      });
+      if (res.ok) {
+        setEditInterview(null);
+        fetchAllInterviews();
+      }
+    } catch {}
   };
 
   // Remove interview by index
   const removeInterview = (idx) => {
-    setInterviews((prev) => prev.filter((_, i) => i !== idx));
+    // This function is no longer needed as interviews are managed by allInterviews
   };
 
   // ends...
@@ -467,6 +496,42 @@ const RecruiterDashboardMain = () => {
     setShowInterviewModal(true);
   };
 
+  const [editInterview, setEditInterview] = useState(null);
+
+  // Fetch all interviews for recruiter
+  const fetchAllInterviews = () => {
+    if (recruiter.recruiterId) {
+      fetch(`${API_BASE}/api/interviews?recruiterId=${recruiter.recruiterId}`)
+        .then((res) => res.json())
+        .then((data) => setAllInterviews(data))
+        .catch(() => setAllInterviews([]));
+    }
+  };
+
+  useEffect(() => {
+    fetchAllInterviews();
+    // eslint-disable-next-line
+  }, [recruiter.recruiterId]);
+
+  // Helper to count pending cases
+  const pendingCasesCount = allInterviews.filter(
+    (i) => i.finalStatus !== "Joined/Closure" && i.finalStatus !== "Rejected"
+  ).length;
+
+  const [showContributionModal, setShowContributionModal] = useState(false);
+  const [contributionLevel, setContributionLevel] = useState("85%"); // placeholder
+  const [teamLeaderMsg, setTeamLeaderMsg] = useState(
+    "Great job on your recent closures!"
+  ); // placeholder
+  const [adminMsg, setAdminMsg] = useState("Keep up the good work."); // placeholder
+  const [closures, setClosures] = useState([
+    { name: "Adhitya – Tracx", date: "2024-06-01" },
+    { name: "Ravi Kumar – CodeLabs", date: "2024-05-15" },
+    { name: "Priya M – WebFusion", date: "2024-04-20" },
+  ]);
+
+  const lastClosure = closures.length > 0 ? closures[0] : null;
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-start bg-gray-50 p-6 dark:bg-gray-900">
       <div className="max-w-5xl w-full">
@@ -654,8 +719,13 @@ const RecruiterDashboardMain = () => {
                   <p className="text-sm text-gray-600 underline dark:text-gray-400">
                     Pending Cases
                   </p>
-                  <p className="text-4xl font-bold text-blue-700 mt-1">12</p>
-                  <button className="mt-2 text-sm px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700">
+                  <p className="text-4xl font-bold text-blue-700 mt-1">
+                    {pendingCasesCount}
+                  </p>
+                  <button
+                    className="mt-2 text-sm px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700"
+                    onClick={() => setShowTrackerModal(true)}
+                  >
                     View Tracker
                   </button>
                 </div>
@@ -920,7 +990,10 @@ const RecruiterDashboardMain = () => {
                 </div>
               </div>
 
-              <button className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700">
+              <button
+                className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700"
+                onClick={() => setShowContributionModal(true)}
+              >
                 View Contribution
               </button>
             </div>
@@ -1377,7 +1450,7 @@ const RecruiterDashboardMain = () => {
                             className="text-red-600 hover:underline"
                             onClick={() =>
                               removeInterview(
-                                interviews.findIndex((intv) => intv === i)
+                                allInterviews.findIndex((intv) => intv === i)
                               )
                             }
                           >
@@ -1400,7 +1473,354 @@ const RecruiterDashboardMain = () => {
             </div>
           </div>
         )}
+
+        {showTrackerModal && (
+          <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-40">
+            <div className="bg-white dark:bg-gray-800 border rounded-xl shadow-2xl p-8 w-full max-w-3xl relative">
+              <button
+                className="absolute top-4 right-4 text-2xl text-gray-500 hover:text-red-500 focus:outline-none"
+                onClick={() => setShowTrackerModal(false)}
+                aria-label="Close"
+              >
+                ×
+              </button>
+              <div className="mb-6 text-xl font-bold text-center dark:text-gray-100">
+                All Interviews (Pending Cases)
+              </div>
+              {allInterviews.length === 0 ? (
+                <div className="text-center text-gray-500 dark:text-gray-300">
+                  No interviews found.
+                </div>
+              ) : (
+                <table className="min-w-full text-sm text-left border mb-4">
+                  <thead className="bg-gray-100 dark:bg-gray-700 dark:border-gray-600 dark:shadow-gray-600">
+                    <tr>
+                      <th className="p-2 border dark:text-gray-200">
+                        Candidate
+                      </th>
+                      <th className="p-2 border dark:text-gray-200">
+                        Position
+                      </th>
+                      <th className="p-2 border dark:text-gray-200">Client</th>
+                      <th className="p-2 border dark:text-gray-200">Date</th>
+                      <th className="p-2 border dark:text-gray-200">Time</th>
+                      <th className="p-2 border dark:text-gray-200">Status</th>
+                      <th className="p-2 border dark:text-gray-200">Edit</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {allInterviews.map((i) => (
+                      <tr key={i._id} className="border dark:border-gray-600">
+                        <td className="p-2">{i.candidateName}</td>
+                        <td className="p-2">{i.position}</td>
+                        <td className="p-2">{i.client}</td>
+                        <td className="p-2">{i.interviewDate}</td>
+                        <td className="p-2">{i.interviewTime}</td>
+                        <td className="p-2">{i.finalStatus}</td>
+                        <td className="p-2">
+                          <button
+                            className="text-blue-600 hover:underline"
+                            onClick={() => setEditInterview(i)}
+                          >
+                            Change Status
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+              <div className="flex justify-end">
+                <button
+                  className="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500"
+                  onClick={() => setShowTrackerModal(false)}
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Edit Interview Modal */}
+        {editInterview && (
+          <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-40">
+            <div className="bg-white dark:bg-gray-800 border rounded-xl shadow-2xl p-8 w-full max-w-lg relative">
+              <button
+                className="absolute top-4 right-4 text-2xl text-gray-500 hover:text-red-500 focus:outline-none"
+                onClick={() => setEditInterview(null)}
+                aria-label="Close"
+              >
+                ×
+              </button>
+              <div className="mb-6 text-xl font-bold text-center dark:text-gray-100">
+                Edit Interview
+              </div>
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  handleEditInterview(editInterview);
+                }}
+                className="space-y-4"
+              >
+                <input
+                  className="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200"
+                  value={editInterview.candidateName}
+                  onChange={(e) =>
+                    setEditInterview({
+                      ...editInterview,
+                      candidateName: e.target.value,
+                    })
+                  }
+                  required
+                />
+                <input
+                  className="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200"
+                  value={editInterview.position}
+                  onChange={(e) =>
+                    setEditInterview({
+                      ...editInterview,
+                      position: e.target.value,
+                    })
+                  }
+                  required
+                />
+                <input
+                  className="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200"
+                  value={editInterview.client}
+                  onChange={(e) =>
+                    setEditInterview({
+                      ...editInterview,
+                      client: e.target.value,
+                    })
+                  }
+                  required
+                />
+                <input
+                  type="date"
+                  className="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200"
+                  value={editInterview.interviewDate}
+                  onChange={(e) =>
+                    setEditInterview({
+                      ...editInterview,
+                      interviewDate: e.target.value,
+                    })
+                  }
+                  required
+                />
+                <input
+                  type="time"
+                  className="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200"
+                  value={editInterview.interviewTime}
+                  onChange={(e) =>
+                    setEditInterview({
+                      ...editInterview,
+                      interviewTime: e.target.value,
+                    })
+                  }
+                  required
+                />
+                <select
+                  className="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200"
+                  value={editInterview.interviewType}
+                  onChange={(e) =>
+                    setEditInterview({
+                      ...editInterview,
+                      interviewType: e.target.value,
+                    })
+                  }
+                  required
+                >
+                  <option value="">Interview Type</option>
+                  <option>Telephonic</option>
+                  <option>Face 2 Face</option>
+                  <option>Video Conference</option>
+                  <option>Assignment</option>
+                </select>
+                <select
+                  className="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200"
+                  value={editInterview.interviewRound}
+                  onChange={(e) =>
+                    setEditInterview({
+                      ...editInterview,
+                      interviewRound: e.target.value,
+                    })
+                  }
+                  required
+                >
+                  <option value="">Interview Round</option>
+                  <option>Intro</option>
+                  <option>Assignment</option>
+                  <option>L1</option>
+                  <option>L2</option>
+                  <option>L3</option>
+                  <option>L4</option>
+                  <option>L5</option>
+                  <option>L6</option>
+                  <option>L7</option>
+                  <option>HR Round</option>
+                  <option>Final Round</option>
+                  <option>Offer Discussion</option>
+                  <option>Additional Discussion</option>
+                </select>
+                <select
+                  className="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200"
+                  value={editInterview.interviewFeedback}
+                  onChange={(e) =>
+                    setEditInterview({
+                      ...editInterview,
+                      interviewFeedback: e.target.value,
+                    })
+                  }
+                  required
+                >
+                  <option value="">Interview Feedback</option>
+                  <option>Intro Scheduled</option>
+                  <option>Intro Reject</option>
+                  <option>Assignment Scheduled</option>
+                  <option>Assignment Reject</option>
+                  <option>L1 Scheduled</option>
+                  <option>L1 Reject</option>
+                  <option>L2 Scheduled</option>
+                  <option>L2 Reject</option>
+                  <option>L3 Scheduled</option>
+                  <option>L3 Reject</option>
+                  <option>L4 Scheduled</option>
+                  <option>L4 Reject</option>
+                  <option>L5 Scheduled</option>
+                  <option>L5 Reject</option>
+                  <option>L6 Scheduled</option>
+                  <option>L6 Reject</option>
+                  <option>L7 Scheduled</option>
+                  <option>L7 Reject</option>
+                  <option>HR Round Scheduled</option>
+                  <option>HR Round Reject</option>
+                  <option>Final Round Scheduled</option>
+                  <option>Final Round Reject</option>
+                  <option>Offer Discussion Scheduled</option>
+                  <option>Offer Discussion Reject</option>
+                  <option>Additional Discussion Scheduled</option>
+                  <option>Additional Discussion Reject</option>
+                  <option>Next Round Schedule Pending</option>
+                </select>
+                <select
+                  className="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200"
+                  value={editInterview.finalStatus}
+                  onChange={(e) =>
+                    setEditInterview({
+                      ...editInterview,
+                      finalStatus: e.target.value,
+                    })
+                  }
+                  required
+                >
+                  <option value="">Final Status</option>
+                  <option>Rejected</option>
+                  <option>Position On-Hold</option>
+                  <option>Schedule Pending</option>
+                  <option>Offer Roll Out</option>
+                  <option>Offer Signing Pending</option>
+                  <option>Offer & Joining Pending</option>
+                  <option>Joined/Closure</option>
+                </select>
+                <div className="flex justify-end gap-2 mt-4">
+                  <button
+                    type="button"
+                    className="bg-gray-300 px-4 py-2 rounded hover:bg-gray-400 dark:bg-gray-700 dark:hover:bg-gray-600"
+                    onClick={() => setEditInterview(null)}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 dark:bg-green-600 dark:hover:bg-green-700"
+                  >
+                    Save
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
       </div>
+
+      {showContributionModal && (
+        <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-40">
+          <div className="bg-white dark:bg-gray-800 border rounded-xl shadow-2xl p-8 w-full max-w-lg relative">
+            <button
+              className="absolute top-4 right-4 text-2xl text-gray-500 hover:text-red-500 focus:outline-none"
+              onClick={() => setShowContributionModal(false)}
+              aria-label="Close"
+            >
+              ×
+            </button>
+            <div className="mb-6 text-xl font-bold text-center dark:text-gray-100">
+              Contribution Details
+            </div>
+            <div className="mb-4">
+              <div className="font-semibold mb-2 dark:text-gray-200">
+                Closures
+              </div>
+              {closures.length === 0 ? (
+                <div className="text-gray-500 dark:text-gray-300">
+                  No closures yet.
+                </div>
+              ) : (
+                <ul className="list-disc list-inside text-gray-700 dark:text-gray-200 mb-2">
+                  {closures.map((c, idx) => (
+                    <li key={idx}>
+                      {c.name}{" "}
+                      <span className="text-xs text-gray-500 ml-2">
+                        ({c.date})
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+            <div className="mb-4">
+              <div className="font-semibold dark:text-gray-200">
+                Last Closure Date
+              </div>
+              <div className="text-gray-700 dark:text-gray-200">
+                {lastClosure ? lastClosure.date : "N/A"}
+              </div>
+            </div>
+            <div className="mb-4">
+              <div className="font-semibold dark:text-gray-200 mb-1">
+                Contribution Level
+              </div>
+              <div className="border rounded p-2 bg-gray-50 dark:bg-gray-700 dark:text-gray-200">
+                {contributionLevel}
+              </div>
+            </div>
+            <div className="mb-4">
+              <div className="font-semibold dark:text-gray-200 mb-1">
+                Message from Team Leader
+              </div>
+              <div className="border rounded p-2 bg-blue-50 dark:bg-blue-900 dark:text-gray-200">
+                {teamLeaderMsg}
+              </div>
+            </div>
+            <div className="mb-4">
+              <div className="font-semibold dark:text-gray-200 mb-1">
+                Message from Admin
+              </div>
+              <div className="border rounded p-2 bg-green-50 dark:bg-green-900 dark:text-gray-200">
+                {adminMsg}
+              </div>
+            </div>
+            <div className="flex justify-end">
+              <button
+                className="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500"
+                onClick={() => setShowContributionModal(false)}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
