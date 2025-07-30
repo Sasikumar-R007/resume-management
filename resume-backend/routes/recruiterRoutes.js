@@ -52,7 +52,6 @@ router.post("/login", async (req, res) => {
   } catch (error) {
     console.error("Login error:", error);
 
-    // Handle specific MongoDB errors
     if (error.name === "MongooseError" || error.name === "MongoError") {
       if (error.message.includes("buffering timed out")) {
         return res.status(500).json({
@@ -96,6 +95,47 @@ router.get("/:recruiterId", async (req, res) => {
     res.json(recruiter);
   } catch (error) {
     res.status(500).json({ message: "Server error" });
+  }
+});
+
+// 🔹 Add new recruiter
+router.post("/", async (req, res) => {
+  try {
+    const {
+      firstName,
+      lastName,
+      email,
+      phone,
+      password,
+      reportingTo, // should be teamLeadId
+    } = req.body;
+
+    if (
+      !firstName ||
+      !lastName ||
+      !email ||
+      !phone ||
+      !password ||
+      !reportingTo
+    ) {
+      return res.status(400).send("All fields are required");
+    }
+
+    const name = `${firstName} ${lastName}`.trim();
+
+    const newRecruiter = new Recruiter({
+      name,
+      email,
+      phone,
+      password,
+      reportingTo,
+    });
+
+    await newRecruiter.save();
+    res.status(201).json(newRecruiter);
+  } catch (error) {
+    console.error("Error creating recruiter:", error);
+    res.status(500).send("Internal Server Error");
   }
 });
 

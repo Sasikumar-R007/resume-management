@@ -4,7 +4,8 @@ import axios from "axios";
 
 import SystemSettings from "./SystemSettings";
 import ActivityLogs from "./ActivityLogs";
-import AddTeamLeaderModal from "./AddTeamLeaderModal"; // adjust the path if needed
+import AddTeamLeaderModal from "./AddTeamLeaderModal";
+import AddRecruiterModal from "./AddRecruiterModal";
 
 import {
   FaDatabase,
@@ -44,8 +45,17 @@ const AdminDashboard = () => {
   const [teamLeadersData, setTeamLeadersData] = useState([]);
   const [recruitersData, setRecruitersData] = useState([]);
 
+  const [showAddRecruiter, setShowAddRecruiter] = useState(false);
+
   const openTLModal = () => setShowTLModal(true);
   const closeTLModal = () => setShowTLModal(false);
+
+  const [tlForm, setTlForm] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    password: "",
+  });
 
   // Add requirements state and modal state
   const [requirements, setRequirements] = useState([
@@ -493,6 +503,22 @@ const AdminDashboard = () => {
     }
   };
 
+  const handleAddTL = async () => {
+    try {
+      const res = await axios.post(
+        "http://localhost:5000/api/team-leaders",
+        tlForm
+      );
+      alert("Team Leader added successfully!");
+      setShowTLModal(false);
+      setTlForm({ name: "", email: "", phone: "", password: "" });
+      // optionally: refresh TL list
+    } catch (err) {
+      alert("Failed to add team leader");
+      console.error(err);
+    }
+  };
+
   // Profile picture functions
   const handleImageUpload = (event) => {
     const file = event.target.files[0];
@@ -567,21 +593,29 @@ const AdminDashboard = () => {
 
               <div className="flex gap-2">
                 <button
-                  onClick={openTLModal}
-                  className="bg-black text-white px-4 py-2 rounded hover:bg-gray-800"
+                  className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                  onClick={() => setShowTLModal(true)}
                 >
                   + Add Team Leader
                 </button>
 
-                {/* Conditionally render modal */}
-                {showTLModal && <AddTeamLeaderModal onClose={closeTLModal} />}
+                {/* Show modal when button is clicked */}
+                {showTLModal && (
+                  <AddTeamLeaderModal onClose={() => setShowTLModal(false)} />
+                )}
 
                 <button
-                  onClick={() => navigate("/admin/add-recruiter")}
+                  onClick={() => setShowAddRecruiter(true)}
                   className="bg-gray-800 text-white px-4 py-2 rounded flex items-center gap-2 hover:bg-gray-700"
                 >
                   <FaUserPlus /> Add Recruiter
                 </button>
+
+                {showAddRecruiter && (
+                  <AddRecruiterModal
+                    onClose={() => setShowAddRecruiter(false)}
+                  />
+                )}
               </div>
             </div>
 
@@ -1524,6 +1558,60 @@ const AdminDashboard = () => {
           </div>
         </div>
       )}
+
+      {/* {showTLModal && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+          <div className="bg-white w-full max-w-md p-6 rounded shadow-lg">
+            <h2 className="text-xl font-bold mb-4">Add New Team Leader</h2>
+
+            <input
+              type="text"
+              placeholder="Name"
+              className="w-full border p-2 mb-3"
+              value={tlForm.name}
+              onChange={(e) => setTlForm({ ...tlForm, name: e.target.value })}
+            />
+            <input
+              type="email"
+              placeholder="Email"
+              className="w-full border p-2 mb-3"
+              value={tlForm.email}
+              onChange={(e) => setTlForm({ ...tlForm, email: e.target.value })}
+            />
+            <input
+              type="tel"
+              placeholder="Phone"
+              className="w-full border p-2 mb-3"
+              value={tlForm.phone}
+              onChange={(e) => setTlForm({ ...tlForm, phone: e.target.value })}
+            />
+            <input
+              type="password"
+              placeholder="Password"
+              className="w-full border p-2 mb-3"
+              value={tlForm.password}
+              onChange={(e) =>
+                setTlForm({ ...tlForm, password: e.target.value })
+              }
+            />
+
+            <div className="flex justify-end space-x-2">
+              <button
+                className="bg-gray-300 px-4 py-2 rounded"
+                onClick={() => setShowTLModal(false)}
+              >
+                Cancel
+              </button>
+              <button
+                className="bg-green-600 text-white px-4 py-2 rounded"
+                onClick={handleAddTL}
+              >
+                Add
+              </button>
+            </div>
+          </div>
+        </div>
+      )} */}
     </div>
   );
 };

@@ -1,25 +1,26 @@
 const mongoose = require("mongoose");
 
-const recruiterSchema = new mongoose.Schema(
-  {
-    recruiterId: {
-      type: String,
-      unique: true,
-      required: true,
-    },
-    name: String,
-    email: {
-      type: String,
-      unique: true,
-      required: true,
-    },
-    mobile: String,
-    designation: String, // e.g. "HR Executive"
-    reportingTo: String, // e.g. "Rajesh Kumar"
-    joiningDate: Date,
-    password: String, // simple for now, later hash if needed
+const recruiterSchema = new mongoose.Schema({
+  recruiterId: {
+    type: String,
+    unique: true,
+    required: true,
   },
-  { timestamps: true }
-);
+  name: String,
+  email: {
+    type: String,
+    unique: true,
+    required: true,
+  },
+  password: String,
+  mobile: String,
+  reportingTo: {
+    type: String,
+    required: true,
+  },
+  joiningDate: Date,
+  profilePic: String,
+  linkedin: String,
+});
 
 module.exports = mongoose.model("Recruiter", recruiterSchema);

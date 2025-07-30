@@ -18,6 +18,7 @@ const teamLeaderSchema = new mongoose.Schema({
   department: String,
   joiningDate: Date,
   profilePic: String,
+  linkedin: String,
 });
 
 module.exports = mongoose.model("TeamLeader", teamLeaderSchema);

@@ -4,7 +4,7 @@ import Signup from "./components/common/Signup";
 import GetStarted from "./components/common/GetStarted";
 import AdminDashboard from "./components/admin/AdminDashboard";
 import AddTeamLeader from "./components/admin/AddTeamLeaderModal";
-import AddRecruiter from "./components/admin/AddRecruiter";
+import AddRecruiter from "./components/admin/AddRecruiterModal";
 import TeamLeaderDashboard from "./components/teamlead/TeamLeaderDashboard";
 import TeamLeaderProfileSetup from "./components/teamlead/TeamLeaderProfileSetup";
 import TeamLeaderMainDashboard from "./components/teamlead/TeamLeaderMainDashboard";
