@@ -3,7 +3,7 @@ import Login from "./components/common/Login";
 import Signup from "./components/common/Signup";
 import GetStarted from "./components/common/GetStarted";
 import AdminDashboard from "./components/admin/AdminDashboard";
-import AddTeamLeader from "./components/admin/AddTeamLeader";
+import AddTeamLeader from "./components/admin/AddTeamLeaderModal";
 import AddRecruiter from "./components/admin/AddRecruiter";
 import TeamLeaderDashboard from "./components/teamlead/TeamLeaderDashboard";
 import TeamLeaderProfileSetup from "./components/teamlead/TeamLeaderProfileSetup";
@@ -34,6 +34,7 @@ import JobDetails from "./components/common/JobDetails";
 
 import { SourceResume } from "./components/sourceresume/SourceResume";
 import CurrentRequirementsPage from "./components/CurrentRequirementsPage";
+import ContributionPage from "./components/admin/ContributionPage";
 
 function App() {
   return (
@@ -77,6 +78,8 @@ function App() {
 
         <Route path="/source-resume" element={<SourceResume />} />
         <Route path="/current-requirements" element={<CurrentRequirementsPage />} />
+
+        <Route path="/admin/contribution" element={<ContributionPage />} />
 
         {/* Add more routes as needed */}
       </Routes>

@@ -10,8 +10,11 @@ const InterviewSchema = new mongoose.Schema(
     interviewTime: { type: String, required: true },
     interviewType: { type: String, required: true },
     interviewRound: { type: String, required: true },
-    interviewFeedback: { type: String, required: true },
-    finalStatus: { type: String, required: true },
+    interviewFeedback: { type: String, default: "" },
+    finalStatus: { type: String, default: "" },
+    nextInterviewDate: { type: String, default: "" },
+    nextInterviewTime: { type: String, default: "" },
+    candidateEmail: { type: String, default: "" },
   },
   { timestamps: true }
 );

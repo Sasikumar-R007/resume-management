@@ -188,8 +188,6 @@ const RecruiterDashboardMain = () => {
     interviewTime: "",
     interviewType: "",
     interviewRound: "",
-    interviewFeedback: "",
-    finalStatus: "",
   });
 
   const handleInterviewChange = (e) => {
@@ -217,7 +215,12 @@ const RecruiterDashboardMain = () => {
   // Add interview (update backend and re-fetch)
   const handleInterviewSubmit = async (e) => {
     e.preventDefault();
-    const payload = { recruiterId: recruiter.recruiterId, ...interviewForm };
+    const payload = {
+      recruiterId: recruiter.recruiterId,
+      ...interviewForm,
+      interviewFeedback: "", // Add default empty value
+      finalStatus: "", // Add default empty value
+    };
     try {
       const res = await fetch(`${API_BASE}/api/interviews`, {
         method: "POST",
@@ -233,13 +236,15 @@ const RecruiterDashboardMain = () => {
           interviewTime: "",
           interviewType: "",
           interviewRound: "",
-          interviewFeedback: "",
-          finalStatus: "",
         });
         setShowInterviewModal(false);
         fetchAllInterviews();
+      } else {
+        console.error("Failed to add interview:", res.status);
       }
-    } catch {}
+    } catch (err) {
+      console.error("Error adding interview:", err);
+    }
   };
 
   // Update interview (PUT and re-fetch)
@@ -251,10 +256,42 @@ const RecruiterDashboardMain = () => {
         body: JSON.stringify(updated),
       });
       if (res.ok) {
+        // If status is rejected, archive the candidate
+        if (updated.finalStatus === "Rejected") {
+          try {
+            const archivePayload = {
+              name: updated.candidateName,
+              email: updated.candidateEmail || "noemail@example.com",
+              status: updated.finalStatus,
+              reason:
+                updated.interviewFeedback ||
+                "Rejected during interview process",
+            };
+
+            const archiveRes = await fetch(`${API_BASE}/api/archived`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(archivePayload),
+            });
+
+            if (archiveRes.ok) {
+              alert(
+                `${updated.candidateName} has been rejected and moved to archived candidates.`
+              );
+            } else {
+              console.error("Failed to archive candidate");
+            }
+          } catch (archiveErr) {
+            console.error("Error archiving candidate:", archiveErr);
+          }
+        }
+
         setEditInterview(null);
         fetchAllInterviews();
       }
-    } catch {}
+    } catch (err) {
+      console.error("Error updating interview:", err);
+    }
   };
 
   // Remove interview by index
@@ -383,6 +420,17 @@ const RecruiterDashboardMain = () => {
     return requirementCounts[reqId]?.[date] || "-";
   };
 
+  // Helper to get the most recent count for a requirement
+  const getMostRecentCountForReq = (reqId) => {
+    const counts = requirementCounts[reqId];
+    if (!counts) return 0;
+    const dates = Object.keys(counts);
+    if (dates.length === 0) return 0;
+    // Sort dates descending (latest first)
+    dates.sort((a, b) => b.localeCompare(a));
+    return parseInt(counts[dates[0]]) || 0;
+  };
+
   // Helper to get the most recent date with a count for a requirement
   const getMostRecentDateForReq = (reqId) => {
     const counts = requirementCounts[reqId];
@@ -392,6 +440,16 @@ const RecruiterDashboardMain = () => {
     // Sort dates descending (latest first)
     dates.sort((a, b) => b.localeCompare(a));
     return dates[0];
+  };
+
+  // Helper to get total count for a requirement
+  const getTotalCountForReq = (reqId) => {
+    const counts = requirementCounts[reqId];
+    if (!counts) return 0;
+    return Object.values(counts).reduce(
+      (sum, count) => sum + (parseInt(count) || 0),
+      0
+    );
   };
 
   // Simple calendar for current month
@@ -823,60 +881,6 @@ const RecruiterDashboardMain = () => {
                     <option>Additional Discussion</option>
                   </select>
 
-                  <select
-                    name="interviewFeedback"
-                    value={interviewForm.interviewFeedback}
-                    onChange={handleInterviewChange}
-                    className="border p-2 rounded dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200"
-                    required
-                  >
-                    <option value="">Interview Feedback</option>
-                    <option>Intro Scheduled</option>
-                    <option>Intro Reject</option>
-                    <option>Assignment Scheduled</option>
-                    <option>Assignment Reject</option>
-                    <option>L1 Scheduled</option>
-                    <option>L1 Reject</option>
-                    <option>L2 Scheduled</option>
-                    <option>L2 Reject</option>
-                    <option>L3 Scheduled</option>
-                    <option>L3 Reject</option>
-                    <option>L4 Scheduled</option>
-                    <option>L4 Reject</option>
-                    <option>L5 Scheduled</option>
-                    <option>L5 Reject</option>
-                    <option>L6 Scheduled</option>
-                    <option>L6 Reject</option>
-                    <option>L7 Scheduled</option>
-                    <option>L7 Reject</option>
-                    <option>HR Round Scheduled</option>
-                    <option>HR Round Reject</option>
-                    <option>Final Round Scheduled</option>
-                    <option>Final Round Reject</option>
-                    <option>Offer Discussion Scheduled</option>
-                    <option>Offer Discussion Reject</option>
-                    <option>Additional Discussion Scheduled</option>
-                    <option>Additional Discussion Reject</option>
-                    <option>Next Round Schedule Pending</option>
-                  </select>
-
-                  <select
-                    name="finalStatus"
-                    value={interviewForm.finalStatus}
-                    onChange={handleInterviewChange}
-                    className="border p-2 rounded dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200"
-                    required
-                  >
-                    <option value="">Final Status</option>
-                    <option>Rejected</option>
-                    <option>Position On-Hold</option>
-                    <option>Schedule Pending</option>
-                    <option>Offer Roll Out</option>
-                    <option>Offer Signing Pending</option>
-                    <option>Offer & Joining Pending</option>
-                    <option>Joined/Closure</option>
-                  </select>
-
                   <div className="col-span-2 flex justify-end gap-2 mt-4">
                     <button
                       type="button"
@@ -1067,21 +1071,13 @@ const RecruiterDashboardMain = () => {
                               req.id
                             );
                             setSelectedDate(mostRecentDate || getToday());
-                            setInputCount(
-                              requirementCounts[req.id]?.[mostRecentDate] || ""
-                            );
+                            setInputCount("");
                             setCalendarStep("calendar");
                           }}
                         >
-                          {getCountForReq(
-                            req.id,
-                            getMostRecentDateForReq(req.id)
-                          ) === "-"
+                          {getTotalCountForReq(req.id) === 0
                             ? "Set"
-                            : `${getCountForReq(
-                                req.id,
-                                getMostRecentDateForReq(req.id)
-                              )} (${getMostRecentDateForReq(req.id)})`}
+                            : getTotalCountForReq(req.id)}
                         </button>
                       </td>
                     </tr>
@@ -1116,9 +1112,7 @@ const RecruiterDashboardMain = () => {
                         selected={selectedDate}
                         onDateClick={(dateStr) => {
                           setSelectedDate(dateStr);
-                          setInputCount(
-                            requirementCounts[openCalendarId]?.[dateStr] || ""
-                          );
+                          setInputCount("");
                           setCalendarStep("input");
                         }}
                       />
@@ -1129,15 +1123,22 @@ const RecruiterDashboardMain = () => {
                     <div className="mb-4 text-lg font-semibold dark:text-gray-200">
                       Set Count for {selectedDate}
                     </div>
+                    <div className="mb-2 text-sm text-gray-600 dark:text-gray-400">
+                      Current count for this date:{" "}
+                      {requirementCounts[openCalendarId]?.[selectedDate] || 0}
+                    </div>
                     <input
                       type="number"
                       min="0"
                       className="border px-3 py-2 rounded w-full dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200 mb-4"
                       value={inputCount}
                       onChange={(e) => setInputCount(e.target.value)}
-                      placeholder="Count"
+                      placeholder="Add to count"
                       autoFocus
                     />
+                    <div className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                      This will be added to the existing count for this date.
+                    </div>
                     <div className="flex gap-4 mt-2 w-full justify-center">
                       <button
                         className="bg-gray-400 text-white px-5 py-2 rounded hover:bg-gray-500 text-sm font-semibold"
@@ -1148,11 +1149,18 @@ const RecruiterDashboardMain = () => {
                       <button
                         className="bg-green-600 text-white px-5 py-2 rounded hover:bg-green-700 text-sm font-semibold"
                         onClick={() => {
+                          const currentCount = parseInt(
+                            requirementCounts[openCalendarId]?.[selectedDate] ||
+                              0
+                          );
+                          const newCount = parseInt(inputCount) || 0;
+                          const totalCount = currentCount + newCount;
+
                           setRequirementCounts((prev) => ({
                             ...prev,
                             [openCalendarId]: {
                               ...(prev[openCalendarId] || {}),
-                              [selectedDate]: inputCount,
+                              [selectedDate]: totalCount.toString(),
                             },
                           }));
                           setOpenCalendarId(null);
@@ -1503,7 +1511,6 @@ const RecruiterDashboardMain = () => {
                       </th>
                       <th className="p-2 border dark:text-gray-200">Client</th>
                       <th className="p-2 border dark:text-gray-200">Date</th>
-                      <th className="p-2 border dark:text-gray-200">Time</th>
                       <th className="p-2 border dark:text-gray-200">Status</th>
                       <th className="p-2 border dark:text-gray-200">Edit</th>
                     </tr>
@@ -1515,7 +1522,6 @@ const RecruiterDashboardMain = () => {
                         <td className="p-2">{i.position}</td>
                         <td className="p-2">{i.client}</td>
                         <td className="p-2">{i.interviewDate}</td>
-                        <td className="p-2">{i.interviewTime}</td>
                         <td className="p-2">{i.finalStatus}</td>
                         <td className="p-2">
                           <button
@@ -1554,7 +1560,7 @@ const RecruiterDashboardMain = () => {
                 ×
               </button>
               <div className="mb-6 text-xl font-bold text-center dark:text-gray-100">
-                Edit Interview
+                Change Interview Status
               </div>
               <form
                 onSubmit={(e) => {
@@ -1563,166 +1569,166 @@ const RecruiterDashboardMain = () => {
                 }}
                 className="space-y-4"
               >
-                <input
-                  className="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200"
-                  value={editInterview.candidateName}
-                  onChange={(e) =>
-                    setEditInterview({
-                      ...editInterview,
-                      candidateName: e.target.value,
-                    })
-                  }
-                  required
-                />
-                <input
-                  className="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200"
-                  value={editInterview.position}
-                  onChange={(e) =>
-                    setEditInterview({
-                      ...editInterview,
-                      position: e.target.value,
-                    })
-                  }
-                  required
-                />
-                <input
-                  className="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200"
-                  value={editInterview.client}
-                  onChange={(e) =>
-                    setEditInterview({
-                      ...editInterview,
-                      client: e.target.value,
-                    })
-                  }
-                  required
-                />
-                <input
-                  type="date"
-                  className="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200"
-                  value={editInterview.interviewDate}
-                  onChange={(e) =>
-                    setEditInterview({
-                      ...editInterview,
-                      interviewDate: e.target.value,
-                    })
-                  }
-                  required
-                />
-                <input
-                  type="time"
-                  className="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200"
-                  value={editInterview.interviewTime}
-                  onChange={(e) =>
-                    setEditInterview({
-                      ...editInterview,
-                      interviewTime: e.target.value,
-                    })
-                  }
-                  required
-                />
-                <select
-                  className="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200"
-                  value={editInterview.interviewType}
-                  onChange={(e) =>
-                    setEditInterview({
-                      ...editInterview,
-                      interviewType: e.target.value,
-                    })
-                  }
-                  required
-                >
-                  <option value="">Interview Type</option>
-                  <option>Telephonic</option>
-                  <option>Face 2 Face</option>
-                  <option>Video Conference</option>
-                  <option>Assignment</option>
-                </select>
-                <select
-                  className="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200"
-                  value={editInterview.interviewRound}
-                  onChange={(e) =>
-                    setEditInterview({
-                      ...editInterview,
-                      interviewRound: e.target.value,
-                    })
-                  }
-                  required
-                >
-                  <option value="">Interview Round</option>
-                  <option>Intro</option>
-                  <option>Assignment</option>
-                  <option>L1</option>
-                  <option>L2</option>
-                  <option>L3</option>
-                  <option>L4</option>
-                  <option>L5</option>
-                  <option>L6</option>
-                  <option>L7</option>
-                  <option>HR Round</option>
-                  <option>Final Round</option>
-                  <option>Offer Discussion</option>
-                  <option>Additional Discussion</option>
-                </select>
-                <select
-                  className="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200"
-                  value={editInterview.interviewFeedback}
-                  onChange={(e) =>
-                    setEditInterview({
-                      ...editInterview,
-                      interviewFeedback: e.target.value,
-                    })
-                  }
-                  required
-                >
-                  <option value="">Interview Feedback</option>
-                  <option>Intro Scheduled</option>
-                  <option>Intro Reject</option>
-                  <option>Assignment Scheduled</option>
-                  <option>Assignment Reject</option>
-                  <option>L1 Scheduled</option>
-                  <option>L1 Reject</option>
-                  <option>L2 Scheduled</option>
-                  <option>L2 Reject</option>
-                  <option>L3 Scheduled</option>
-                  <option>L3 Reject</option>
-                  <option>L4 Scheduled</option>
-                  <option>L4 Reject</option>
-                  <option>L5 Scheduled</option>
-                  <option>L5 Reject</option>
-                  <option>L6 Scheduled</option>
-                  <option>L6 Reject</option>
-                  <option>L7 Scheduled</option>
-                  <option>L7 Reject</option>
-                  <option>HR Round Scheduled</option>
-                  <option>HR Round Reject</option>
-                  <option>Final Round Scheduled</option>
-                  <option>Final Round Reject</option>
-                  <option>Offer Discussion Scheduled</option>
-                  <option>Offer Discussion Reject</option>
-                  <option>Additional Discussion Scheduled</option>
-                  <option>Additional Discussion Reject</option>
-                  <option>Next Round Schedule Pending</option>
-                </select>
-                <select
-                  className="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200"
-                  value={editInterview.finalStatus}
-                  onChange={(e) =>
-                    setEditInterview({
-                      ...editInterview,
-                      finalStatus: e.target.value,
-                    })
-                  }
-                  required
-                >
-                  <option value="">Final Status</option>
-                  <option>Rejected</option>
-                  <option>Position On-Hold</option>
-                  <option>Schedule Pending</option>
-                  <option>Offer Roll Out</option>
-                  <option>Offer Signing Pending</option>
-                  <option>Offer & Joining Pending</option>
-                  <option>Joined/Closure</option>
-                </select>
+                {/* Display existing data as text */}
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <span className="font-semibold dark:text-gray-200">
+                      Date & Time:
+                    </span>
+                    <span className="dark:text-gray-200">
+                      {editInterview.interviewDate}{" "}
+                      {editInterview.interviewTime}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="font-semibold dark:text-gray-200">
+                      Interview Type:
+                    </span>
+                    <span className="dark:text-gray-200">
+                      {editInterview.interviewType}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="font-semibold dark:text-gray-200">
+                      Interview Round:
+                    </span>
+                    <span className="dark:text-gray-200">
+                      {editInterview.interviewRound}
+                    </span>
+                  </div>
+                </div>
+
+                <hr className="my-4" />
+
+                {/* Interview Feedback */}
+                <div>
+                  <label className="block text-sm font-medium mb-1 dark:text-gray-200">
+                    Interview Feedback
+                  </label>
+                  <select
+                    className="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200"
+                    value={editInterview.interviewFeedback || ""}
+                    onChange={(e) =>
+                      setEditInterview({
+                        ...editInterview,
+                        interviewFeedback: e.target.value,
+                      })
+                    }
+                    required
+                  >
+                    <option value="">Select Interview Feedback</option>
+                    <option>Intro Scheduled</option>
+                    <option>Intro Reject</option>
+                    <option>Assignment Scheduled</option>
+                    <option>Assignment Reject</option>
+                    <option>L1 Scheduled</option>
+                    <option>L1 Reject</option>
+                    <option>L2 Scheduled</option>
+                    <option>L2 Reject</option>
+                    <option>L3 Scheduled</option>
+                    <option>L3 Reject</option>
+                    <option>L4 Scheduled</option>
+                    <option>L4 Reject</option>
+                    <option>L5 Scheduled</option>
+                    <option>L5 Reject</option>
+                    <option>L6 Scheduled</option>
+                    <option>L6 Reject</option>
+                    <option>L7 Scheduled</option>
+                    <option>L7 Reject</option>
+                    <option>HR Round Scheduled</option>
+                    <option>HR Round Reject</option>
+                    <option>Final Round Scheduled</option>
+                    <option>Final Round Reject</option>
+                    <option>Offer Discussion Scheduled</option>
+                    <option>Offer Discussion Reject</option>
+                    <option>Additional Discussion Scheduled</option>
+                    <option>Additional Discussion Reject</option>
+                    <option>Next Round Schedule Pending</option>
+                  </select>
+                </div>
+
+                {/* Final Status */}
+                <div>
+                  <label className="block text-sm font-medium mb-1 dark:text-gray-200">
+                    Final Status
+                  </label>
+                  <select
+                    className="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200"
+                    value={editInterview.finalStatus || ""}
+                    onChange={(e) => {
+                      const newStatus = e.target.value;
+                      setEditInterview({
+                        ...editInterview,
+                        finalStatus: newStatus,
+                        // Clear next interview date/time if status is rejected
+                        nextInterviewDate:
+                          newStatus === "Rejected"
+                            ? ""
+                            : editInterview.nextInterviewDate,
+                        nextInterviewTime:
+                          newStatus === "Rejected"
+                            ? ""
+                            : editInterview.nextInterviewTime,
+                      });
+                    }}
+                    required
+                  >
+                    <option value="">Select Final Status</option>
+                    <option>Rejected</option>
+                    <option>Position On-Hold</option>
+                    <option>Schedule Pending</option>
+                    <option>Offer Roll Out</option>
+                    <option>Offer Signing Pending</option>
+                    <option>Offer & Joining Pending</option>
+                    <option>Joined/Closure</option>
+                  </select>
+                </div>
+
+                {/* Conditional Next Interview Date/Time for non-rejected statuses */}
+                {editInterview.finalStatus &&
+                  editInterview.finalStatus !== "Rejected" && (
+                    <div className="space-y-2">
+                      <label className="block text-sm font-medium dark:text-gray-200">
+                        Next Interview Date & Time
+                      </label>
+                      <div className="flex gap-2">
+                        <input
+                          type="date"
+                          className="flex-1 border p-2 rounded dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200"
+                          value={editInterview.nextInterviewDate || ""}
+                          onChange={(e) =>
+                            setEditInterview({
+                              ...editInterview,
+                              nextInterviewDate: e.target.value,
+                            })
+                          }
+                          placeholder="Date"
+                        />
+                        <input
+                          type="time"
+                          className="flex-1 border p-2 rounded dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200"
+                          value={editInterview.nextInterviewTime || ""}
+                          onChange={(e) =>
+                            setEditInterview({
+                              ...editInterview,
+                              nextInterviewTime: e.target.value,
+                            })
+                          }
+                          placeholder="Time"
+                        />
+                      </div>
+                      {/* Display current next interview info if available */}
+                      {editInterview.nextInterviewDate &&
+                        editInterview.nextInterviewTime && (
+                          <div className="text-sm text-gray-600 dark:text-gray-400 mt-2">
+                            Current next interview:{" "}
+                            {editInterview.nextInterviewDate} at{" "}
+                            {editInterview.nextInterviewTime}
+                          </div>
+                        )}
+                    </div>
+                  )}
+
                 <div className="flex justify-end gap-2 mt-4">
                   <button
                     type="button"

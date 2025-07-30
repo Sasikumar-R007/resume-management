@@ -7,6 +7,9 @@ import {
   FaUserTie,
   FaChartPie,
   FaUserPlus,
+  FaEnvelope,
+  FaPhone,
+  FaTimes,
 } from "react-icons/fa";
 import { FiRepeat } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
@@ -24,6 +27,12 @@ const TeamLeaderDashboard = () => {
   const [selectedRecruiter, setSelectedRecruiter] = useState("");
   const [darkMode, setDarkMode] = useState(false);
 
+  // New state for modals
+  const [showRecruitersModal, setShowRecruitersModal] = useState(false);
+  const [showOngoingModal, setShowOngoingModal] = useState(false);
+  const [recruiterDetails, setRecruiterDetails] = useState([]);
+  const [loading, setLoading] = useState(false);
+
   useEffect(() => {
     if (darkMode) {
       document.documentElement.classList.add("dark");
@@ -31,6 +40,93 @@ const TeamLeaderDashboard = () => {
       document.documentElement.classList.remove("dark");
     }
   }, [darkMode]);
+
+  // Function to fetch recruiter details
+  const fetchRecruiterDetails = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch("http://localhost:5000/api/recruiters");
+      if (response.ok) {
+        const allRecruiters = await response.json();
+
+        // Filter recruiters based on team leader assignment
+        // This is a simple assignment logic - you can modify based on your business rules
+        const teamLeaderId = teamLeader.teamLeadId;
+        let assignedRecruitersToTL = [];
+
+        if (teamLeaderId === "TL001") {
+          assignedRecruitersToTL = allRecruiters.filter(
+            (rec) => rec.recruiterId === "R001" || rec.recruiterId === "R002"
+          );
+        } else if (teamLeaderId === "TL002") {
+          assignedRecruitersToTL = allRecruiters.filter(
+            (rec) => rec.recruiterId === "R003" || rec.recruiterId === "R004"
+          );
+        } else if (teamLeaderId === "TL003") {
+          assignedRecruitersToTL = allRecruiters.filter(
+            (rec) => rec.recruiterId === "R005" || rec.recruiterId === "R006"
+          );
+        } else {
+          // Fallback: assign first 2 recruiters to any TL
+          assignedRecruitersToTL = allRecruiters.slice(0, 2);
+        }
+
+        // Add rough closure counts for this month
+        assignedRecruitersToTL = assignedRecruitersToTL.map((recruiter) => ({
+          ...recruiter,
+          closuresThisMonth: Math.floor(Math.random() * 8) + 2, // Random number between 2-9
+        }));
+
+        setRecruiterDetails(assignedRecruitersToTL);
+      }
+    } catch (error) {
+      console.error("Error fetching recruiter details:", error);
+      // Fallback to dummy data if API fails
+      setRecruiterDetails([
+        {
+          recruiterId: "R001",
+          name: "R. Sudharshan",
+          email: "sudharshan@company.com",
+          mobile: "+91 98765 43210",
+          designation: "Senior Recruiter",
+          joiningDate: "2023-01-15",
+          closuresThisMonth: 7,
+        },
+        {
+          recruiterId: "R002",
+          name: "Deepika",
+          email: "deepika@company.com",
+          mobile: "+91 98765 43211",
+          designation: "Recruiter",
+          joiningDate: "2023-03-20",
+          closuresThisMonth: 4,
+        },
+      ]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Function to handle recruiter modal
+  const handleRecruitersClick = () => {
+    fetchRecruiterDetails();
+    setShowRecruitersModal(true);
+  };
+
+  // Function to handle ongoing recruitments click
+  const handleOngoingClick = () => {
+    setShowOngoingModal(true);
+  };
+
+  // Function to handle email
+  const handleEmail = (email) => {
+    window.open(`mailto:${email}`, "_blank");
+  };
+
+  // Function to handle call
+  const handleCall = (mobile) => {
+    window.open(`tel:${mobile}`, "_blank");
+  };
 
   useEffect(() => {
     const stored = localStorage.getItem("teamLeaderProfile");
@@ -228,30 +324,67 @@ const TeamLeaderDashboard = () => {
               Profile Details
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-3 text-sm text-gray-800 dark:text-gray-100">
-              <p><span className="font-semibold text-gray-700 dark:text-gray-200">ID:</span> {teamLeader.teamLeadId}</p>
-              <p><span className="font-semibold text-gray-700 dark:text-gray-200">Name:</span> {teamLeader.name}</p>
-              <p><span className="font-semibold text-gray-700 dark:text-gray-200">Email:</span> {teamLeader.email}</p>
-              <p><span className="font-semibold text-gray-700 dark:text-gray-200">Mobile:</span> {teamLeader.mobile}</p>
-              <p><span className="font-semibold text-gray-700 dark:text-gray-200">Department:</span> {teamLeader.department}</p>
-              <p><span className="font-semibold text-gray-700 dark:text-gray-200">Reporting To:</span> {teamLeader.reportingTo}</p>
-              <p><span className="font-semibold text-gray-700 dark:text-gray-200">Joining Date:</span> {teamLeader.joiningDate && new Date(teamLeader.joiningDate).toLocaleDateString("en-IN")}</p>
+              <p>
+                <span className="font-semibold text-gray-700 dark:text-gray-200">
+                  ID:
+                </span>{" "}
+                {teamLeader.teamLeadId}
+              </p>
+              <p>
+                <span className="font-semibold text-gray-700 dark:text-gray-200">
+                  Name:
+                </span>{" "}
+                {teamLeader.name}
+              </p>
+              <p>
+                <span className="font-semibold text-gray-700 dark:text-gray-200">
+                  Email:
+                </span>{" "}
+                {teamLeader.email}
+              </p>
+              <p>
+                <span className="font-semibold text-gray-700 dark:text-gray-200">
+                  Mobile:
+                </span>{" "}
+                {teamLeader.mobile}
+              </p>
+              <p>
+                <span className="font-semibold text-gray-700 dark:text-gray-200">
+                  Department:
+                </span>{" "}
+                {teamLeader.department}
+              </p>
+              <p>
+                <span className="font-semibold text-gray-700 dark:text-gray-200">
+                  Reporting To:
+                </span>{" "}
+                {teamLeader.reportingTo}
+              </p>
+              <p>
+                <span className="font-semibold text-gray-700 dark:text-gray-200">
+                  Joining Date:
+                </span>{" "}
+                {teamLeader.joiningDate &&
+                  new Date(teamLeader.joiningDate).toLocaleDateString("en-IN")}
+              </p>
             </div>
           </div>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
           {[
-            "Assigned Recruiters",
-            "Ongoing Recruitments",
-            "Completed Hires",
-            "Team Performance",
-          ].map((title, idx) => (
+            { title: "Assigned Recruiters", onClick: handleRecruitersClick },
+            { title: "Ongoing Recruitments", onClick: handleOngoingClick },
+            { title: "Completed Hires", onClick: () => {} },
+            { title: "Team Performance", onClick: () => {} },
+          ].map((item, idx) => (
             <div
               key={idx}
               className="bg-white p-5 rounded-lg shadow hover:shadow-md transition cursor-pointer dark:bg-gray-800 dark:border-gray-700 dark:shadow-gray-700"
+              onClick={item.onClick}
             >
               <h3 className="font-semibold text-lg text-gray-900 dark:text-gray-100">
-                {title}
+                {item.title}
               </h3>
               <p className="text-blue-700 text-2xl font-bold dark:text-blue-400">
                 {idx === 3 ? "88%" : idx + 2}
@@ -331,15 +464,21 @@ const TeamLeaderDashboard = () => {
             <ul className="space-y-3 text-sm">
               <li className="flex justify-between items-center text-gray-700 dark:text-gray-300">
                 <span>High Priority</span>
-                <span className="text-white bg-red-500 rounded-full px-3 py-1 text-xs font-bold">1</span>
+                <span className="text-white bg-red-500 rounded-full px-3 py-1 text-xs font-bold">
+                  1
+                </span>
               </li>
               <li className="flex justify-between items-center text-gray-700 dark:text-gray-300">
                 <span>Medium Priority</span>
-                <span className="text-white bg-blue-500 rounded-full px-3 py-1 text-xs font-bold">3</span>
+                <span className="text-white bg-blue-500 rounded-full px-3 py-1 text-xs font-bold">
+                  3
+                </span>
               </li>
               <li className="flex justify-between items-center text-gray-700 dark:text-gray-300">
                 <span>Low Priority</span>
-                <span className="text-white bg-gray-400 rounded-full px-3 py-1 text-xs font-bold">0</span>
+                <span className="text-white bg-gray-400 rounded-full px-3 py-1 text-xs font-bold">
+                  0
+                </span>
               </li>
             </ul>
           </div>
@@ -438,6 +577,151 @@ const TeamLeaderDashboard = () => {
             </tbody>
           </table>
         </div>
+
+        {/* Recruiters Modal */}
+        {showRecruitersModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto dark:bg-gray-800 dark:text-gray-100">
+              <div className="flex justify-between items-center p-6 border-b dark:border-gray-700">
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                  Assigned Recruiters
+                </h2>
+                <button
+                  onClick={() => setShowRecruitersModal(false)}
+                  className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                >
+                  <FaTimes size={24} />
+                </button>
+              </div>
+
+              <div className="p-6">
+                {loading ? (
+                  <div className="text-center py-8">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+                    <p className="mt-4 text-gray-600 dark:text-gray-400">
+                      Loading recruiter details...
+                    </p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {recruiterDetails.map((recruiter, index) => (
+                      <div
+                        key={recruiter.recruiterId}
+                        className="bg-gray-50 rounded-lg p-6 border dark:bg-gray-700 dark:border-gray-600"
+                      >
+                        <div className="flex items-center justify-between mb-4">
+                          <div>
+                            <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
+                              {recruiter.name}
+                            </h3>
+                            <p className="text-sm text-gray-600 dark:text-gray-400">
+                              {recruiter.designation}
+                            </p>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-sm text-gray-600 dark:text-gray-400">
+                              ID: {recruiter.recruiterId}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="space-y-3 mb-6">
+                          <div className="flex items-center">
+                            <span className="font-medium text-gray-700 dark:text-gray-300 w-24">
+                              Email:
+                            </span>
+                            <span className="text-gray-600 dark:text-gray-400">
+                              {recruiter.email}
+                            </span>
+                          </div>
+                          <div className="flex items-center">
+                            <span className="font-medium text-gray-700 dark:text-gray-300 w-24">
+                              Mobile:
+                            </span>
+                            <span className="text-gray-600 dark:text-gray-400">
+                              {recruiter.mobile}
+                            </span>
+                          </div>
+                          <div className="flex items-center">
+                            <span className="font-medium text-gray-700 dark:text-gray-300 w-24">
+                              Joined:
+                            </span>
+                            <span className="text-gray-600 dark:text-gray-400">
+                              {recruiter.joiningDate &&
+                                new Date(
+                                  recruiter.joiningDate
+                                ).toLocaleDateString("en-IN")}
+                            </span>
+                          </div>
+                          <div className="flex items-center">
+                            <span className="font-medium text-gray-700 dark:text-gray-300 w-24">
+                              Closures:
+                            </span>
+                            <span className="text-gray-600 dark:text-gray-400">
+                              <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-sm font-semibold dark:bg-green-900 dark:text-green-200">
+                                {recruiter.closuresThisMonth} this month
+                              </span>
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="flex gap-3">
+                          <button
+                            onClick={() => handleEmail(recruiter.email)}
+                            className="flex items-center gap-2 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors"
+                          >
+                            <FaEnvelope size={16} />
+                            Email
+                          </button>
+                          <button
+                            onClick={() => handleCall(recruiter.mobile)}
+                            className="flex items-center gap-2 bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors"
+                          >
+                            <FaPhone size={16} />
+                            Call
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Ongoing Recruitments Modal */}
+        {showOngoingModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl dark:bg-gray-800 dark:text-gray-100">
+              <div className="flex justify-between items-center p-6 border-b dark:border-gray-700">
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                  Ongoing Recruitments
+                </h2>
+                <button
+                  onClick={() => setShowOngoingModal(false)}
+                  className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                >
+                  <FaTimes size={24} />
+                </button>
+              </div>
+
+              <div className="p-6">
+                <div className="text-center py-8">
+                  <FaTasks className="text-4xl text-blue-500 mx-auto mb-4" />
+                  <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                    Coming Soon!
+                  </h3>
+                  <p className="text-gray-600 dark:text-gray-400">
+                    The ongoing recruitments feature will be implemented soon.
+                    This will show all active recruitment processes and their
+                    current status.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {showAssignPopup && selectedReq && (
           <div className="fixed inset-0 bg-black bg-opacity-40 z-50 flex items-center justify-center">

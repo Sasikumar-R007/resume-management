@@ -238,6 +238,10 @@ app.use("/api/team-leaders", teamLeaderRoutes);
 const adminRoutes = require("./routes/adminRoutes");
 app.use("/api/admins", adminRoutes);
 
+// ==================== Contribution Routes ====================
+const contributionRoutes = require("./routes/contributionRoutes");
+app.use("/api/contributions", contributionRoutes);
+
 // ==================== Seed Database Route ====================
 app.post("/api/seed", async (req, res) => {
   try {

@@ -4,6 +4,7 @@ import axios from "axios";
 
 import SystemSettings from "./SystemSettings";
 import ActivityLogs from "./ActivityLogs";
+import AddTeamLeaderModal from "./AddTeamLeaderModal"; // adjust the path if needed
 
 import {
   FaDatabase,
@@ -23,6 +24,8 @@ import {
   FaTrash as FaTrashIcon,
   FaUserCheck,
   FaArrowLeft,
+  FaChartLine,
+  FaTimes,
 } from "react-icons/fa";
 
 const AdminDashboard = () => {
@@ -34,6 +37,15 @@ const AdminDashboard = () => {
   const [profileImage, setProfileImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
   const [showRequirementsSession, setShowRequirementsSession] = useState(false);
+  const [showTLModal, setShowTLModal] = useState(false);
+  // Performance modal state
+  const [showPerformanceModal, setShowPerformanceModal] = useState(false);
+  const [selectedTeamLeader, setSelectedTeamLeader] = useState(null);
+  const [teamLeadersData, setTeamLeadersData] = useState([]);
+  const [recruitersData, setRecruitersData] = useState([]);
+
+  const openTLModal = () => setShowTLModal(true);
+  const closeTLModal = () => setShowTLModal(false);
 
   // Add requirements state and modal state
   const [requirements, setRequirements] = useState([
@@ -142,6 +154,189 @@ const AdminDashboard = () => {
     fetchAdmin();
   }, []);
 
+  // Performance data
+  useEffect(() => {
+    // Initialize performance data
+    const teamLeaders = [
+      {
+        id: 1,
+        name: "Alex Rodriguez",
+        performance: 85, // percentage
+        status: "achieved", // under_achieved, achieved, over_performed
+      },
+      {
+        id: 2,
+        name: "Maria Garcia",
+        performance: 92,
+        status: "over_performed",
+      },
+      {
+        id: 3,
+        name: "David Chen",
+        performance: 78,
+        status: "under_achieved",
+      },
+    ];
+
+    const recruiters = [
+      // Team 1 - Alex Rodriguez (5 recruiters)
+      {
+        id: 1,
+        name: "R. Sudharshan",
+        teamLeaderId: 1,
+        performance: 82,
+        status: "achieved",
+      },
+      {
+        id: 2,
+        name: "Deepika",
+        teamLeaderId: 1,
+        performance: 89,
+        status: "over_performed",
+      },
+      {
+        id: 3,
+        name: "Venkat",
+        teamLeaderId: 1,
+        performance: 76,
+        status: "under_achieved",
+      },
+      {
+        id: 4,
+        name: "Priya",
+        teamLeaderId: 1,
+        performance: 91,
+        status: "over_performed",
+      },
+      {
+        id: 5,
+        name: "Kavitha",
+        teamLeaderId: 1,
+        performance: 87,
+        status: "achieved",
+      },
+
+      // Team 2 - Maria Garcia (5 recruiters)
+      {
+        id: 6,
+        name: "Rajesh",
+        teamLeaderId: 2,
+        performance: 95,
+        status: "over_performed",
+      },
+      {
+        id: 7,
+        name: "Anjali",
+        teamLeaderId: 2,
+        performance: 88,
+        status: "achieved",
+      },
+      {
+        id: 8,
+        name: "Sowmiya",
+        teamLeaderId: 2,
+        performance: 93,
+        status: "over_performed",
+      },
+      {
+        id: 9,
+        name: "Lokesh",
+        teamLeaderId: 2,
+        performance: 85,
+        status: "achieved",
+      },
+      {
+        id: 10,
+        name: "Megha",
+        teamLeaderId: 2,
+        performance: 90,
+        status: "over_performed",
+      },
+
+      // Team 3 - David Chen (5 recruiters)
+      {
+        id: 11,
+        name: "Prabhu",
+        teamLeaderId: 3,
+        performance: 75,
+        status: "under_achieved",
+      },
+      {
+        id: 12,
+        name: "Kiran",
+        teamLeaderId: 3,
+        performance: 81,
+        status: "achieved",
+      },
+      {
+        id: 13,
+        name: "Sundar",
+        teamLeaderId: 3,
+        performance: 73,
+        status: "under_achieved",
+      },
+      {
+        id: 14,
+        name: "Rahul",
+        teamLeaderId: 3,
+        performance: 79,
+        status: "under_achieved",
+      },
+      {
+        id: 15,
+        name: "Anjali",
+        teamLeaderId: 3,
+        performance: 84,
+        status: "achieved",
+      },
+    ];
+
+    setTeamLeadersData(teamLeaders);
+    setRecruitersData(recruiters);
+  }, []);
+
+  // Performance functions
+  const handlePerformanceClick = () => {
+    setShowPerformanceModal(true);
+    setSelectedTeamLeader(null);
+  };
+
+  const handleTeamLeaderClick = (teamLeader) => {
+    setSelectedTeamLeader(teamLeader);
+  };
+
+  const getPerformanceColor = (status) => {
+    switch (status) {
+      case "under_achieved":
+        return "bg-red-500";
+      case "achieved":
+        return "bg-green-500";
+      case "over_performed":
+        return "bg-blue-500";
+      default:
+        return "bg-gray-500";
+    }
+  };
+
+  const getPerformanceText = (status) => {
+    switch (status) {
+      case "under_achieved":
+        return "Under Achieved";
+      case "achieved":
+        return "Achieved";
+      case "over_performed":
+        return "Over Performed";
+      default:
+        return "Unknown";
+    }
+  };
+
+  const getRecruitersForTeamLeader = (teamLeaderId) => {
+    return recruitersData.filter(
+      (recruiter) => recruiter.teamLeaderId === teamLeaderId
+    );
+  };
+
   const stats = [
     {
       title: "Total Users",
@@ -232,18 +427,20 @@ const AdminDashboard = () => {
       alert("Please select a team leader");
       return;
     }
-    
-    const selectedTL = teamLeaders.find(tl => tl.id === parseInt(selectedTeamLead));
-    
+
+    const selectedTL = teamLeaders.find(
+      (tl) => tl.id === parseInt(selectedTeamLead)
+    );
+
     setRequirements(
       requirements.map((r) =>
-        r.id === selectedRequirement.id 
-          ? { 
-              ...r, 
-              assigned: true, 
+        r.id === selectedRequirement.id
+          ? {
+              ...r,
+              assigned: true,
               teamLead: selectedTL.name,
-              talentAdvisor: selectedTL.name // For now, using team lead as talent advisor
-            } 
+              talentAdvisor: selectedTL.name, // For now, using team lead as talent advisor
+            }
           : r
       )
     );
@@ -370,11 +567,15 @@ const AdminDashboard = () => {
 
               <div className="flex gap-2">
                 <button
-                  onClick={() => navigate("/admin/add-team-leader")}
-                  className="bg-gray-800 text-white px-4 py-2 rounded flex items-center gap-2 hover:bg-gray-700"
+                  onClick={openTLModal}
+                  className="bg-black text-white px-4 py-2 rounded hover:bg-gray-800"
                 >
-                  <FaUserPlus /> Add Team Leader
+                  + Add Team Leader
                 </button>
+
+                {/* Conditionally render modal */}
+                {showTLModal && <AddTeamLeaderModal onClose={closeTLModal} />}
+
                 <button
                   onClick={() => navigate("/admin/add-recruiter")}
                   className="bg-gray-800 text-white px-4 py-2 rounded flex items-center gap-2 hover:bg-gray-700"
@@ -500,19 +701,29 @@ const AdminDashboard = () => {
                 Manage Database
               </div>
             </div>
-            <div className="p-6 bg-white rounded-lg shadow flex flex-col items-center justify-center border border-gray-200">
-              <FaHeartbeat size={28} className="text-gray-600 mb-2" />
+            <div
+              className="p-6 bg-white rounded-lg shadow flex flex-col items-center justify-center cursor-pointer hover:bg-gray-50 border border-gray-200"
+              onClick={handlePerformanceClick}
+            >
+              <FaChartLine size={28} className="text-gray-600 mb-2" />
               <div className="text-2xl font-bold text-gray-800">
-                System Health
+                Performance
               </div>
-              <div className="text-gray-600 text-sm text-center">Healthy</div>
+              <div className="text-gray-600 text-sm text-center">
+                Team Leaders & Recruiters
+              </div>
             </div>
-            <div className="p-6 bg-white rounded-lg shadow flex flex-col items-center justify-center border border-gray-200">
-              <FaServer size={28} className="text-gray-600 mb-2" />
+            <div
+              className="p-6 bg-white rounded-lg shadow flex flex-col items-center justify-center cursor-pointer hover:bg-gray-50 border border-gray-200"
+              onClick={() => navigate("/admin/contribution")}
+            >
+              <FaUsers size={28} className="text-gray-600 mb-2" />
               <div className="text-2xl font-bold text-gray-800">
-                System Status
+                Contribution
               </div>
-              <div className="text-gray-600 text-sm text-center">Running</div>
+              <div className="text-gray-600 text-sm text-center">
+                Overall Contribution Data
+              </div>
             </div>
           </div>
         </>
@@ -775,24 +986,34 @@ const AdminDashboard = () => {
                   &times;
                 </button>
                 <h2 className="text-xl font-bold mb-4">Assign Requirement</h2>
-                
+
                 <div className="mb-4">
                   <h3 className="font-semibold mb-2">Requirement Details:</h3>
                   <div className="bg-gray-50 p-3 rounded">
-                    <p><strong>Position:</strong> {selectedRequirement.position}</p>
-                    <p><strong>Company:</strong> {selectedRequirement.company}</p>
-                    <p><strong>Criticality:</strong> 
-                      <span className={`ml-1 px-2 py-1 rounded text-xs font-bold ${
-                        selectedRequirement.criticality === "High"
-                          ? "bg-red-100 text-red-600"
-                          : selectedRequirement.criticality === "Medium"
-                          ? "bg-orange-100 text-orange-600"
-                          : "bg-green-100 text-green-600"
-                      }`}>
+                    <p>
+                      <strong>Position:</strong> {selectedRequirement.position}
+                    </p>
+                    <p>
+                      <strong>Company:</strong> {selectedRequirement.company}
+                    </p>
+                    <p>
+                      <strong>Criticality:</strong>
+                      <span
+                        className={`ml-1 px-2 py-1 rounded text-xs font-bold ${
+                          selectedRequirement.criticality === "High"
+                            ? "bg-red-100 text-red-600"
+                            : selectedRequirement.criticality === "Medium"
+                            ? "bg-orange-100 text-orange-600"
+                            : "bg-green-100 text-green-600"
+                        }`}
+                      >
                         {selectedRequirement.criticality}
                       </span>
                     </p>
-                    <p><strong>Contact Person:</strong> {selectedRequirement.contactPerson}</p>
+                    <p>
+                      <strong>Contact Person:</strong>{" "}
+                      {selectedRequirement.contactPerson}
+                    </p>
                   </div>
                 </div>
 
@@ -1115,6 +1336,190 @@ const AdminDashboard = () => {
                   Save Changes
                 </button>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Performance Modal */}
+      {showPerformanceModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-6xl max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center p-6 border-b">
+              <h2 className="text-2xl font-bold text-gray-900">
+                Team Performance Overview
+              </h2>
+              <button
+                onClick={() => setShowPerformanceModal(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <FaTimes size={24} />
+              </button>
+            </div>
+
+            <div className="p-6">
+              {/* Team Leaders Table */}
+              <div className="mb-8">
+                <h3 className="text-xl font-semibold mb-4 text-gray-800">
+                  Team Leaders Performance
+                </h3>
+                <div className="bg-white rounded-lg shadow overflow-hidden">
+                  <table className="w-full">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Team Leader
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Performance
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {teamLeadersData.map((teamLeader) => (
+                        <tr
+                          key={teamLeader.id}
+                          className={`hover:bg-gray-50 cursor-pointer ${
+                            selectedTeamLeader?.id === teamLeader.id
+                              ? "bg-blue-50"
+                              : ""
+                          }`}
+                          onClick={() => handleTeamLeaderClick(teamLeader)}
+                        >
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm font-medium text-gray-900">
+                              {teamLeader.name}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="flex items-center">
+                              <div className="flex-1 bg-gray-200 rounded-full h-2 mr-3">
+                                <div
+                                  className={`h-2 rounded-full ${getPerformanceColor(
+                                    teamLeader.status
+                                  )}`}
+                                  style={{
+                                    width: `${teamLeader.performance}%`,
+                                  }}
+                                ></div>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <span className="text-sm font-medium text-gray-900">
+                                  {teamLeader.performance}%
+                                </span>
+                                <span
+                                  className={`px-2 py-1 text-xs font-semibold rounded-full ${
+                                    teamLeader.status === "under_achieved"
+                                      ? "bg-red-100 text-red-800"
+                                      : teamLeader.status === "achieved"
+                                      ? "bg-green-100 text-green-800"
+                                      : "bg-blue-100 text-blue-800"
+                                  }`}
+                                >
+                                  {getPerformanceText(teamLeader.status)}
+                                </span>
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Recruiters Table - Only show when a team leader is selected */}
+              {selectedTeamLeader && (
+                <div className="mt-8">
+                  <h3 className="text-xl font-semibold mb-4 text-gray-800">
+                    Recruiters under {selectedTeamLeader.name}
+                  </h3>
+                  <div className="bg-white rounded-lg shadow overflow-hidden">
+                    <table className="w-full">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Recruiter
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Performance
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                        {getRecruitersForTeamLeader(selectedTeamLeader.id).map(
+                          (recruiter) => (
+                            <tr key={recruiter.id} className="hover:bg-gray-50">
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <div className="text-sm font-medium text-gray-900">
+                                  {recruiter.name}
+                                </div>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <div className="flex items-center">
+                                  <div className="flex-1 bg-gray-200 rounded-full h-2 mr-3">
+                                    <div
+                                      className={`h-2 rounded-full ${getPerformanceColor(
+                                        recruiter.status
+                                      )}`}
+                                      style={{
+                                        width: `${recruiter.performance}%`,
+                                      }}
+                                    ></div>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-sm font-medium text-gray-900">
+                                      {recruiter.performance}%
+                                    </span>
+                                    <span
+                                      className={`px-2 py-1 text-xs font-semibold rounded-full ${
+                                        recruiter.status === "under_achieved"
+                                          ? "bg-red-100 text-red-800"
+                                          : recruiter.status === "achieved"
+                                          ? "bg-green-100 text-green-800"
+                                          : "bg-blue-100 text-blue-800"
+                                      }`}
+                                    >
+                                      {getPerformanceText(recruiter.status)}
+                                    </span>
+                                  </div>
+                                </div>
+                              </td>
+                            </tr>
+                          )
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {/* Performance Legend */}
+              <div className="mt-8 p-4 bg-gray-50 rounded-lg">
+                <h4 className="text-sm font-semibold text-gray-700 mb-3">
+                  Performance Legend
+                </h4>
+                <div className="flex flex-wrap gap-4">
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 bg-red-500 rounded"></div>
+                    <span className="text-sm text-gray-600">
+                      Under Achieved (0-80%)
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 bg-green-500 rounded"></div>
+                    <span className="text-sm text-gray-600">
+                      Achieved (80-90%)
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 bg-blue-500 rounded"></div>
+                    <span className="text-sm text-gray-600">
+                      Over Performed (90%+)
+                    </span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
