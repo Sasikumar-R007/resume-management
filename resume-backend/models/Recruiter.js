@@ -14,10 +14,7 @@ const recruiterSchema = new mongoose.Schema({
   },
   password: String,
   mobile: String,
-  reportingTo: {
-    type: String,
-    required: true,
-  },
+  reportingTo: String, // TL ID like STTL001
   joiningDate: Date,
   profilePic: String,
   linkedin: String,

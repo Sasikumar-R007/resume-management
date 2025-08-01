@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 
 const AddRecruiterModal = ({ onClose }) => {
   const [formData, setFormData] = useState({
@@ -7,12 +7,14 @@ const AddRecruiterModal = ({ onClose }) => {
     email: "",
     mobile: "",
     password: "",
-    reportingToId: "",
-    reportingToName: "",
+    joiningDate: "",
+    linkedin: "",
+    reportingTo: "", // Will hold TL ID
   });
 
   const [teamLeaders, setTeamLeaders] = useState([]);
 
+  // Fetch TL list for dropdown
   useEffect(() => {
     const fetchTeamLeaders = async () => {
       try {
@@ -20,7 +22,7 @@ const AddRecruiterModal = ({ onClose }) => {
         const data = await res.json();
         setTeamLeaders(data);
       } catch (err) {
-        console.error("Error fetching TLs:", err);
+        console.error("❌ Failed to fetch team leaders:", err);
       }
     };
 
@@ -31,11 +33,6 @@ const AddRecruiterModal = ({ onClose }) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleTLChange = (e) => {
-    const [id, name] = e.target.value.split("|");
-    setFormData({ ...formData, reportingToId: id, reportingToName: name });
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -44,7 +41,9 @@ const AddRecruiterModal = ({ onClose }) => {
       email: formData.email,
       mobile: formData.mobile,
       password: formData.password,
-      reportingTo: formData.reportingToId, // ✅ FIXED
+      joiningDate: formData.joiningDate,
+      linkedin: formData.linkedin,
+      reportingTo: formData.reportingTo,
     };
 
     try {
@@ -60,7 +59,8 @@ const AddRecruiterModal = ({ onClose }) => {
         console.log("✅ Recruiter added successfully");
         onClose();
       } else {
-        console.error("❌ Failed to add Recruiter");
+        const errMsg = await response.json();
+        console.error("❌ Failed to add Recruiter", errMsg);
       }
     } catch (err) {
       console.error("❌ Error:", err);
@@ -126,7 +126,6 @@ const AddRecruiterModal = ({ onClose }) => {
               onChange={handleChange}
               className="w-full border border-gray-300 rounded px-3 py-2"
               placeholder="Enter email"
-              autoComplete="new-email"
             />
           </div>
 
@@ -139,28 +138,46 @@ const AddRecruiterModal = ({ onClose }) => {
               onChange={handleChange}
               className="w-full border border-gray-300 rounded px-3 py-2"
               placeholder="Enter password"
-              autoComplete="new-password"
             />
           </div>
 
           <div>
             <label className="block text-sm font-medium mb-1">
-              Assign Team Leader
+              Joining Date
+            </label>
+            <input
+              name="joiningDate"
+              type="date"
+              value={formData.joiningDate}
+              onChange={handleChange}
+              className="w-full border border-gray-300 rounded px-3 py-2"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-1">
+              LinkedIn Profile
+            </label>
+            <input
+              name="linkedin"
+              type="text"
+              value={formData.linkedin}
+              onChange={handleChange}
+              className="w-full border border-gray-300 rounded px-3 py-2"
+              placeholder="LinkedIn URL"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-1">
+              Reporting To (Team Leader)
             </label>
             <select
-              name="reportingToId"
-              value={formData.reportingToId}
-              onChange={(e) => {
-                const selectedTL = teamLeaders.find(
-                  (tl) => tl.teamLeadId === e.target.value
-                );
-                setFormData({
-                  ...formData,
-                  reportingToId: selectedTL?.teamLeadId || "",
-                  reportingToName: selectedTL?.name || "",
-                });
-              }}
+              name="reportingTo"
+              value={formData.reportingTo}
+              onChange={handleChange}
               className="w-full border border-gray-300 rounded px-3 py-2"
+              required
             >
               <option value="">Select Team Leader</option>
               {teamLeaders.map((tl) => (
