@@ -46,6 +46,7 @@ const AdminDashboard = () => {
   const [recruitersData, setRecruitersData] = useState([]);
 
   const [showAddRecruiter, setShowAddRecruiter] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null); // For editing
 
   const openTLModal = () => setShowTLModal(true);
   const closeTLModal = () => setShowTLModal(false);
@@ -134,6 +135,40 @@ const AdminDashboard = () => {
     { id: 3, name: "David Chen", email: "david@scaling.com" },
     { id: 4, name: "Sarah Wilson", email: "sarah@scaling.com" },
   ];
+
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const tlRes = await axios.get("http://localhost:5000/api/team-leaders");
+        const recRes = await axios.get("http://localhost:5000/api/recruiters");
+
+        const combinedUsers = [
+          ...tlRes.data.map((tl) => ({
+            id: tl.teamLeadId,
+            name: tl.name,
+            email: tl.email,
+            role: "Team Leader",
+            status: "Active",
+            lastLogin: tl.lastLogin || "N/A",
+          })),
+          ...recRes.data.map((rec) => ({
+            id: rec.recruiterId,
+            name: rec.name,
+            email: rec.email,
+            role: "Recruiter",
+            status: "Active",
+            lastLogin: rec.lastLogin || "N/A",
+          })),
+        ];
+
+        setUsers(combinedUsers);
+      } catch (error) {
+        console.error("Error fetching users:", error);
+      }
+    };
+
+    fetchUsers();
+  }, []);
 
   useEffect(() => {
     const fetchAdmin = async () => {
@@ -374,24 +409,7 @@ const AdminDashboard = () => {
     },
   ];
 
-  const users = [
-    {
-      id: 1,
-      name: "John Doe",
-      email: "john@example.com",
-      role: "Recruiter",
-      status: "Active",
-      lastLogin: "2025-05-30 14:23",
-    },
-    {
-      id: 2,
-      name: "Jane Smith",
-      email: "jane@example.com",
-      role: "Team Leader",
-      status: "Inactive",
-      lastLogin: "2025-05-29 09:10",
-    },
-  ];
+  const [users, setUsers] = useState([]);
 
   // Stats calculation
   const totalReq = requirements.length;
@@ -491,15 +509,31 @@ const AdminDashboard = () => {
   };
 
   const handleEdit = (user) => {
-    navigate("/recruiter/setup-profile", { state: user });
+    setSelectedUser(user); // Store selected user
+    if (user.role === "Team Leader") {
+      setShowTLModal(true);
+    } else {
+      setShowAddRecruiter(true);
+    }
   };
 
-  const handleDelete = (id) => {
-    const confirmDelete = window.confirm(
-      "Are you sure to delete this recruiter?"
-    );
-    if (confirmDelete) {
-      console.log("Deleted user with ID:", id);
+  const handleDelete = async (id, role) => {
+    if (!window.confirm("Are you sure you want to delete this user?")) return;
+
+    try {
+      if (role === "Team Leader") {
+        await axios.delete(`http://localhost:5000/api/team-leaders/${id}`);
+      } else {
+        await axios.delete(`http://localhost:5000/api/recruiters/${id}`);
+      }
+
+      // Update table after deletion
+      setUsers((prev) => prev.filter((user) => user.id !== id));
+
+      alert(`${role} deleted successfully`);
+    } catch (error) {
+      console.error("Error deleting user:", error);
+      alert("Failed to delete user.");
     }
   };
 
@@ -619,6 +653,7 @@ const AdminDashboard = () => {
               </div>
             </div>
 
+            {/* Table */}
             <div className="mt-6 bg-white shadow p-4 rounded-lg overflow-x-auto w-full">
               {users.length > 0 ? (
                 <table className="w-full text-left border-collapse">
@@ -646,18 +681,20 @@ const AdminDashboard = () => {
                         <td className="p-2">{user.status}</td>
                         <td className="p-2">{user.lastLogin}</td>
                         <td className="p-2">
-                          <button
-                            className="text-blue-600 hover:underline"
-                            onClick={() => handleEdit(user)}
-                          >
-                            Edit
-                          </button>
-                          <button
-                            className="text-red-600 ml-2 hover:underline"
-                            onClick={() => handleDelete(user.id)}
-                          >
-                            Delete
-                          </button>
+                          <td className="p-2">
+                            <button
+                              className="text-blue-600 hover:underline"
+                              onClick={() => handleEdit(user)}
+                            >
+                              Edit
+                            </button>
+                            <button
+                              className="text-red-600 ml-2 hover:underline"
+                              onClick={() => handleDelete(user.id, user.role)}
+                            >
+                              Delete
+                            </button>
+                          </td>
                         </td>
                       </tr>
                     ))}

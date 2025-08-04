@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from "react";
+import axios from "axios";
 import {
   FaBriefcase,
   FaUserCheck,
+  FaLinkedin,
   FaCalendarCheck,
   FaHandshake,
   FaEdit,
@@ -29,6 +31,7 @@ const RecruiterDashboardMain = () => {
 
   // Dark Mode
   const [darkMode, setDarkMode] = useState(false);
+  const [activeTab, setActiveTab] = useState("updates");
 
   useEffect(() => {
     if (darkMode) {
@@ -56,6 +59,29 @@ const RecruiterDashboardMain = () => {
   ];
 
   const [recruiter, setRecruiter] = useState({});
+  const recruiterId = localStorage.getItem("recruiterId"); // Store recruiterId after login
+
+  useEffect(() => {
+    if (recruiterId) {
+      axios
+        .get(`${API_BASE}/recruiter/${recruiterId}`)
+        .then((res) => setRecruiter(res.data))
+        .catch((err) => console.error("Error fetching recruiter:", err));
+    }
+  }, [recruiterId]);
+
+  const [newBannerUrl, setNewBannerUrl] = useState("");
+  const [newProfilePic, setNewProfilePic] = useState("");
+
+  const [editData, setEditData] = useState({
+    recruiterId: "",
+    name: "",
+    email: "",
+    mobile: "",
+    designation: "",
+    reportingTo: "",
+    joiningDate: "",
+  });
 
   useEffect(() => {
     const stored = localStorage.getItem("recruiterProfile");
@@ -63,6 +89,8 @@ const RecruiterDashboardMain = () => {
       setRecruiter(JSON.parse(stored));
     }
   }, []);
+
+  const [visibleCount, setVisibleCount] = useState(5);
 
   const [activeCandidates, setActiveCandidates] = useState([
     {
@@ -152,6 +180,8 @@ const RecruiterDashboardMain = () => {
   const [showAll, setShowAll] = useState(false);
   const [showTrackerModal, setShowTrackerModal] = useState(false);
 
+  const [activeSection, setActiveSection] = useState("dashboard");
+
   //Rec Profile session data
 
   // const [recruiter, setRecruiter] = useState({
@@ -164,16 +194,96 @@ const RecruiterDashboardMain = () => {
   //   profilePic: "/assets/recruiter.jpg",
   // });
 
+  // // Upload Profile Picture
+  // const handleProfilePicChange = async (e) => {
+  //   const file = e.target.files[0];
+  //   if (!file) return;
+
+  //   const formData = new FormData();
+  //   formData.append("profilePic", file);
+
+  //   try {
+  //     const res = await axios.post(
+  //       `${API_BASE}/recruiters/upload-profile-pic/${recruiter._id}`,
+  //       formData,
+  //       {
+  //         headers: { "Content-Type": "multipart/form-data" },
+  //       }
+  //     );
+  //     setRecruiter((prev) => ({ ...prev, profilePic: res.data.profilePic }));
+  //   } catch (error) {
+  //     console.error("Error uploading profile pic:", error);
+  //   }
+  // };
+
+  // // Upload Banner
+  // const handleBannerChange = async (e) => {
+  //   const file = e.target.files[0];
+  //   if (!file) return;
+
+  //   const formData = new FormData();
+  //   formData.append("banner", file);
+
+  //   try {
+  //     const res = await axios.post(
+  //       `${API_BASE}/recruiters/upload-banner/${recruiter._id}`,
+  //       formData,
+  //       {
+  //         headers: { "Content-Type": "multipart/form-data" },
+  //       }
+  //     );
+  //     setRecruiter((prev) => ({ ...prev, bannerUrl: res.data.bannerUrl }));
+  //   } catch (error) {
+  //     console.error("Error uploading banner:", error);
+  //   }
+  // };
+
   const handleRemovePic = () => {
     setRecruiter({ ...recruiter, profilePic: "" });
   };
 
-  const handleChangePic = (e) => {
+  // Upload Profile Picture
+  const handleChangePic = async (e) => {
     const file = e.target.files[0];
-    if (file) {
-      const imageUrl = URL.createObjectURL(file);
-      setRecruiter({ ...recruiter, profilePic: imageUrl });
+    if (!file || !recruiter._id) return;
+
+    const formData = new FormData();
+    formData.append("profilePic", file);
+
+    try {
+      const res = await axios.post(
+        `${API_BASE}/api/recruiters/upload-profile-pic/${recruiter._id}`,
+        formData,
+        { headers: { "Content-Type": "multipart/form-data" } }
+      );
+      setRecruiter({ ...recruiter, profilePic: res.data.profilePic });
+    } catch (err) {
+      console.error("Error uploading profile picture:", err);
     }
+  };
+
+  // Upload Banner
+  const handleChangeBanner = async (e) => {
+    const file = e.target.files[0];
+    if (!file || !recruiter._id) return;
+
+    const formData = new FormData();
+    formData.append("banner", file);
+
+    try {
+      const res = await axios.post(
+        `${API_BASE}/api/recruiters/upload-banner/${recruiter._id}`,
+        formData,
+        { headers: { "Content-Type": "multipart/form-data" } }
+      );
+      setRecruiter({ ...recruiter, bannerUrl: res.data.bannerUrl });
+    } catch (err) {
+      console.error("Error uploading banner:", err);
+    }
+  };
+
+  const handleRemoveBanner = () => {
+    setRecruiter({ ...recruiter, bannerUrl: "" });
   };
 
   const [confirmId, setConfirmId] = useState(null);
@@ -302,6 +412,11 @@ const RecruiterDashboardMain = () => {
   // ends...
 
   const [showModal, setShowModal] = useState(false);
+  const [showEditProfileModal, setShowEditProfileModal] = useState(false);
+
+  useEffect(() => {
+    setShowEditProfileModal(recruiter);
+  }, [recruiter]);
 
   const statuses = [
     "Shortlisted",
@@ -370,44 +485,228 @@ const RecruiterDashboardMain = () => {
     }
   };
 
-  const [activeRequirements, setActiveRequirements] = useState([
+  // const [activeRequirements, setActiveRequirements] = useState([
+  //   {
+  //     id: 1,
+  //     position: "Full Stack Engineer",
+  //     criticality: "Medium",
+  //     company: "StartupXYZ",
+  //     contactPerson: "David Wilson",
+  //     contactPersonEmail: "david@example.com",
+  //     talentAdvisor: "Lisa Wang",
+  //   },
+  //   {
+  //     id: 2,
+  //     position: "Backend Developer",
+  //     criticality: "Low",
+  //     company: "DataTech Solutions",
+  //     contactPerson: "Tom Anderson",
+  //     contactPersonEmail: "tom@example.com",
+  //     talentAdvisor: "Lisa Wang",
+  //   },
+  //   {
+  //     id: 3,
+  //     position: "Data Scientist",
+  //     criticality: "High",
+  //     company: "AI Innovations",
+  //     contactPerson: "Robert Kim",
+  //     contactPersonEmail: "robert@example.com",
+  //     talentAdvisor: "Lisa Wang",
+  //   },
+  //   {
+  //     id: 4,
+  //     position: "Quality Assurance Engineer",
+  //     criticality: "Low",
+  //     company: "TestPro Solutions",
+  //     contactPerson: "Kevin Brown",
+  //     contactPersonEmail: "kevin@example.com",
+  //     talentAdvisor: "Lisa Wang",
+  //   },
+  // ]);
+
+  const [activeRequirements] = useState([
     {
       id: 1,
-      position: "Full Stack Engineer",
-      criticality: "Medium",
-      company: "StartupXYZ",
-      contactPerson: "David Wilson",
-      contactPersonEmail: "david@example.com",
-      talentAdvisor: "Lisa Wang",
+      position: "Frontend Dev",
+      criticality: "High",
+      company: "TechCorp",
+      contactPerson: "John",
+      contactPersonEmail: "john@corp.com",
     },
     {
       id: 2,
-      position: "Backend Developer",
-      criticality: "Low",
-      company: "DataTech Solutions",
-      contactPerson: "Tom Anderson",
-      contactPersonEmail: "tom@example.com",
-      talentAdvisor: "Lisa Wang",
+      position: "Backend Dev",
+      criticality: "Medium",
+      company: "SoftInc",
+      contactPerson: "Jane",
+      contactPersonEmail: "jane@corp.com",
     },
     {
       id: 3,
-      position: "Data Scientist",
-      criticality: "High",
-      company: "AI Innovations",
-      contactPerson: "Robert Kim",
-      contactPersonEmail: "robert@example.com",
-      talentAdvisor: "Lisa Wang",
+      position: "Full Stack Dev",
+      criticality: "Low",
+      company: "WebWorks",
+      contactPerson: "Sam",
+      contactPersonEmail: "sam@corp.com",
     },
     {
       id: 4,
-      position: "Quality Assurance Engineer",
+      position: "UI/UX Designer",
+      criticality: "High",
+      company: "Designify",
+      contactPerson: "Alice",
+      contactPersonEmail: "alice@corp.com",
+    },
+    {
+      id: 5,
+      position: "Project Manager",
+      criticality: "Medium",
+      company: "ManageIt",
+      contactPerson: "Bob",
+      contactPersonEmail: "bob@corp.com",
+    },
+    {
+      id: 6,
+      position: "DevOps Engineer",
       criticality: "Low",
-      company: "TestPro Solutions",
-      contactPerson: "Kevin Brown",
-      contactPersonEmail: "kevin@example.com",
-      talentAdvisor: "Lisa Wang",
+      company: "CloudBase",
+      contactPerson: "Eve",
+      contactPersonEmail: "eve@corp.com",
+    },
+    {
+      id: 7,
+      position: "QA Tester",
+      criticality: "High",
+      company: "BugCatchers",
+      contactPerson: "Tom",
+      contactPersonEmail: "tom@corp.com",
+    },
+    {
+      id: 8,
+      position: "Data Analyst",
+      criticality: "Medium",
+      company: "InsightSoft",
+      contactPerson: "Mia",
+      contactPersonEmail: "mia@corp.com",
+    },
+    {
+      id: 9,
+      position: "Mobile App Dev",
+      criticality: "Low",
+      company: "AppLogic",
+      contactPerson: "Naveen",
+      contactPersonEmail: "naveen@corp.com",
+    },
+    {
+      id: 10,
+      position: "Product Designer",
+      criticality: "High",
+      company: "PixelMint",
+      contactPerson: "Kavi",
+      contactPersonEmail: "kavi@corp.com",
     },
   ]);
+
+  const requirements = [
+    {
+      id: 1,
+      position: "Frontend Developer",
+      criticality: "High",
+      company: "TechCorp",
+      spoc: "David Wilson",
+      spocEmail: "david@techcorp.com",
+    },
+    {
+      id: 2,
+      position: "UI/UX Designer",
+      criticality: "Medium",
+      company: "Designify",
+      spoc: "Tom Anderson",
+      spocEmail: "tom@designify.com",
+    },
+    {
+      id: 3,
+      position: "Backend Developer",
+      criticality: "Low",
+      company: "CodeLabs",
+      spoc: "Robert Kim",
+      spocEmail: "robert@codelabs.com",
+    },
+    {
+      id: 4,
+      position: "QA Tester",
+      criticality: "Medium",
+      company: "AppLogic",
+      spoc: "Kevin Brown",
+      spocEmail: "kevin@applogic.com",
+    },
+    {
+      id: 5,
+      position: "Mobile App Developer",
+      criticality: "High",
+      company: "Tesco",
+      spoc: "Mel Gibson",
+      spocEmail: "mel@tesco.com",
+    },
+    {
+      id: 6,
+      position: "Data Analyst",
+      criticality: "Low",
+      company: "InsightSoft",
+      spoc: "Priya S",
+      spocEmail: "priya@insightsoft.com",
+    },
+    {
+      id: 7,
+      position: "DevOps Engineer",
+      criticality: "High",
+      company: "CloudBase",
+      spoc: "Arun K",
+      spocEmail: "arun@cloudbase.com",
+    },
+    {
+      id: 8,
+      position: "Project Manager",
+      criticality: "Medium",
+      company: "AgileWorks",
+      spoc: "John P",
+      spocEmail: "john@agileworks.com",
+    },
+    {
+      id: 9,
+      position: "HR Manager",
+      criticality: "Low",
+      company: "HireNow",
+      spoc: "Deepak S",
+      spocEmail: "deepak@hirenow.com",
+    },
+    {
+      id: 10,
+      position: "Product Designer",
+      criticality: "High",
+      company: "PixelMint",
+      spoc: "Sara N",
+      spocEmail: "sara@pixelmint.com",
+    },
+  ];
+
+  const renderCriticality = (level) => {
+    const styles = {
+      High: "bg-red-100 text-red-700",
+      Medium: "bg-blue-100 text-blue-700",
+      Low: "bg-gray-200 text-gray-700",
+    };
+    return (
+      <span
+        className={`px-3 py-1 rounded-full text-xs font-semibold ${
+          styles[level] || ""
+        }`}
+      >
+        {level.toUpperCase()}
+      </span>
+    );
+  };
+
   const [archivedRequirements, setArchivedRequirements] = useState([]);
   const [requirementCounts, setRequirementCounts] = useState({}); // { [reqId]: { [date]: count } }
   const [openCalendarId, setOpenCalendarId] = useState(null); // reqId of open calendar
@@ -591,593 +890,1256 @@ const RecruiterDashboardMain = () => {
   const lastClosure = closures.length > 0 ? closures[0] : null;
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-start bg-gray-50 p-6 dark:bg-gray-900">
-      <div className="max-w-5xl w-full">
-        <div className="flex items-center justify-between mb-8 flex-col md:flex-row gap-4">
-          {/* Left: Welcome Message */}
+    <div className="flex min-h-screen">
+      {/* Sidebar */}
+      <aside className="w-64 bg-blue-900 text-gray-300 fixed top-0 left-0 h-full flex flex-col py-8 px-6">
+        <nav className="flex flex-col text-lg gap-6">
+          <button
+            className={`text-left hover:text-white ${
+              activeSection === "dashboard" ? "font-bold text-white" : ""
+            }`}
+            onClick={() => setActiveSection("dashboard")}
+          >
+            Dashboard
+          </button>
+          <button
+            className={`text-left hover:text-white ${
+              activeSection === "jobBoard" ? "font-bold text-white" : ""
+            }`}
+            onClick={() => setActiveSection("jobBoard")}
+          >
+            Job Board
+          </button>
+          <button
+            className={`text-left hover:text-white ${
+              activeSection === "settings" ? "font-bold text-white" : ""
+            }`}
+            onClick={() => setActiveSection("settings")}
+          >
+            Settings
+          </button>
+          <button
+            onClick={handleLogout}
+            className="text-left hover:bg-red-600 text-white bg-red-500 rounded-md px-4 py-2"
+          >
+            Sign Out
+          </button>
+        </nav>
+      </aside>
+
+      {/* Main Content */}
+      <main className="ml-64 flex-1 bg-gray-50 dark:bg-gray-900 overflow-y-auto">
+        {activeSection === "dashboard" && (
           <div>
-            <h1 className="text-3xl font-bold mb-2 text-left text-gray-800 dark:text-white">
-              Welcome {recruiter.name}
-            </h1>
-            <p className="text-gray-700 max-w-xl text-left dark:text-gray-300">
-              To get started, review your current jobs and candidates, or update
-              your profile to better manage your recruitment process.
-            </p>
-          </div>
-
-          {/* Right: Sign Out Button */}
-          <div className="flex items-center gap-4">
-            <div
-              onClick={() => setDarkMode(!darkMode)}
-              className="cursor-pointer p-2 rounded-full bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition"
-              title="Toggle dark mode"
-            >
-              {darkMode ? (
-                <Sun className="w-5 h-5 text-yellow-400" />
-              ) : (
-                <Moon className="w-5 h-5 text-gray-800" />
-              )}
-            </div>
-            <button
-              onClick={handleLogout}
-              className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 dark:bg-red-600 dark:hover:bg-red-700"
-            >
-              Sign Out
-            </button>
-          </div>
-        </div>
-
-        {/* Recruiter Profile Section */}
-        <div className="bg-white dark:bg-gray-800 shadow p-6 rounded-lg w-full max-w-full mx-auto mt-6 mb-6 relative">
-          {/* Profile Picture */}
-          <div className="absolute right-6 top-1/2 transform -translate-y-1/2 flex flex-col items-center">
-            {recruiter.profilePic && (
-              <img
-                src={recruiter.profilePic}
-                alt="Profile"
-                className="w-32 h-32 rounded-full object-cover border dark:border-gray-700"
-              />
-            )}
-            <div className="flex gap-2 mt-2">
-              <label className="text-xs text-blue-500 cursor-pointer dark:text-blue-400">
-                Change
-                <input
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={handleChangePic}
-                />
-              </label>
-              {recruiter.profilePic && (
-                <button
-                  onClick={handleRemovePic}
-                  className="text-xs text-red-500 dark:text-red-400"
-                >
-                  Remove
-                </button>
-              )}
-            </div>
-          </div>
-
-          {/* Profile Info */}
-          <div className="mb-6 pr-40">
-            <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-4">
-              Recruiter Profile
-            </h2>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-4 text-sm text-gray-700 dark:text-gray-200">
-              <p>
-                <strong>ID:</strong> {recruiter.recruiterId}
-              </p>
-              <p>
-                <strong>Name:</strong> {recruiter.name}
-              </p>
-              <p>
-                <strong>Email:</strong> {recruiter.email}
-              </p>
-              <p>
-                <strong>Mobile:</strong> {recruiter.mobile}
-              </p>
-              <p>
-                <strong>Designation:</strong> {recruiter.designation}
-              </p>
-              <p>
-                <strong>Reporting To:</strong> {recruiter.reportingTo}
-              </p>
-              <p>
-                <strong>Joining Date:</strong>{" "}
-                {new Date(recruiter.joiningDate).toLocaleDateString("en-IN")}
-              </p>
-              {/* Optional: Show password change button */}
-              {/* <p>
-        <button className="text-blue-600 underline text-sm">
-          Change Password
-        </button>
-      </p> */}
-            </div>
-          </div>
-        </div>
-
-        {/* Rec Profile Session ends */}
-
-        {/* Recruiter Dashboard Layout Fixed */}
-
-        <div className="flex flex-col gap-6 mb-6">
-          {/* Top Row - 3 Summary Boxes */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Active Jobs */}
-            <div
-              className="p-6 border rounded-2xl bg-white shadow cursor-pointer hover:shadow-xl transition-all duration-300 flex flex-col justify-between dark:bg-gray-800 dark:border-gray-700 dark:shadow-gray-700"
-              onClick={() => navigate(summaryCards[0]?.path)}
-            >
-              <div>
-                <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200">
-                  {summaryCards[0]?.title}
-                </h3>
-                <p className="text-3xl font-bold text-blue-700">
-                  {summaryCards[0]?.count}
-                </p>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  {summaryCards[0]?.subtitle}
-                </p>
-              </div>
-              <div className="mt-2">{summaryCards[0]?.icon}</div>
-            </div>
-
-            {/* Second Summary Card */}
-            <div
-              className="p-6 border rounded-2xl bg-white shadow cursor-pointer hover:shadow-xl transition-all duration-300 flex flex-col justify-between dark:bg-gray-800 dark:border-gray-700 dark:shadow-gray-700"
-              onClick={() => navigate(summaryCards[1]?.path)}
-            >
-              <div>
-                <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200">
-                  {summaryCards[1]?.title}
-                </h3>
-                <p className="text-3xl font-bold text-blue-700">
-                  {summaryCards[1]?.count}
-                </p>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  {summaryCards[1]?.subtitle}
-                </p>
-              </div>
-              <div className="mt-2">{summaryCards[1]?.icon}</div>
-            </div>
-
-            {/* Interview Tracker */}
-            <div className="p-6 h-full border rounded-2xl bg-white shadow hover:shadow-xl transition flex flex-col justify-between dark:bg-gray-800 dark:border-gray-700 dark:shadow-gray-700">
-              <h3 className="text-lg font-semibold text-gray-800 text-center mb-3 dark:text-gray-200">
-                Interview Tracker
-              </h3>
-              <div className="flex justify-between items-start text-center pb-1">
-                <div className="flex-1">
-                  <p className="text-sm text-gray-600 underline dark:text-gray-400">
-                    Today's Schedule
-                  </p>
-                  <button
-                    className="text-4xl font-bold text-blue-700 mt-1 focus:outline-none hover:underline"
-                    onClick={() => setShowTodayInterviewsModal(true)}
-                    style={{
-                      background: "none",
-                      border: "none",
-                      padding: 0,
-                      margin: 0,
-                    }}
-                  >
-                    {todaysInterviews.length}
-                  </button>
-                  <button
-                    className="mt-2 text-sm px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700"
-                    onClick={handleOpenAddInterview}
-                  >
-                    Add Interview
-                  </button>
-                </div>
-                <div className="border-l h-16 mx-4"></div>
-                <div className="flex-1">
-                  <p className="text-sm text-gray-600 underline dark:text-gray-400">
-                    Pending Cases
-                  </p>
-                  <p className="text-4xl font-bold text-blue-700 mt-1">
-                    {pendingCasesCount}
-                  </p>
-                  <button
-                    className="mt-2 text-sm px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700"
-                    onClick={() => setShowTrackerModal(true)}
-                  >
-                    View Tracker
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {showInterviewModal && (
-            <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-              <div className="bg-white rounded-xl shadow-lg w-full max-w-3xl p-6 dark:bg-gray-800">
-                <h2 className="text-xl font-semibold mb-4 dark:text-gray-200">
-                  Add Interview
-                </h2>
-                <form
-                  onSubmit={handleInterviewSubmit}
-                  className="grid grid-cols-1 md:grid-cols-2 gap-4"
-                >
-                  <input
-                    name="candidateName"
-                    value={interviewForm.candidateName}
-                    onChange={handleInterviewChange}
-                    placeholder="Candidate Name"
-                    className="border p-2 rounded dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200"
-                    required
+            <div className="w-full">
+              {/* Top Row */}
+              {/* Banner Section */}
+              <div className="relative w-full">
+                {/* Banner Image */}
+                <div className="relative group">
+                  <img
+                    src={
+                      recruiter?.bannerUrl
+                        ? `${API_BASE}${recruiter.bannerUrl}`
+                        : "/default-banner.jpg"
+                    }
+                    alt="Banner"
+                    className="w-full h-48 object-cover"
                   />
-                  <input
-                    name="position"
-                    value={interviewForm.position}
-                    onChange={handleInterviewChange}
-                    placeholder="Position"
-                    className="border p-2 rounded dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200"
-                    required
-                  />
-                  <input
-                    name="client"
-                    value={interviewForm.client}
-                    onChange={handleInterviewChange}
-                    placeholder="Client"
-                    className="border p-2 rounded dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200"
-                    required
-                  />
-                  <div className="flex gap-2">
-                    <input
-                      type="date"
-                      name="interviewDate"
-                      value={interviewForm.interviewDate}
-                      onChange={handleInterviewChange}
-                      className="border p-2 rounded w-1/2 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200"
-                      required
-                    />
-                    <input
-                      type="time"
-                      name="interviewTime"
-                      value={interviewForm.interviewTime}
-                      onChange={handleInterviewChange}
-                      className="border p-2 rounded w-1/2 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200"
-                      required
-                    />
-                  </div>
-
-                  <select
-                    name="interviewType"
-                    value={interviewForm.interviewType}
-                    onChange={handleInterviewChange}
-                    className="border p-2 rounded dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200"
-                    required
-                  >
-                    <option value="">Interview Type</option>
-                    <option>Telephonic</option>
-                    <option>Face 2 Face</option>
-                    <option>Video Conference</option>
-                    <option>Assignment</option>
-                  </select>
-
-                  <select
-                    name="interviewRound"
-                    value={interviewForm.interviewRound}
-                    onChange={handleInterviewChange}
-                    className="border p-2 rounded dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200"
-                    required
-                  >
-                    <option value="">Interview Round</option>
-                    <option>Intro</option>
-                    <option>Assignment</option>
-                    <option>L1</option>
-                    <option>L2</option>
-                    <option>L3</option>
-                    <option>L4</option>
-                    <option>L5</option>
-                    <option>L6</option>
-                    <option>L7</option>
-                    <option>HR Round</option>
-                    <option>Final Round</option>
-                    <option>Offer Discussion</option>
-                    <option>Additional Discussion</option>
-                  </select>
-
-                  <div className="col-span-2 flex justify-end gap-2 mt-4">
-                    <button
-                      type="button"
-                      onClick={() => setShowInterviewModal(false)}
-                      className="bg-gray-300 px-4 py-2 rounded hover:bg-gray-400 dark:bg-gray-700 dark:hover:bg-gray-600"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="submit"
-                      className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 dark:bg-green-600 dark:hover:bg-green-700"
-                    >
-                      Submit
-                    </button>
-                  </div>
-                </form>
-              </div>
-            </div>
-          )}
-
-          {/* Bottom Row - Requirements + Contributions */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Current Requirements */}
-            <div className="bg-white p-6 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700 dark:shadow-gray-700">
-              <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-200">
-                Current Requirements
-              </h3>
-              <div className="space-y-2 mt-4">
-                <div className="flex justify-between items-center bg-gray-100 px-4 py-4 rounded shadow-sm dark:bg-gray-700 dark:border-gray-600 dark:shadow-gray-600">
-                  <div className="flex items-center gap-2">
-                    <ClipboardList className="text-blue-600 w-4 h-4" />
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      Assigned Requirements
-                    </p>
-                  </div>
-                  <h4 className="text-sm font-semibold text-gray-800">4</h4>
-                </div>
-
-                <div className="flex justify-between items-center bg-gray-100 px-4 py-4 rounded shadow-sm dark:bg-gray-700 dark:border-gray-600 dark:shadow-gray-600">
-                  <div className="flex items-center gap-2">
-                    <AlertCircle className="text-red-600 w-4 h-4" />
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      High Priority
-                    </p>
-                  </div>
-                  <h4 className="text-sm font-semibold text-gray-800">1</h4>
-                </div>
-
-                <div className="flex justify-between items-center bg-gray-100 px-4 py-4 rounded shadow-sm dark:bg-gray-700 dark:border-gray-600 dark:shadow-gray-600">
-                  <div className="flex items-center gap-2">
-                    <CheckCircle className="text-green-600 w-4 h-4" />
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      Active Positions
-                    </p>
-                  </div>
-                  <h4 className="text-sm font-semibold text-gray-800">4</h4>
-                </div>
-
-                {/* wate space */}
-                <div className="flex justify-between items-center bg-white px-4 pb-12 dark:bg-gray-800 dark:border-gray-700 dark:shadow-gray-700 dark:text-gray-200">
-                  <div className="flex items-center"></div>
-                </div>
-              </div>
-
-              <button
-                onClick={() => setShowModal(true)}
-                className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700"
-              >
-                View All Requirements
-              </button>
-            </div>
-
-            {/* Overall Contributions with shaded blocks */}
-            <div className="bg-white p-6 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700 dark:shadow-gray-700">
-              <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-200">
-                Overall Contribution
-              </h3>
-              <div className="space-y-2 mt-4">
-                <div className="flex justify-between items-center bg-gray-100 px-4 py-4 rounded shadow-sm dark:bg-gray-700 dark:border-gray-600 dark:shadow-gray-600">
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
-                    Tenure
-                  </p>
-                  <p className="text-sm font-semibold text-gray-800">
-                    4 Quarters
-                  </p>
-                </div>
-
-                <div className="flex justify-between items-center bg-gray-100 px-4 py-4 rounded shadow-sm dark:bg-gray-700 dark:border-gray-600 dark:shadow-gray-600">
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
-                    Total Closures
-                  </p>
-                  <p className="text-sm font-semibold text-gray-800">3</p>
-                </div>
-
-                <div className="flex justify-between items-center bg-gray-100 px-4 py-4 rounded shadow-sm dark:bg-gray-700 dark:border-gray-600 dark:shadow-gray-600">
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
-                    Recent Closure
-                  </p>
-                  <p className="text-sm font-semibold text-gray-800">
-                    Adhitya – Tracx
-                  </p>
-                </div>
-
-                <div className="flex justify-between items-center bg-gray-100 px-4 py-4 rounded shadow-sm dark:bg-gray-700 dark:border-gray-600 dark:shadow-gray-600">
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
-                    Last Closure
-                  </p>
-                  <p className="text-sm font-semibold text-gray-800">
-                    1M 15 Days
-                  </p>
-                </div>
-              </div>
-
-              <button
-                className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700"
-                onClick={() => setShowContributionModal(true)}
-              >
-                View Contribution
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {showModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50">
-            <div className="bg-white p-6 rounded-lg max-w-4xl w-full min-h-[80vh] overflow-y-auto dark:bg-gray-800">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-bold dark:text-gray-200">
-                  Your Requirements
-                </h2>
-                <button
-                  onClick={() => setShowModal(false)}
-                  className="text-red-500 font-bold text-lg dark:text-red-500"
-                >
-                  X
-                </button>
-              </div>
-              <p className="text-sm text-gray-500 mb-2 dark:text-gray-400">
-                Read-only view of requirements assigned to you for recruitment
-              </p>
-              <table className="min-w-full text-sm text-left border">
-                <thead className="bg-gray-100 dark:bg-gray-700 dark:border-gray-600 dark:shadow-gray-600">
-                  <tr>
-                    <th className="p-2 border dark:text-gray-200">Position</th>
-                    <th className="p-2 border dark:text-gray-200">
-                      Criticality
-                    </th>
-                    <th className="p-2 border dark:text-gray-200">Company</th>
-                    <th className="p-2 border dark:text-gray-200">SPOC</th>
-                    <th className="p-2 border dark:text-gray-200">
-                      SPOC Email
-                    </th>
-                    <th className="p-2 border dark:text-gray-200">Count</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {activeRequirements.map((req) => (
-                    <tr key={req.id} className="border dark:border-gray-600">
-                      <td className="p-2 text-blue-600 font-medium dark:text-blue-400">
-                        {req.position}
-                      </td>
-                      <td className="p-2">
-                        <span
-                          className={`px-2 py-1 rounded text-xs dark:text-gray-200 ${
-                            req.criticality === "High"
-                              ? "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-100"
-                              : req.criticality === "Medium"
-                              ? "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-100"
-                              : "bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-200"
-                          }`}
-                        >
-                          {req.criticality}
-                        </span>
-                      </td>
-                      <td className="p-2 dark:text-gray-200">{req.company}</td>
-                      <td className="p-2 dark:text-gray-200">
-                        {req.contactPerson}
-                      </td>
-                      <td className="p-2 dark:text-gray-200">
-                        {req.contactPersonEmail}
-                      </td>
-                      <td className="p-2">
-                        <button
-                          className="px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-xs"
-                          onClick={() => {
-                            setOpenCalendarId(req.id);
-                            const mostRecentDate = getMostRecentDateForReq(
-                              req.id
-                            );
-                            setSelectedDate(mostRecentDate || getToday());
-                            setInputCount("");
-                            setCalendarStep("calendar");
-                          }}
-                        >
-                          {getTotalCountForReq(req.id) === 0
-                            ? "Set"
-                            : getTotalCountForReq(req.id)}
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
-
-        {openCalendarId && (
-          <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-30">
-            <div className="bg-white dark:bg-gray-800 border rounded-xl shadow-2xl p-8 relative w-full max-w-md flex flex-col items-center">
-              <button
-                className="absolute top-4 right-4 text-2xl text-gray-500 hover:text-red-500 focus:outline-none"
-                onClick={() => {
-                  setOpenCalendarId(null);
-                  setCalendarStep("calendar");
-                }}
-                aria-label="Close"
-              >
-                ×
-              </button>
-              <div className="w-full flex flex-col items-center">
-                <div className="mb-6 text-xl font-bold text-center dark:text-gray-100">
-                  Select a Date for Count
-                </div>
-                {calendarStep === "calendar" ? (
-                  <>
-                    <div className="mb-4 w-full flex justify-center">
-                      <Calendar
-                        selected={selectedDate}
-                        onDateClick={(dateStr) => {
-                          setSelectedDate(dateStr);
-                          setInputCount("");
-                          setCalendarStep("input");
-                        }}
+                  {/* Hover options for banner */}
+                  <div className="absolute inset-0 bg-black bg-opacity-30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition">
+                    <label className="bg-white text-sm px-3 py-1 rounded cursor-pointer mr-2">
+                      Change
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={handleChangeBanner}
                       />
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <div className="mb-4 text-lg font-semibold dark:text-gray-200">
-                      Set Count for {selectedDate}
-                    </div>
-                    <div className="mb-2 text-sm text-gray-600 dark:text-gray-400">
-                      Current count for this date:{" "}
-                      {requirementCounts[openCalendarId]?.[selectedDate] || 0}
-                    </div>
-                    <input
-                      type="number"
-                      min="0"
-                      className="border px-3 py-2 rounded w-full dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200 mb-4"
-                      value={inputCount}
-                      onChange={(e) => setInputCount(e.target.value)}
-                      placeholder="Add to count"
-                      autoFocus
-                    />
-                    <div className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-                      This will be added to the existing count for this date.
-                    </div>
-                    <div className="flex gap-4 mt-2 w-full justify-center">
+                    </label>
+                    {recruiter.bannerUrl && (
                       <button
-                        className="bg-gray-400 text-white px-5 py-2 rounded hover:bg-gray-500 text-sm font-semibold"
-                        onClick={() => setCalendarStep("calendar")}
+                        className="bg-red-500 text-white text-sm px-3 py-1 rounded"
+                        onClick={handleRemoveBanner}
                       >
-                        Back
+                        Remove
                       </button>
-                      <button
-                        className="bg-green-600 text-white px-5 py-2 rounded hover:bg-green-700 text-sm font-semibold"
-                        onClick={() => {
-                          const currentCount = parseInt(
-                            requirementCounts[openCalendarId]?.[selectedDate] ||
-                              0
-                          );
-                          const newCount = parseInt(inputCount) || 0;
-                          const totalCount = currentCount + newCount;
+                    )}
+                  </div>
+                </div>
 
-                          setRequirementCounts((prev) => ({
-                            ...prev,
-                            [openCalendarId]: {
-                              ...(prev[openCalendarId] || {}),
-                              [selectedDate]: totalCount.toString(),
-                            },
-                          }));
-                          setOpenCalendarId(null);
-                          setCalendarStep("calendar");
-                        }}
+                {/* Profile Picture */}
+                <div className="absolute left-1/2 transform -translate-x-1/2 bottom-[-70px] group">
+                  <img
+                    src={
+                      recruiter?.profilePic
+                        ? `${API_BASE}${recruiter.profilePic}`
+                        : "/default-profile.jpg"
+                    }
+                    alt="Profile"
+                    className="w-32 h-32 rounded-full object-cover border-4 border-white"
+                  />
+                  {/* Hover options for profile */}
+                  <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center opacity-0 group-hover:opacity-100 rounded-full transition">
+                    <label className="bg-white text-xs px-2 py-1 rounded cursor-pointer mr-1">
+                      Change
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={handleChangePic}
+                      />
+                    </label>
+                    {recruiter.profilePic && (
+                      <button
+                        className="bg-red-500 text-white text-xs px-2 py-1 rounded"
+                        onClick={handleRemovePic}
                       >
-                        Save
+                        Remove
                       </button>
-                    </div>
-                  </>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Row: Contribution, LinkedIn, Edit */}
+              <div className="flex justify-between items-center mt-5 px-6">
+                <p className="font-semibold text-gray-700">
+                  Total Contribution <br />
+                  <span className="text-xl">
+                    ₹{recruiter.totalContribution || "0"}
+                  </span>
+                </p>
+
+                <div className="flex items-center gap-3">
+                  <div
+                    onClick={() => setDarkMode(!darkMode)}
+                    className="cursor-pointer p-2 rounded-full bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition"
+                    title="Toggle dark mode"
+                  >
+                    {darkMode ? (
+                      <Sun className="w-5 h-5 text-yellow-400" />
+                    ) : (
+                      <Moon className="w-5 h-5 text-gray-800" />
+                    )}
+                  </div>
+                  <a
+                    href={recruiter.linkedinUrl || "#"}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-blue-500 hover:bg-blue-700"
+                  >
+                    <FaLinkedin className="w-5 h-5 text-white" />
+                  </a>
+
+                  <button
+                    onClick={() => {
+                      setEditData(recruiter); // Copy recruiter details into editData
+                      setShowEditProfileModal(true);
+                    }}
+                    className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 text-sm font-medium"
+                  >
+                    Edit Profile
+                  </button>
+                </div>
+              </div>
+
+              {/* {showEditProfileModal && (
+                <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50">
+                  <div className="bg-white dark:bg-gray-800 p-6 rounded-lg w-full max-w-lg relative">
+                    <button
+                      onClick={() => setShowEditProfileModal(false)}
+                      className="absolute top-4 right-4 text-gray-500 hover:text-red-500 text-2xl"
+                    >
+                      ×
+                    </button>
+
+                    <h2 className="text-xl font-semibold mb-4 dark:text-gray-200">
+                      Edit Profile
+                    </h2>
+
+                    <form
+                      onSubmit={async (e) => {
+                        e.preventDefault();
+                        try {
+                          await axios.put(
+                            `${API_BASE}/recruiter/profile`,
+                            editData
+                          );
+                          setRecruiter(editData); // Update dashboard instantly
+                          setShowEditProfileModal(false);
+                        } catch (error) {
+                          console.error("Error updating profile:", error);
+                        }
+                      }}
+                      className="space-y-4"
+                    >
+                      <div>
+                        <label className="block text-sm font-medium mb-1 dark:text-gray-300">
+                          Name
+                        </label>
+                        <input
+                          type="text"
+                          value={editData.name || ""}
+                          onChange={(e) =>
+                            setEditData({ ...editData, name: e.target.value })
+                          }
+                          className="w-full border px-3 py-2 rounded dark:bg-gray-700 dark:text-gray-200"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium mb-1 dark:text-gray-300">
+                          Designation
+                        </label>
+                        <input
+                          type="text"
+                          value={editData.designation || ""}
+                          onChange={(e) =>
+                            setEditData({
+                              ...editData,
+                              designation: e.target.value,
+                            })
+                          }
+                          className="w-full border px-3 py-2 rounded dark:bg-gray-700 dark:text-gray-200"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium mb-1 dark:text-gray-300">
+                          Mobile
+                        </label>
+                        <input
+                          type="text"
+                          value={editData.mobile || ""}
+                          onChange={(e) =>
+                            setEditData({ ...editData, mobile: e.target.value })
+                          }
+                          className="w-full border px-3 py-2 rounded dark:bg-gray-700 dark:text-gray-200"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium mb-1 dark:text-gray-300">
+                          Email
+                        </label>
+                        <input
+                          type="email"
+                          value={editData.email || ""}
+                          onChange={(e) =>
+                            setEditData({ ...editData, email: e.target.value })
+                          }
+                          className="w-full border px-3 py-2 rounded dark:bg-gray-700 dark:text-gray-200"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium mb-1 dark:text-gray-300">
+                          Reporting To
+                        </label>
+                        <input
+                          type="text"
+                          value={editData.reportingTo || ""}
+                          onChange={(e) =>
+                            setEditData({
+                              ...editData,
+                              reportingTo: e.target.value,
+                            })
+                          }
+                          className="w-full border px-3 py-2 rounded dark:bg-gray-700 dark:text-gray-200"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium mb-1 dark:text-gray-300">
+                          LinkedIn URL
+                        </label>
+                        <input
+                          type="text"
+                          value={editData.linkedinUrl || ""}
+                          onChange={(e) =>
+                            setEditData({
+                              ...editData,
+                              linkedinUrl: e.target.value,
+                            })
+                          }
+                          className="w-full border px-3 py-2 rounded dark:bg-gray-700 dark:text-gray-200"
+                        />
+                      </div>
+
+                      <div className="flex justify-end gap-3">
+                        <button
+                          type="button"
+                          onClick={() => setShowEditProfileModal(false)}
+                          className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="submit"
+                          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                        >
+                          Save
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+              )} */}
+
+              {/* Recruiter Info */}
+              <div className="text-center mt-3">
+                <h2 className="text-xl font-bold text-gray-900">
+                  {recruiter.name}
+                </h2>
+                <p className="text-gray-600 font-bold">
+                  Talent Advisor{" "}
+                  <span className="ml-2 px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs">
+                    {recruiter.recruiterId}
+                  </span>
+                </p>
+                <p className="text-gray-500 text-sm mt-1">
+                  📞 {recruiter.mobile} &nbsp; ✉️ {recruiter.email}
+                </p>
+                <p className="text-gray-400 text-sm">
+                  Joining Date:{" "}
+                  {new Date(recruiter.joiningDate).toLocaleDateString("en-IN")}
+                </p>
+                <p className="text-gray-400 text-sm">
+                  Reporting to: {recruiter.reportingTo}
+                </p>
+              </div>
+
+              {/*new tabbed sessions*/}
+
+              <div className="flex border-b mt-5">
+                {["updates", "requirements", "pipeline", "activity"].map(
+                  (tab) => (
+                    <button
+                      key={tab}
+                      onClick={() => setActiveTab(tab)}
+                      className={`px-4 py-2 font-medium ${
+                        activeTab === tab
+                          ? "border-b-2 border-blue-600 text-blue-600"
+                          : "text-gray-500 hover:text-blue-600"
+                      }`}
+                    >
+                      {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                    </button>
+                  )
                 )}
               </div>
-            </div>
-          </div>
-        )}
 
-        {/* {confirmId && (
+              {/*tabbed session codes here seperately*/}
+              <div className="mt-6">
+                {activeTab === "updates" && (
+                  <div className="mx-5 mb-3 dark:text-gray-200">
+                    <div className="flex justify-between items-center mx-5 mb-3 dark:text-gray-200">
+                      <div>
+                        <h2 className="text-xl font-semibold mb-4">Updates</h2>
+                      </div>
+                      <div>
+                        <button
+                          onClick={() => navigate("/recruiter/add-job")}
+                          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition mr-5 dark:bg-blue-600 dark:hover:bg-blue-700"
+                        >
+                          Post Jobs
+                        </button>
+                        <button
+                          onClick={handleUploadClick}
+                          className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition mr-5 dark:bg-green-600 dark:hover:bg-green-700"
+                        >
+                          Upload Resume
+                        </button>
+
+                        <button
+                          onClick={() => navigate("/source-resume")}
+                          className=" bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition dark:bg-blue-600 dark:hover:bg-blue-700  "
+                        >
+                          Source Resume
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col gap-6 mb-6">
+                      {/* Top Row - 3 Summary Boxes */}
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        {/* Active Jobs */}
+                        <div
+                          className="bg-white rounded-xl shadow-md hover:shadow-lg transition cursor-pointer p-5 flex flex-col items-center text-center dark:bg-gray-800 dark:border dark:border-gray-700"
+                          onClick={() => navigate(summaryCards[0]?.path)}
+                        >
+                          {/* Icon & Title */}
+                          <div className="flex flex-col items-center">
+                            <div className="text-blue-800 text-xl mb-1">
+                              {summaryCards[0]?.icon}
+                            </div>
+                            <h3 className="text-base font-semibold text-gray-800 dark:text-gray-200">
+                              {summaryCards[0]?.title}
+                            </h3>
+                          </div>
+
+                          {/* Main Count */}
+                          <p className="text-4xl font-bold text-black mt-2 dark:text-white">
+                            {summaryCards[0]?.count}
+                          </p>
+
+                          {/* Subtitle in Highlighted Bar */}
+                          <div className="mt-3 bg-red-100 text-red-600 px-3 py-1 rounded-md text-sm font-medium flex items-center gap-2">
+                            <span className="text-red-600">
+                              {/* Small icon if needed */}
+                            </span>
+                            {summaryCards[0]?.subtitle}
+                          </div>
+                        </div>
+
+                        {/* Second Summary Card */}
+                        <div
+                          className="bg-white rounded-xl shadow-md hover:shadow-lg transition cursor-pointer p-5 flex flex-col items-center text-center dark:bg-gray-800 dark:border dark:border-gray-700"
+                          onClick={() => navigate(summaryCards[1]?.path)}
+                        >
+                          {/* Icon & Title */}
+                          <div className="flex flex-col items-center">
+                            <div className="text-blue-800 text-xl mb-1">
+                              {summaryCards[1]?.icon}
+                            </div>
+                            <h3 className="text-base font-semibold text-gray-800 dark:text-gray-200">
+                              {summaryCards[1]?.title}
+                            </h3>
+                          </div>
+
+                          {/* Main Count */}
+                          <p className="text-4xl font-bold text-black mt-2 dark:text-white">
+                            {summaryCards[1]?.count}
+                          </p>
+
+                          {/* Subtitle in Highlighted Bar */}
+                          <div className="mt-3 bg-red-100 text-red-600 px-3 py-1 rounded-md text-sm font-medium flex items-center gap-2">
+                            {summaryCards[1]?.subtitle}
+                          </div>
+                        </div>
+
+                        {/* Interview Tracker */}
+                        <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition p-5 dark:bg-gray-800 dark:border dark:border-gray-700">
+                          {/* Title */}
+                          <h3 className="text-lg font-semibold text-center text-blue-900 mb-4 dark:text-gray-200">
+                            Interview Tracker
+                          </h3>
+
+                          {/* Two sections side by side */}
+                          <div className="flex items-center justify-between">
+                            {/* Today's Schedule */}
+                            <div className="flex-1 flex flex-col items-center">
+                              <p className="text-sm text-gray-600 dark:text-gray-400">
+                                Today's Schedule
+                              </p>
+                              <p className="text-3xl font-bold text-black dark:text-white mt-1">
+                                {todaysInterviews.length}
+                              </p>
+                              <button
+                                className="mt-2 px-4 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700"
+                                onClick={handleOpenAddInterview}
+                              >
+                                Add
+                              </button>
+                            </div>
+
+                            {/* Divider */}
+                            <div className="border-l h-16 mx-4"></div>
+
+                            {/* Pending Cases */}
+                            <div className="flex-1 flex flex-col items-center">
+                              <p className="text-sm text-gray-600 dark:text-gray-400">
+                                Pending cases
+                              </p>
+                              <p className="text-3xl font-bold text-black dark:text-white mt-1">
+                                {pendingCasesCount}
+                              </p>
+                              <button
+                                className="mt-2 px-4 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700"
+                                onClick={() => setShowTrackerModal(true)}
+                              >
+                                View
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {showInterviewModal && (
+                        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+                          <div className="bg-white rounded-xl shadow-lg w-full max-w-3xl p-6 dark:bg-gray-800">
+                            <h2 className="text-xl font-semibold mb-4 dark:text-gray-200">
+                              Add Interview
+                            </h2>
+                            <form
+                              onSubmit={handleInterviewSubmit}
+                              className="grid grid-cols-1 md:grid-cols-2 gap-4"
+                            >
+                              <input
+                                name="candidateName"
+                                value={interviewForm.candidateName}
+                                onChange={handleInterviewChange}
+                                placeholder="Candidate Name"
+                                className="border p-2 rounded dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200"
+                                required
+                              />
+                              <input
+                                name="position"
+                                value={interviewForm.position}
+                                onChange={handleInterviewChange}
+                                placeholder="Position"
+                                className="border p-2 rounded dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200"
+                                required
+                              />
+                              <input
+                                name="client"
+                                value={interviewForm.client}
+                                onChange={handleInterviewChange}
+                                placeholder="Client"
+                                className="border p-2 rounded dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200"
+                                required
+                              />
+                              <div className="flex gap-2">
+                                <input
+                                  type="date"
+                                  name="interviewDate"
+                                  value={interviewForm.interviewDate}
+                                  onChange={handleInterviewChange}
+                                  className="border p-2 rounded w-1/2 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200"
+                                  required
+                                />
+                                <input
+                                  type="time"
+                                  name="interviewTime"
+                                  value={interviewForm.interviewTime}
+                                  onChange={handleInterviewChange}
+                                  className="border p-2 rounded w-1/2 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200"
+                                  required
+                                />
+                              </div>
+
+                              <select
+                                name="interviewType"
+                                value={interviewForm.interviewType}
+                                onChange={handleInterviewChange}
+                                className="border p-2 rounded dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200"
+                                required
+                              >
+                                <option value="">Interview Type</option>
+                                <option>Telephonic</option>
+                                <option>Face 2 Face</option>
+                                <option>Video Conference</option>
+                                <option>Assignment</option>
+                              </select>
+
+                              <select
+                                name="interviewRound"
+                                value={interviewForm.interviewRound}
+                                onChange={handleInterviewChange}
+                                className="border p-2 rounded dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200"
+                                required
+                              >
+                                <option value="">Interview Round</option>
+                                <option>Intro</option>
+                                <option>Assignment</option>
+                                <option>L1</option>
+                                <option>L2</option>
+                                <option>L3</option>
+                                <option>L4</option>
+                                <option>L5</option>
+                                <option>L6</option>
+                                <option>L7</option>
+                                <option>HR Round</option>
+                                <option>Final Round</option>
+                                <option>Offer Discussion</option>
+                                <option>Additional Discussion</option>
+                              </select>
+
+                              <div className="col-span-2 flex justify-end gap-2 mt-4">
+                                <button
+                                  type="button"
+                                  onClick={() => setShowInterviewModal(false)}
+                                  className="bg-gray-300 px-4 py-2 rounded hover:bg-gray-400 dark:bg-gray-700 dark:hover:bg-gray-600"
+                                >
+                                  Cancel
+                                </button>
+                                <button
+                                  type="submit"
+                                  className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 dark:bg-green-600 dark:hover:bg-green-700"
+                                >
+                                  Submit
+                                </button>
+                              </div>
+                            </form>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Candidate Status */}
+                      <div className="flex flex-col lg:flex-row gap-4 my-5 w-full">
+                        {/* Left Column */}
+                        <div className="w-full bg-white rounded-2xl shadow p-4 dark:bg-gray-800 dark:border-gray-700 dark:shadow-gray-700">
+                          <h2 className="text-xl font-semibold mb-4 dark:text-gray-200">
+                            Applicant Overview
+                          </h2>
+                          <div className="overflow-x-auto">
+                            {/* Table */}
+                            <div className="overflow-x-auto">
+                              <table className="min-w-full table-auto border-collapse">
+                                <thead>
+                                  <tr className="text-left bg-gray-100 dark:bg-gray-700">
+                                    <th className="p-3 dark:text-gray-200">
+                                      Applied on
+                                    </th>
+                                    <th className="p-3 dark:text-gray-200">
+                                      Candidate Name
+                                    </th>
+                                    <th className="p-3 dark:text-gray-200">
+                                      Company
+                                    </th>
+                                    <th className="p-3 dark:text-gray-200">
+                                      Role Applied
+                                    </th>
+                                    <th className="p-3 dark:text-gray-200">
+                                      Submission
+                                    </th>
+                                    <th className="p-3 dark:text-gray-200">
+                                      Current Status
+                                    </th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {activeCandidates
+                                    .slice(0, visibleCount)
+                                    .map((cand, index) => (
+                                      <tr
+                                        key={cand.id}
+                                        className="border-b hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-700"
+                                      >
+                                        <td className="p-3 dark:text-gray-200">
+                                          {`0${index + 1}-08-2025`}
+                                        </td>
+                                        <td
+                                          className="p-3 font-medium text-blue-600 cursor-pointer hover:underline dark:text-blue-400"
+                                          onClick={() =>
+                                            navigate(
+                                              `/recruiter/candidate/${cand.id}`
+                                            )
+                                          }
+                                        >
+                                          {cand.name}
+                                        </td>
+                                        <td className="p-3 dark:text-gray-200">
+                                          {cand.company}
+                                        </td>
+                                        <td
+                                          className="p-3 cursor-pointer hover:underline dark:text-gray-200"
+                                          onClick={() =>
+                                            navigate(
+                                              `/recruiter/job/${cand.jobId}`
+                                            )
+                                          }
+                                        >
+                                          {cand.job}
+                                        </td>
+                                        <td className="p-3">
+                                          <span
+                                            className={`px-3 py-1 rounded-full text-white text-sm ${
+                                              index % 2 === 0
+                                                ? "bg-green-500"
+                                                : "bg-blue-500"
+                                            }`}
+                                          >
+                                            {index % 2 === 0
+                                              ? "Inbound"
+                                              : "Uploaded"}
+                                          </span>
+                                        </td>
+                                        <td className="p-3">
+                                          <select
+                                            className="border px-2 py-1 rounded dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200"
+                                            defaultValue="In-Process"
+                                            onChange={(e) =>
+                                              handleStatusChange(
+                                                cand,
+                                                e.target.value
+                                              )
+                                            }
+                                          >
+                                            {statuses.map((status) => (
+                                              <option
+                                                key={status}
+                                                value={status}
+                                              >
+                                                {status}
+                                              </option>
+                                            ))}
+                                          </select>
+                                        </td>
+                                      </tr>
+                                    ))}
+                                </tbody>
+                              </table>
+                            </div>
+
+                            {/* View More / View Less Buttons */}
+                            <div className="flex justify-end gap-3 mt-4">
+                              {visibleCount > 5 && (
+                                <button
+                                  className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
+                                  onClick={() =>
+                                    setVisibleCount(visibleCount - 5)
+                                  }
+                                >
+                                  View Less
+                                </button>
+                              )}
+                              {visibleCount < activeCandidates.length && (
+                                <button
+                                  className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                                  onClick={() =>
+                                    setVisibleCount(visibleCount + 5)
+                                  }
+                                >
+                                  View More
+                                </button>
+                              )}
+                            </div>
+
+                            {showReasonModal && (
+                              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                                <div className="bg-white w-full max-w-md p-6 rounded-2xl shadow-xl dark:bg-gray-800 dark:border-gray-700 dark:shadow-gray-700">
+                                  <h3 className="text-lg font-semibold mb-4 text-center dark:text-gray-200">
+                                    Reason for Screening Out
+                                  </h3>
+
+                                  <div className="mb-4">
+                                    <label className="block mb-1 font-medium">
+                                      Select Reason
+                                    </label>
+                                    <select
+                                      className="w-full border px-3 py-2 rounded dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200"
+                                      value={reason}
+                                      onChange={(e) =>
+                                        setReason(e.target.value)
+                                      }
+                                    >
+                                      <option value="">
+                                        -- Choose a reason --
+                                      </option>
+                                      {rejectionReasons.map((r) => (
+                                        <option key={r} value={r}>
+                                          {r}
+                                        </option>
+                                      ))}
+                                    </select>
+                                  </div>
+
+                                  <div className="mb-4">
+                                    <label className="block mb-1 font-medium">
+                                      Optional Description
+                                    </label>
+                                    <textarea
+                                      rows="3"
+                                      className="w-full border px-3 py-2 rounded dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200"
+                                      value={desc}
+                                      onChange={(e) => setDesc(e.target.value)}
+                                      placeholder="Write more details (optional)..."
+                                    ></textarea>
+                                  </div>
+
+                                  <div className="flex justify-between">
+                                    <button
+                                      className="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500"
+                                      onClick={() => setShowReasonModal(false)}
+                                    >
+                                      Cancel
+                                    </button>
+                                    <button
+                                      className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+                                      onClick={handleSubmitReason}
+                                    >
+                                      Submit
+                                    </button>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {activeTab === "requirements" && (
+                  <div className="mx-5 mb-3 dark:text-gray-200">
+                    {/* Requirements Section */}
+                    {/* Boxes Section */}
+                    <h2 className="text-2xl font-semibold mb-6 dark:text-gray-200">
+                      Requirements
+                    </h2>
+                    <div className="grid grid-cols-3 gap-4 mb-10">
+                      {[
+                        { title: "Total Requirements", count: 10 },
+                        { title: "High Priority", count: 5 },
+                        { title: "Robust Requirements", count: 4 },
+                        { title: "Idle Requirements", count: 2 },
+                        { title: "Delivery Pending", count: 3 },
+                        { title: "Easy Requirements", count: 2 },
+                      ].map((box, index) => (
+                        <div
+                          key={index}
+                          className="bg-white dark:bg-gray-700 shadow-md rounded-lg p-4 flex flex-col justify-between h-24 transition-all duration-300 hover:shadow-lg hover:-translate-y-1"
+                        >
+                          <h3 className="text-base font-semibold text-gray-700 dark:text-gray-300">
+                            {box.title}
+                          </h3>
+                          <p className="text-5xl font-bold text-blue-700 self-end mr-7">
+                            {box.count}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Bottom Row - Requirements + Contributions */}
+                    {/* grid grid-cols-1 md:grid-cols-2 */}
+                    <div className=" gap-6">
+                      {/* Requirements Section */}
+                      {/* Deliverables Table */}
+                      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+                        <h2 className="text-xl font-semibold mb-4 dark:text-gray-200">
+                          Deliverables
+                        </h2>
+
+                        <div className="overflow-x-auto">
+                          <table className="min-w-full table-auto border-collapse">
+                            <thead>
+                              <tr className="bg-gray-100 dark:bg-gray-700 text-left">
+                                <th className="p-3 dark:text-gray-200">
+                                  Positions
+                                </th>
+                                <th className="p-3 dark:text-gray-200">
+                                  Criticality
+                                </th>
+                                <th className="p-3 dark:text-gray-200">
+                                  Company
+                                </th>
+                                <th className="p-3 dark:text-gray-200">SPOC</th>
+                                <th className="p-3 dark:text-gray-200">
+                                  SPOC Email
+                                </th>
+                                <th className="p-3 dark:text-gray-200">
+                                  Count
+                                </th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {activeRequirements
+                                .slice(0, visibleCount)
+                                .map((req) => (
+                                  <tr
+                                    key={req.id}
+                                    className="border-b hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-700"
+                                  >
+                                    <td className="p-3 text-blue-600 font-medium dark:text-blue-400">
+                                      {req.position}
+                                    </td>
+                                    <td className="p-3">
+                                      <span
+                                        className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                                          req.criticality === "High"
+                                            ? "bg-red-100 text-red-700"
+                                            : req.criticality === "Medium"
+                                            ? "bg-blue-100 text-blue-700"
+                                            : "bg-gray-200 text-gray-700"
+                                        }`}
+                                      >
+                                        {req.criticality}
+                                      </span>
+                                    </td>
+                                    <td className="p-3 dark:text-gray-200">
+                                      {req.company}
+                                    </td>
+                                    <td className="p-3 dark:text-gray-200">
+                                      {req.contactPerson}
+                                    </td>
+                                    <td className="p-3 dark:text-gray-200">
+                                      {req.contactPersonEmail}
+                                    </td>
+                                    <td className="p-3">
+                                      <button
+                                        className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
+                                        onClick={() => {
+                                          setOpenCalendarId(req.id);
+                                          const mostRecentDate =
+                                            getMostRecentDateForReq(req.id);
+                                          setSelectedDate(
+                                            mostRecentDate || getToday()
+                                          );
+                                          setInputCount("");
+                                          setCalendarStep("calendar");
+                                          setShowModal(true); // <-- Opens your modal
+                                        }}
+                                      >
+                                        {getTotalCountForReq(req.id) === 0
+                                          ? "Set"
+                                          : getTotalCountForReq(req.id)}
+                                      </button>
+                                    </td>
+                                  </tr>
+                                ))}
+                            </tbody>
+                          </table>
+                        </div>
+
+                        {/* View More / View Less */}
+                        {/* Buttons Section */}
+                        {/* Buttons */}
+                        <div className="flex justify-end gap-4 mt-4">
+                          {visibleCount < requirements.length ? (
+                            <button
+                              className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                              onClick={() => setVisibleCount(visibleCount + 5)}
+                            >
+                              View More
+                            </button>
+                          ) : (
+                            visibleCount > 5 && (
+                              <button
+                                className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700"
+                                onClick={() => setVisibleCount(5)}
+                              >
+                                View Less
+                              </button>
+                            )
+                          )}
+                          <button
+                            className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+                            onClick={() => navigate("/requirements-archive")}
+                          >
+                            Req-Archives
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Overall Contributions with shaded blocks */}
+                    </div>
+
+                    {/* {showModal && (
+                      <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50">
+                        <div className="bg-white p-6 rounded-lg max-w-4xl w-full min-h-[80vh] overflow-y-auto dark:bg-gray-800">
+                          <div className="flex justify-between items-center mb-4">
+                            <h2 className="text-xl font-bold dark:text-gray-200">
+                              Your Requirements
+                            </h2>
+                            <button
+                              onClick={() => setShowModal(false)}
+                              className="text-red-500 font-bold text-lg dark:text-red-500"
+                            >
+                              X
+                            </button>
+                          </div>
+                          <p className="text-sm text-gray-500 mb-2 dark:text-gray-400">
+                            Read-only view of requirements assigned to you for
+                            recruitment
+                          </p>
+                          <table className="min-w-full text-sm text-left border">
+                            <thead className="bg-gray-100 dark:bg-gray-700 dark:border-gray-600 dark:shadow-gray-600">
+                              <tr>
+                                <th className="p-2 border dark:text-gray-200">
+                                  Position
+                                </th>
+                                <th className="p-2 border dark:text-gray-200">
+                                  Criticality
+                                </th>
+                                <th className="p-2 border dark:text-gray-200">
+                                  Company
+                                </th>
+                                <th className="p-2 border dark:text-gray-200">
+                                  SPOC
+                                </th>
+                                <th className="p-2 border dark:text-gray-200">
+                                  SPOC Email
+                                </th>
+                                <th className="p-2 border dark:text-gray-200">
+                                  Count
+                                </th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {activeRequirements.map((req) => (
+                                <tr
+                                  key={req.id}
+                                  className="border dark:border-gray-600"
+                                >
+                                  <td className="p-2 text-blue-600 font-medium dark:text-blue-400">
+                                    {req.position}
+                                  </td>
+                                  <td className="p-2">
+                                    <span
+                                      className={`px-2 py-1 rounded text-xs dark:text-gray-200 ${
+                                        req.criticality === "High"
+                                          ? "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-100"
+                                          : req.criticality === "Medium"
+                                          ? "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-100"
+                                          : "bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-200"
+                                      }`}
+                                    >
+                                      {req.criticality}
+                                    </span>
+                                  </td>
+                                  <td className="p-2 dark:text-gray-200">
+                                    {req.company}
+                                  </td>
+                                  <td className="p-2 dark:text-gray-200">
+                                    {req.contactPerson}
+                                  </td>
+                                  <td className="p-2 dark:text-gray-200">
+                                    {req.contactPersonEmail}
+                                  </td>
+                                  <td className="p-2">
+                                    <button
+                                      className="px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-xs"
+                                      onClick={() => {
+                                        setOpenCalendarId(req.id);
+                                        const mostRecentDate =
+                                          getMostRecentDateForReq(req.id);
+                                        setSelectedDate(
+                                          mostRecentDate || getToday()
+                                        );
+                                        setInputCount("");
+                                        setCalendarStep("calendar");
+                                      }}
+                                    >
+                                      {getTotalCountForReq(req.id) === 0
+                                        ? "Set"
+                                        : getTotalCountForReq(req.id)}
+                                    </button>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    )} */}
+
+                    {openCalendarId && (
+                      <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-30">
+                        <div className="bg-white dark:bg-gray-800 border rounded-xl shadow-2xl p-8 relative w-full max-w-md flex flex-col items-center">
+                          <button
+                            className="absolute top-4 right-4 text-2xl text-gray-500 hover:text-red-500 focus:outline-none"
+                            onClick={() => {
+                              setOpenCalendarId(null);
+                              setCalendarStep("calendar");
+                            }}
+                            aria-label="Close"
+                          >
+                            ×
+                          </button>
+                          <div className="w-full flex flex-col items-center">
+                            <div className="mb-6 text-xl font-bold text-center dark:text-gray-100">
+                              Select a Date for Count
+                            </div>
+                            {calendarStep === "calendar" ? (
+                              <>
+                                <div className="mb-4 w-full flex justify-center">
+                                  <Calendar
+                                    selected={selectedDate}
+                                    onDateClick={(dateStr) => {
+                                      setSelectedDate(dateStr);
+                                      setInputCount("");
+                                      setCalendarStep("input");
+                                    }}
+                                  />
+                                </div>
+                              </>
+                            ) : (
+                              <>
+                                <div className="mb-4 text-lg font-semibold dark:text-gray-200">
+                                  Set Count for {selectedDate}
+                                </div>
+                                <div className="mb-2 text-sm text-gray-600 dark:text-gray-400">
+                                  Current count for this date:{" "}
+                                  {requirementCounts[openCalendarId]?.[
+                                    selectedDate
+                                  ] || 0}
+                                </div>
+                                <input
+                                  type="number"
+                                  min="0"
+                                  className="border px-3 py-2 rounded w-full dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200 mb-4"
+                                  value={inputCount}
+                                  onChange={(e) =>
+                                    setInputCount(e.target.value)
+                                  }
+                                  placeholder="Add to count"
+                                  autoFocus
+                                />
+                                <div className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                                  This will be added to the existing count for
+                                  this date.
+                                </div>
+                                <div className="flex gap-4 mt-2 w-full justify-center">
+                                  <button
+                                    className="bg-gray-400 text-white px-5 py-2 rounded hover:bg-gray-500 text-sm font-semibold"
+                                    onClick={() => setCalendarStep("calendar")}
+                                  >
+                                    Back
+                                  </button>
+                                  <button
+                                    className="bg-green-600 text-white px-5 py-2 rounded hover:bg-green-700 text-sm font-semibold"
+                                    onClick={() => {
+                                      const currentCount = parseInt(
+                                        requirementCounts[openCalendarId]?.[
+                                          selectedDate
+                                        ] || 0
+                                      );
+                                      const newCount =
+                                        parseInt(inputCount) || 0;
+                                      const totalCount =
+                                        currentCount + newCount;
+
+                                      setRequirementCounts((prev) => ({
+                                        ...prev,
+                                        [openCalendarId]: {
+                                          ...(prev[openCalendarId] || {}),
+                                          [selectedDate]: totalCount.toString(),
+                                        },
+                                      }));
+                                      setOpenCalendarId(null);
+                                      setCalendarStep("calendar");
+                                    }}
+                                  >
+                                    Save
+                                  </button>
+                                </div>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {activeTab === "pipeline" && (
+                  <div>
+                    {/* Resume/Pipeline Section */}
+                    <h2 className="text-xl font-semibold mb-4">Pipeline</h2>
+                    {/* Right Column Buttons for small screens */}
+                    <div className="block lg:hidden mt-6 flex flex-col gap-3">
+                      <button
+                        className="w-full py-3 bg-green-600 text-white text-lg rounded-xl shadow hover:bg-green-700"
+                        onClick={() => navigate("/funnel")}
+                      >
+                        Pipeline
+                      </button>
+                      <button
+                        className="w-full py-3 bg-yellow-500 text-white text-lg rounded-xl shadow hover:bg-yellow-400"
+                        onClick={() => navigate("/archived-candidates")}
+                      >
+                        Archived
+                      </button>
+                    </div>
+                    {/* Right Column Buttons for large screens */}
+                    <div className="hidden lg:flex lg:w-[25%] flex-col gap-4">
+                      <button
+                        className="w-full py-3 bg-green-600 text-white text-lg rounded-xl shadow hover:bg-green-700"
+                        onClick={() => navigate("/funnel")}
+                      >
+                        Pipeline
+                      </button>
+                      <button
+                        className="w-full py-3 bg-yellow-500 text-white text-lg rounded-xl shadow hover:bg-yellow-400"
+                        onClick={() => navigate("/archived-candidates")}
+                      >
+                        Archived
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {activeTab === "activity" && (
+                  <div>
+                    {/* Activity Section */}
+                    <h2 className="text-xl mx-5 font-semibold mb-4">
+                      Recent Activity
+                    </h2>
+                    <div className="w-[60%] bg-white p-6 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700 dark:shadow-gray-700">
+                      <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-200">
+                        Overall Contribution
+                      </h3>
+                      <div className="space-y-2 mt-4">
+                        <div className="flex justify-between items-center bg-gray-100 px-4 py-4 rounded shadow-sm dark:bg-gray-700 dark:border-gray-600 dark:shadow-gray-600">
+                          <p className="text-sm text-gray-600 dark:text-gray-400">
+                            Tenure
+                          </p>
+                          <p className="text-sm font-semibold text-gray-800">
+                            4 Quarters
+                          </p>
+                        </div>
+
+                        <div className="flex justify-between items-center bg-gray-100 px-4 py-4 rounded shadow-sm dark:bg-gray-700 dark:border-gray-600 dark:shadow-gray-600">
+                          <p className="text-sm text-gray-600 dark:text-gray-400">
+                            Total Closures
+                          </p>
+                          <p className="text-sm font-semibold text-gray-800">
+                            3
+                          </p>
+                        </div>
+
+                        <div className="flex justify-between items-center bg-gray-100 px-4 py-4 rounded shadow-sm dark:bg-gray-700 dark:border-gray-600 dark:shadow-gray-600">
+                          <p className="text-sm text-gray-600 dark:text-gray-400">
+                            Recent Closure
+                          </p>
+                          <p className="text-sm font-semibold text-gray-800">
+                            Adhitya – Tracx
+                          </p>
+                        </div>
+
+                        <div className="flex justify-between items-center bg-gray-100 px-4 py-4 rounded shadow-sm dark:bg-gray-700 dark:border-gray-600 dark:shadow-gray-600">
+                          <p className="text-sm text-gray-600 dark:text-gray-400">
+                            Last Closure
+                          </p>
+                          <p className="text-sm font-semibold text-gray-800">
+                            1M 15 Days
+                          </p>
+                        </div>
+                      </div>
+
+                      <button
+                        className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700"
+                        onClick={() => setShowContributionModal(true)}
+                      >
+                        View Contribution
+                      </button>
+                    </div>
+
+                    {/* Recent Activities */}
+                    <div className="bg-white p-6 rounded-lg shadow max-w-full mx-auto dark:bg-gray-800 dark:border-gray-700 dark:shadow-gray-700">
+                      <div className="flex justify-between items-center mb-4">
+                        {/* <button className="text-blue-600 hover:underline flex items-center gap-1">
+              <FaEdit /> Edit Profile
+            </button> */}
+                      </div>
+                      <ul className="list-disc list-inside text-gray-700 dark:text-gray-200">
+                        {recentActivities.map((item, idx) => (
+                          <li key={idx} className="mb-2">
+                            {item}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Recruiter Dashboard Layout Fixed */}
+
+              {/* {confirmId && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
             <div className="bg-white p-4 rounded shadow-lg max-w-sm w-full">
               <h3 className="text-lg font-semibold mb-2">Are you sure?</h3>
@@ -1202,631 +2164,462 @@ const RecruiterDashboardMain = () => {
           </div>
         )} */}
 
-        <div className="flex justify-between items-center mb-3 dark:text-gray-200">
-          <div>
-            <button
-              onClick={handleUploadClick}
-              className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition mr-5 dark:bg-green-600 dark:hover:bg-green-700"
-            >
-              Upload Resume
-            </button>
-
-            <button
-              onClick={() => navigate("/source-resume")}
-              className="mt-6 bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition dark:bg-blue-600 dark:hover:bg-blue-700  "
-            >
-              Source Resume
-            </button>
-
-            {/* <button
-              onClick={() => navigate("/all-resumes")}
-              className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition ml-4"
-            >
-              View Profiles
-            </button> */}
-          </div>
-
-          <button
-            onClick={() => navigate("/recruiter/add-job")}
-            className="bg-blue-600 text-white ml-4 px-4 py-2 rounded-lg hover:bg-blue-700 transition dark:bg-blue-600 dark:hover:bg-blue-700"
-          >
-            Add Job
-          </button>
-        </div>
-
-        {/* Candidate Status */}
-
-        <div className="flex flex-col lg:flex-row gap-4 my-5 w-full">
-          {/* Left Column */}
-          <div className="lg:w-[75%] w-full bg-white rounded-2xl shadow p-4 dark:bg-gray-800 dark:border-gray-700 dark:shadow-gray-700">
-            <h2 className="text-xl font-semibold mb-4 dark:text-gray-200">
-              Candidate Status
-            </h2>
-            <div className="overflow-x-auto">
-              <table className="min-w-full table-auto border-collapse">
-                <thead>
-                  <tr className="text-left bg-gray-100 dark:bg-gray-700 dark:border-gray-600 dark:shadow-gray-600">
-                    <th className="p-2 dark:text-gray-200">S.No.</th>
-                    <th className="p-2 dark:text-gray-200">Name</th>
-                    <th className="p-2 dark:text-gray-200">Job Title</th>
-                    <th className="p-2 dark:text-gray-200">Company</th>
-                    <th className="p-2 dark:text-gray-200">Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {visibleCandidates.map((cand, index) => (
-                    <tr
-                      key={cand.id}
-                      className="border-b hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-700"
+              {showTodayInterviewsModal && (
+                <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-40">
+                  <div className="bg-white dark:bg-gray-800 border rounded-xl shadow-2xl p-8 w-full max-w-2xl relative">
+                    <button
+                      className="absolute top-4 right-4 text-2xl text-gray-500 hover:text-red-500 focus:outline-none"
+                      onClick={() => setShowTodayInterviewsModal(false)}
+                      aria-label="Close"
                     >
-                      <td className="p-2 dark:text-gray-200">{index + 1}</td>
-                      <td
-                        className="p-2 text-blue-600 cursor-pointer hover:underline dark:text-blue-400"
-                        onClick={() =>
-                          navigate(`/recruiter/candidate/${cand.id}`)
-                        }
-                      >
-                        {cand.name}
-                      </td>
-                      <td
-                        className="p-2 cursor-pointer hover:underline"
-                        onClick={() => navigate(`/recruiter/job/${cand.jobId}`)}
-                      >
-                        {cand.job}
-                      </td>
-                      <td className="p-2 dark:text-gray-200">{cand.company}</td>
-                      <td className="p-2">
-                        <select
-                          className="border px-2 py-1 rounded dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200"
-                          defaultValue="Processing"
-                          onChange={(e) =>
-                            handleStatusChange(cand, e.target.value)
-                          }
-                        >
-                          {statuses.map((status) => (
-                            <option key={status}>{status}</option>
+                      ×
+                    </button>
+                    <div className="mb-6 text-xl font-bold text-center dark:text-gray-100">
+                      Today's Interviews
+                    </div>
+                    {todaysInterviews.length === 0 ? (
+                      <div className="text-center text-gray-500 dark:text-gray-300">
+                        No interviews scheduled for today.
+                      </div>
+                    ) : (
+                      <table className="min-w-full text-sm text-left border mb-4">
+                        <thead className="bg-gray-100 dark:bg-gray-700 dark:border-gray-600 dark:shadow-gray-600">
+                          <tr>
+                            <th className="p-2 border dark:text-gray-200">
+                              Candidate
+                            </th>
+                            <th className="p-2 border dark:text-gray-200">
+                              Position
+                            </th>
+                            <th className="p-2 border dark:text-gray-200">
+                              Client
+                            </th>
+                            <th className="p-2 border dark:text-gray-200">
+                              Time
+                            </th>
+                            <th className="p-2 border dark:text-gray-200">
+                              Type
+                            </th>
+                            <th className="p-2 border dark:text-gray-200">
+                              Remove
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {todaysInterviews.map((i, idx) => (
+                            <tr
+                              key={idx}
+                              className="border dark:border-gray-600"
+                            >
+                              <td className="p-2">{i.candidateName}</td>
+                              <td className="p-2">{i.position}</td>
+                              <td className="p-2">{i.client}</td>
+                              <td className="p-2">{i.interviewTime}</td>
+                              <td className="p-2">{i.interviewType}</td>
+                              <td className="p-2">
+                                <button
+                                  className="text-red-600 hover:underline"
+                                  onClick={() =>
+                                    removeInterview(
+                                      allInterviews.findIndex(
+                                        (intv) => intv === i
+                                      )
+                                    )
+                                  }
+                                >
+                                  Remove
+                                </button>
+                              </td>
+                            </tr>
                           ))}
-                        </select>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-              {showReasonModal && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                  <div className="bg-white w-full max-w-md p-6 rounded-2xl shadow-xl dark:bg-gray-800 dark:border-gray-700 dark:shadow-gray-700">
-                    <h3 className="text-lg font-semibold mb-4 text-center dark:text-gray-200">
-                      Reason for Screening Out
-                    </h3>
-
-                    <div className="mb-4">
-                      <label className="block mb-1 font-medium">
-                        Select Reason
-                      </label>
-                      <select
-                        className="w-full border px-3 py-2 rounded dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200"
-                        value={reason}
-                        onChange={(e) => setReason(e.target.value)}
-                      >
-                        <option value="">-- Choose a reason --</option>
-                        {rejectionReasons.map((r) => (
-                          <option key={r} value={r}>
-                            {r}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div className="mb-4">
-                      <label className="block mb-1 font-medium">
-                        Optional Description
-                      </label>
-                      <textarea
-                        rows="3"
-                        className="w-full border px-3 py-2 rounded dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200"
-                        value={desc}
-                        onChange={(e) => setDesc(e.target.value)}
-                        placeholder="Write more details (optional)..."
-                      ></textarea>
-                    </div>
-
-                    <div className="flex justify-between">
+                        </tbody>
+                      </table>
+                    )}
+                    <div className="flex justify-end">
                       <button
                         className="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500"
-                        onClick={() => setShowReasonModal(false)}
+                        onClick={() => setShowTodayInterviewsModal(false)}
                       >
-                        Cancel
-                      </button>
-                      <button
-                        className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
-                        onClick={handleSubmitReason}
-                      >
-                        Submit
+                        Close
                       </button>
                     </div>
                   </div>
                 </div>
               )}
-            </div>
 
-            <div className="text-right mt-4">
-              <button
-                className="text-blue-600 font-medium hover:underline"
-                onClick={() => setShowAll(!showAll)}
-              >
-                {showAll ? "Show Less" : "See More"}
-              </button>
-            </div>
-
-            {/* Right Column Buttons for small screens */}
-            <div className="block lg:hidden mt-6 flex flex-col gap-3">
-              <button
-                className="w-full py-3 bg-green-600 text-white text-lg rounded-xl shadow hover:bg-green-700"
-                onClick={() => navigate("/funnel")}
-              >
-                Pipeline
-              </button>
-              <button
-                className="w-full py-3 bg-yellow-500 text-white text-lg rounded-xl shadow hover:bg-yellow-400"
-                onClick={() => navigate("/archived-candidates")}
-              >
-                Archived
-              </button>
-            </div>
-          </div>
-
-          {/* Right Column Buttons for large screens */}
-          <div className="hidden lg:flex lg:w-[25%] flex-col gap-4">
-            <button
-              className="w-full py-3 bg-green-600 text-white text-lg rounded-xl shadow hover:bg-green-700"
-              onClick={() => navigate("/funnel")}
-            >
-              Pipeline
-            </button>
-            <button
-              className="w-full py-3 bg-yellow-500 text-white text-lg rounded-xl shadow hover:bg-yellow-400"
-              onClick={() => navigate("/archived-candidates")}
-            >
-              Archived
-            </button>
-          </div>
-        </div>
-
-        {/* Recent Activities */}
-
-        <div className="bg-white p-6 rounded-lg shadow max-w-full mx-auto dark:bg-gray-800 dark:border-gray-700 dark:shadow-gray-700">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-2xl font-semibold dark:text-gray-200">
-              Recent Activity
-            </h2>
-            {/* <button className="text-blue-600 hover:underline flex items-center gap-1">
-              <FaEdit /> Edit Profile
-            </button> */}
-          </div>
-          <ul className="list-disc list-inside text-gray-700 dark:text-gray-200">
-            {recentActivities.map((item, idx) => (
-              <li key={idx} className="mb-2">
-                {item}
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        {showTodayInterviewsModal && (
-          <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-40">
-            <div className="bg-white dark:bg-gray-800 border rounded-xl shadow-2xl p-8 w-full max-w-2xl relative">
-              <button
-                className="absolute top-4 right-4 text-2xl text-gray-500 hover:text-red-500 focus:outline-none"
-                onClick={() => setShowTodayInterviewsModal(false)}
-                aria-label="Close"
-              >
-                ×
-              </button>
-              <div className="mb-6 text-xl font-bold text-center dark:text-gray-100">
-                Today's Interviews
-              </div>
-              {todaysInterviews.length === 0 ? (
-                <div className="text-center text-gray-500 dark:text-gray-300">
-                  No interviews scheduled for today.
-                </div>
-              ) : (
-                <table className="min-w-full text-sm text-left border mb-4">
-                  <thead className="bg-gray-100 dark:bg-gray-700 dark:border-gray-600 dark:shadow-gray-600">
-                    <tr>
-                      <th className="p-2 border dark:text-gray-200">
-                        Candidate
-                      </th>
-                      <th className="p-2 border dark:text-gray-200">
-                        Position
-                      </th>
-                      <th className="p-2 border dark:text-gray-200">Client</th>
-                      <th className="p-2 border dark:text-gray-200">Time</th>
-                      <th className="p-2 border dark:text-gray-200">Type</th>
-                      <th className="p-2 border dark:text-gray-200">Remove</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {todaysInterviews.map((i, idx) => (
-                      <tr key={idx} className="border dark:border-gray-600">
-                        <td className="p-2">{i.candidateName}</td>
-                        <td className="p-2">{i.position}</td>
-                        <td className="p-2">{i.client}</td>
-                        <td className="p-2">{i.interviewTime}</td>
-                        <td className="p-2">{i.interviewType}</td>
-                        <td className="p-2">
-                          <button
-                            className="text-red-600 hover:underline"
-                            onClick={() =>
-                              removeInterview(
-                                allInterviews.findIndex((intv) => intv === i)
-                              )
-                            }
-                          >
-                            Remove
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              )}
-              <div className="flex justify-end">
-                <button
-                  className="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500"
-                  onClick={() => setShowTodayInterviewsModal(false)}
-                >
-                  Close
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {showTrackerModal && (
-          <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-40">
-            <div className="bg-white dark:bg-gray-800 border rounded-xl shadow-2xl p-8 w-full max-w-3xl relative">
-              <button
-                className="absolute top-4 right-4 text-2xl text-gray-500 hover:text-red-500 focus:outline-none"
-                onClick={() => setShowTrackerModal(false)}
-                aria-label="Close"
-              >
-                ×
-              </button>
-              <div className="mb-6 text-xl font-bold text-center dark:text-gray-100">
-                All Interviews (Pending Cases)
-              </div>
-              {allInterviews.length === 0 ? (
-                <div className="text-center text-gray-500 dark:text-gray-300">
-                  No interviews found.
-                </div>
-              ) : (
-                <table className="min-w-full text-sm text-left border mb-4">
-                  <thead className="bg-gray-100 dark:bg-gray-700 dark:border-gray-600 dark:shadow-gray-600">
-                    <tr>
-                      <th className="p-2 border dark:text-gray-200">
-                        Candidate
-                      </th>
-                      <th className="p-2 border dark:text-gray-200">
-                        Position
-                      </th>
-                      <th className="p-2 border dark:text-gray-200">Client</th>
-                      <th className="p-2 border dark:text-gray-200">Date</th>
-                      <th className="p-2 border dark:text-gray-200">Status</th>
-                      <th className="p-2 border dark:text-gray-200">Edit</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {allInterviews.map((i) => (
-                      <tr key={i._id} className="border dark:border-gray-600">
-                        <td className="p-2">{i.candidateName}</td>
-                        <td className="p-2">{i.position}</td>
-                        <td className="p-2">{i.client}</td>
-                        <td className="p-2">{i.interviewDate}</td>
-                        <td className="p-2">{i.finalStatus}</td>
-                        <td className="p-2">
-                          <button
-                            className="text-blue-600 hover:underline"
-                            onClick={() => setEditInterview(i)}
-                          >
-                            Change Status
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              )}
-              <div className="flex justify-end">
-                <button
-                  className="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500"
-                  onClick={() => setShowTrackerModal(false)}
-                >
-                  Close
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Edit Interview Modal */}
-        {editInterview && (
-          <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-40">
-            <div className="bg-white dark:bg-gray-800 border rounded-xl shadow-2xl p-8 w-full max-w-lg relative">
-              <button
-                className="absolute top-4 right-4 text-2xl text-gray-500 hover:text-red-500 focus:outline-none"
-                onClick={() => setEditInterview(null)}
-                aria-label="Close"
-              >
-                ×
-              </button>
-              <div className="mb-6 text-xl font-bold text-center dark:text-gray-100">
-                Change Interview Status
-              </div>
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  handleEditInterview(editInterview);
-                }}
-                className="space-y-4"
-              >
-                {/* Display existing data as text */}
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span className="font-semibold dark:text-gray-200">
-                      Date & Time:
-                    </span>
-                    <span className="dark:text-gray-200">
-                      {editInterview.interviewDate}{" "}
-                      {editInterview.interviewTime}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="font-semibold dark:text-gray-200">
-                      Interview Type:
-                    </span>
-                    <span className="dark:text-gray-200">
-                      {editInterview.interviewType}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="font-semibold dark:text-gray-200">
-                      Interview Round:
-                    </span>
-                    <span className="dark:text-gray-200">
-                      {editInterview.interviewRound}
-                    </span>
-                  </div>
-                </div>
-
-                <hr className="my-4" />
-
-                {/* Interview Feedback */}
-                <div>
-                  <label className="block text-sm font-medium mb-1 dark:text-gray-200">
-                    Interview Feedback
-                  </label>
-                  <select
-                    className="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200"
-                    value={editInterview.interviewFeedback || ""}
-                    onChange={(e) =>
-                      setEditInterview({
-                        ...editInterview,
-                        interviewFeedback: e.target.value,
-                      })
-                    }
-                    required
-                  >
-                    <option value="">Select Interview Feedback</option>
-                    <option>Intro Scheduled</option>
-                    <option>Intro Reject</option>
-                    <option>Assignment Scheduled</option>
-                    <option>Assignment Reject</option>
-                    <option>L1 Scheduled</option>
-                    <option>L1 Reject</option>
-                    <option>L2 Scheduled</option>
-                    <option>L2 Reject</option>
-                    <option>L3 Scheduled</option>
-                    <option>L3 Reject</option>
-                    <option>L4 Scheduled</option>
-                    <option>L4 Reject</option>
-                    <option>L5 Scheduled</option>
-                    <option>L5 Reject</option>
-                    <option>L6 Scheduled</option>
-                    <option>L6 Reject</option>
-                    <option>L7 Scheduled</option>
-                    <option>L7 Reject</option>
-                    <option>HR Round Scheduled</option>
-                    <option>HR Round Reject</option>
-                    <option>Final Round Scheduled</option>
-                    <option>Final Round Reject</option>
-                    <option>Offer Discussion Scheduled</option>
-                    <option>Offer Discussion Reject</option>
-                    <option>Additional Discussion Scheduled</option>
-                    <option>Additional Discussion Reject</option>
-                    <option>Next Round Schedule Pending</option>
-                  </select>
-                </div>
-
-                {/* Final Status */}
-                <div>
-                  <label className="block text-sm font-medium mb-1 dark:text-gray-200">
-                    Final Status
-                  </label>
-                  <select
-                    className="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200"
-                    value={editInterview.finalStatus || ""}
-                    onChange={(e) => {
-                      const newStatus = e.target.value;
-                      setEditInterview({
-                        ...editInterview,
-                        finalStatus: newStatus,
-                        // Clear next interview date/time if status is rejected
-                        nextInterviewDate:
-                          newStatus === "Rejected"
-                            ? ""
-                            : editInterview.nextInterviewDate,
-                        nextInterviewTime:
-                          newStatus === "Rejected"
-                            ? ""
-                            : editInterview.nextInterviewTime,
-                      });
-                    }}
-                    required
-                  >
-                    <option value="">Select Final Status</option>
-                    <option>Rejected</option>
-                    <option>Position On-Hold</option>
-                    <option>Schedule Pending</option>
-                    <option>Offer Roll Out</option>
-                    <option>Offer Signing Pending</option>
-                    <option>Offer & Joining Pending</option>
-                    <option>Joined/Closure</option>
-                  </select>
-                </div>
-
-                {/* Conditional Next Interview Date/Time for non-rejected statuses */}
-                {editInterview.finalStatus &&
-                  editInterview.finalStatus !== "Rejected" && (
-                    <div className="space-y-2">
-                      <label className="block text-sm font-medium dark:text-gray-200">
-                        Next Interview Date & Time
-                      </label>
-                      <div className="flex gap-2">
-                        <input
-                          type="date"
-                          className="flex-1 border p-2 rounded dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200"
-                          value={editInterview.nextInterviewDate || ""}
-                          onChange={(e) =>
-                            setEditInterview({
-                              ...editInterview,
-                              nextInterviewDate: e.target.value,
-                            })
-                          }
-                          placeholder="Date"
-                        />
-                        <input
-                          type="time"
-                          className="flex-1 border p-2 rounded dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200"
-                          value={editInterview.nextInterviewTime || ""}
-                          onChange={(e) =>
-                            setEditInterview({
-                              ...editInterview,
-                              nextInterviewTime: e.target.value,
-                            })
-                          }
-                          placeholder="Time"
-                        />
+              {showTrackerModal && (
+                <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-40">
+                  <div className="bg-white dark:bg-gray-800 border rounded-xl shadow-2xl p-8 w-full max-w-3xl relative">
+                    <button
+                      className="absolute top-4 right-4 text-2xl text-gray-500 hover:text-red-500 focus:outline-none"
+                      onClick={() => setShowTrackerModal(false)}
+                      aria-label="Close"
+                    >
+                      ×
+                    </button>
+                    <div className="mb-6 text-xl font-bold text-center dark:text-gray-100">
+                      All Interviews (Pending Cases)
+                    </div>
+                    {allInterviews.length === 0 ? (
+                      <div className="text-center text-gray-500 dark:text-gray-300">
+                        No interviews found.
                       </div>
-                      {/* Display current next interview info if available */}
-                      {editInterview.nextInterviewDate &&
-                        editInterview.nextInterviewTime && (
-                          <div className="text-sm text-gray-600 dark:text-gray-400 mt-2">
-                            Current next interview:{" "}
-                            {editInterview.nextInterviewDate} at{" "}
-                            {editInterview.nextInterviewTime}
+                    ) : (
+                      <table className="min-w-full text-sm text-left border mb-4">
+                        <thead className="bg-gray-100 dark:bg-gray-700 dark:border-gray-600 dark:shadow-gray-600">
+                          <tr>
+                            <th className="p-2 border dark:text-gray-200">
+                              Candidate
+                            </th>
+                            <th className="p-2 border dark:text-gray-200">
+                              Position
+                            </th>
+                            <th className="p-2 border dark:text-gray-200">
+                              Client
+                            </th>
+                            <th className="p-2 border dark:text-gray-200">
+                              Date
+                            </th>
+                            <th className="p-2 border dark:text-gray-200">
+                              Status
+                            </th>
+                            <th className="p-2 border dark:text-gray-200">
+                              Edit
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {allInterviews.map((i) => (
+                            <tr
+                              key={i._id}
+                              className="border dark:border-gray-600"
+                            >
+                              <td className="p-2">{i.candidateName}</td>
+                              <td className="p-2">{i.position}</td>
+                              <td className="p-2">{i.client}</td>
+                              <td className="p-2">{i.interviewDate}</td>
+                              <td className="p-2">{i.finalStatus}</td>
+                              <td className="p-2">
+                                <button
+                                  className="text-blue-600 hover:underline"
+                                  onClick={() => setEditInterview(i)}
+                                >
+                                  Change Status
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    )}
+                    <div className="flex justify-end">
+                      <button
+                        className="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500"
+                        onClick={() => setShowTrackerModal(false)}
+                      >
+                        Close
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Edit Interview Modal */}
+              {editInterview && (
+                <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-40">
+                  <div className="bg-white dark:bg-gray-800 border rounded-xl shadow-2xl p-8 w-full max-w-lg relative">
+                    <button
+                      className="absolute top-4 right-4 text-2xl text-gray-500 hover:text-red-500 focus:outline-none"
+                      onClick={() => setEditInterview(null)}
+                      aria-label="Close"
+                    >
+                      ×
+                    </button>
+                    <div className="mb-6 text-xl font-bold text-center dark:text-gray-100">
+                      Change Interview Status
+                    </div>
+                    <form
+                      onSubmit={(e) => {
+                        e.preventDefault();
+                        handleEditInterview(editInterview);
+                      }}
+                      className="space-y-4"
+                    >
+                      {/* Display existing data as text */}
+                      <div className="space-y-2">
+                        <div className="flex justify-between">
+                          <span className="font-semibold dark:text-gray-200">
+                            Date & Time:
+                          </span>
+                          <span className="dark:text-gray-200">
+                            {editInterview.interviewDate}{" "}
+                            {editInterview.interviewTime}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="font-semibold dark:text-gray-200">
+                            Interview Type:
+                          </span>
+                          <span className="dark:text-gray-200">
+                            {editInterview.interviewType}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="font-semibold dark:text-gray-200">
+                            Interview Round:
+                          </span>
+                          <span className="dark:text-gray-200">
+                            {editInterview.interviewRound}
+                          </span>
+                        </div>
+                      </div>
+
+                      <hr className="my-4" />
+
+                      {/* Interview Feedback */}
+                      <div>
+                        <label className="block text-sm font-medium mb-1 dark:text-gray-200">
+                          Interview Feedback
+                        </label>
+                        <select
+                          className="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200"
+                          value={editInterview.interviewFeedback || ""}
+                          onChange={(e) =>
+                            setEditInterview({
+                              ...editInterview,
+                              interviewFeedback: e.target.value,
+                            })
+                          }
+                          required
+                        >
+                          <option value="">Select Interview Feedback</option>
+                          <option>Intro Scheduled</option>
+                          <option>Intro Reject</option>
+                          <option>Assignment Scheduled</option>
+                          <option>Assignment Reject</option>
+                          <option>L1 Scheduled</option>
+                          <option>L1 Reject</option>
+                          <option>L2 Scheduled</option>
+                          <option>L2 Reject</option>
+                          <option>L3 Scheduled</option>
+                          <option>L3 Reject</option>
+                          <option>L4 Scheduled</option>
+                          <option>L4 Reject</option>
+                          <option>L5 Scheduled</option>
+                          <option>L5 Reject</option>
+                          <option>L6 Scheduled</option>
+                          <option>L6 Reject</option>
+                          <option>L7 Scheduled</option>
+                          <option>L7 Reject</option>
+                          <option>HR Round Scheduled</option>
+                          <option>HR Round Reject</option>
+                          <option>Final Round Scheduled</option>
+                          <option>Final Round Reject</option>
+                          <option>Offer Discussion Scheduled</option>
+                          <option>Offer Discussion Reject</option>
+                          <option>Additional Discussion Scheduled</option>
+                          <option>Additional Discussion Reject</option>
+                          <option>Next Round Schedule Pending</option>
+                        </select>
+                      </div>
+
+                      {/* Final Status */}
+                      <div>
+                        <label className="block text-sm font-medium mb-1 dark:text-gray-200">
+                          Final Status
+                        </label>
+                        <select
+                          className="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200"
+                          value={editInterview.finalStatus || ""}
+                          onChange={(e) => {
+                            const newStatus = e.target.value;
+                            setEditInterview({
+                              ...editInterview,
+                              finalStatus: newStatus,
+                              // Clear next interview date/time if status is rejected
+                              nextInterviewDate:
+                                newStatus === "Rejected"
+                                  ? ""
+                                  : editInterview.nextInterviewDate,
+                              nextInterviewTime:
+                                newStatus === "Rejected"
+                                  ? ""
+                                  : editInterview.nextInterviewTime,
+                            });
+                          }}
+                          required
+                        >
+                          <option value="">Select Final Status</option>
+                          <option>Rejected</option>
+                          <option>Position On-Hold</option>
+                          <option>Schedule Pending</option>
+                          <option>Offer Roll Out</option>
+                          <option>Offer Signing Pending</option>
+                          <option>Offer & Joining Pending</option>
+                          <option>Joined/Closure</option>
+                        </select>
+                      </div>
+
+                      {/* Conditional Next Interview Date/Time for non-rejected statuses */}
+                      {editInterview.finalStatus &&
+                        editInterview.finalStatus !== "Rejected" && (
+                          <div className="space-y-2">
+                            <label className="block text-sm font-medium dark:text-gray-200">
+                              Next Interview Date & Time
+                            </label>
+                            <div className="flex gap-2">
+                              <input
+                                type="date"
+                                className="flex-1 border p-2 rounded dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200"
+                                value={editInterview.nextInterviewDate || ""}
+                                onChange={(e) =>
+                                  setEditInterview({
+                                    ...editInterview,
+                                    nextInterviewDate: e.target.value,
+                                  })
+                                }
+                                placeholder="Date"
+                              />
+                              <input
+                                type="time"
+                                className="flex-1 border p-2 rounded dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200"
+                                value={editInterview.nextInterviewTime || ""}
+                                onChange={(e) =>
+                                  setEditInterview({
+                                    ...editInterview,
+                                    nextInterviewTime: e.target.value,
+                                  })
+                                }
+                                placeholder="Time"
+                              />
+                            </div>
+                            {/* Display current next interview info if available */}
+                            {editInterview.nextInterviewDate &&
+                              editInterview.nextInterviewTime && (
+                                <div className="text-sm text-gray-600 dark:text-gray-400 mt-2">
+                                  Current next interview:{" "}
+                                  {editInterview.nextInterviewDate} at{" "}
+                                  {editInterview.nextInterviewTime}
+                                </div>
+                              )}
                           </div>
                         )}
-                    </div>
-                  )}
 
-                <div className="flex justify-end gap-2 mt-4">
-                  <button
-                    type="button"
-                    className="bg-gray-300 px-4 py-2 rounded hover:bg-gray-400 dark:bg-gray-700 dark:hover:bg-gray-600"
-                    onClick={() => setEditInterview(null)}
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 dark:bg-green-600 dark:hover:bg-green-700"
-                  >
-                    Save
-                  </button>
+                      <div className="flex justify-end gap-2 mt-4">
+                        <button
+                          type="button"
+                          className="bg-gray-300 px-4 py-2 rounded hover:bg-gray-400 dark:bg-gray-700 dark:hover:bg-gray-600"
+                          onClick={() => setEditInterview(null)}
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="submit"
+                          className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 dark:bg-green-600 dark:hover:bg-green-700"
+                        >
+                          Save
+                        </button>
+                      </div>
+                    </form>
+                  </div>
                 </div>
-              </form>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {showContributionModal && (
-        <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-40">
-          <div className="bg-white dark:bg-gray-800 border rounded-xl shadow-2xl p-8 w-full max-w-lg relative">
-            <button
-              className="absolute top-4 right-4 text-2xl text-gray-500 hover:text-red-500 focus:outline-none"
-              onClick={() => setShowContributionModal(false)}
-              aria-label="Close"
-            >
-              ×
-            </button>
-            <div className="mb-6 text-xl font-bold text-center dark:text-gray-100">
-              Contribution Details
-            </div>
-            <div className="mb-4">
-              <div className="font-semibold mb-2 dark:text-gray-200">
-                Closures
-              </div>
-              {closures.length === 0 ? (
-                <div className="text-gray-500 dark:text-gray-300">
-                  No closures yet.
-                </div>
-              ) : (
-                <ul className="list-disc list-inside text-gray-700 dark:text-gray-200 mb-2">
-                  {closures.map((c, idx) => (
-                    <li key={idx}>
-                      {c.name}{" "}
-                      <span className="text-xs text-gray-500 ml-2">
-                        ({c.date})
-                      </span>
-                    </li>
-                  ))}
-                </ul>
               )}
             </div>
-            <div className="mb-4">
-              <div className="font-semibold dark:text-gray-200">
-                Last Closure Date
+
+            {showContributionModal && (
+              <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-40">
+                <div className="bg-white dark:bg-gray-800 border rounded-xl shadow-2xl p-8 w-full max-w-lg relative">
+                  <button
+                    className="absolute top-4 right-4 text-2xl text-gray-500 hover:text-red-500 focus:outline-none"
+                    onClick={() => setShowContributionModal(false)}
+                    aria-label="Close"
+                  >
+                    ×
+                  </button>
+                  <div className="mb-6 text-xl font-bold text-center dark:text-gray-100">
+                    Contribution Details
+                  </div>
+                  <div className="mb-4">
+                    <div className="font-semibold mb-2 dark:text-gray-200">
+                      Closures
+                    </div>
+                    {closures.length === 0 ? (
+                      <div className="text-gray-500 dark:text-gray-300">
+                        No closures yet.
+                      </div>
+                    ) : (
+                      <ul className="list-disc list-inside text-gray-700 dark:text-gray-200 mb-2">
+                        {closures.map((c, idx) => (
+                          <li key={idx}>
+                            {c.name}{" "}
+                            <span className="text-xs text-gray-500 ml-2">
+                              ({c.date})
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                  <div className="mb-4">
+                    <div className="font-semibold dark:text-gray-200">
+                      Last Closure Date
+                    </div>
+                    <div className="text-gray-700 dark:text-gray-200">
+                      {lastClosure ? lastClosure.date : "N/A"}
+                    </div>
+                  </div>
+                  <div className="mb-4">
+                    <div className="font-semibold dark:text-gray-200 mb-1">
+                      Contribution Level
+                    </div>
+                    <div className="border rounded p-2 bg-gray-50 dark:bg-gray-700 dark:text-gray-200">
+                      {contributionLevel}
+                    </div>
+                  </div>
+                  <div className="mb-4">
+                    <div className="font-semibold dark:text-gray-200 mb-1">
+                      Message from Team Leader
+                    </div>
+                    <div className="border rounded p-2 bg-blue-50 dark:bg-blue-900 dark:text-gray-200">
+                      {teamLeaderMsg}
+                    </div>
+                  </div>
+                  <div className="mb-4">
+                    <div className="font-semibold dark:text-gray-200 mb-1">
+                      Message from Admin
+                    </div>
+                    <div className="border rounded p-2 bg-green-50 dark:bg-green-900 dark:text-gray-200">
+                      {adminMsg}
+                    </div>
+                  </div>
+                  <div className="flex justify-end">
+                    <button
+                      className="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500"
+                      onClick={() => setShowContributionModal(false)}
+                    >
+                      Close
+                    </button>
+                  </div>
+                </div>
               </div>
-              <div className="text-gray-700 dark:text-gray-200">
-                {lastClosure ? lastClosure.date : "N/A"}
-              </div>
-            </div>
-            <div className="mb-4">
-              <div className="font-semibold dark:text-gray-200 mb-1">
-                Contribution Level
-              </div>
-              <div className="border rounded p-2 bg-gray-50 dark:bg-gray-700 dark:text-gray-200">
-                {contributionLevel}
-              </div>
-            </div>
-            <div className="mb-4">
-              <div className="font-semibold dark:text-gray-200 mb-1">
-                Message from Team Leader
-              </div>
-              <div className="border rounded p-2 bg-blue-50 dark:bg-blue-900 dark:text-gray-200">
-                {teamLeaderMsg}
-              </div>
-            </div>
-            <div className="mb-4">
-              <div className="font-semibold dark:text-gray-200 mb-1">
-                Message from Admin
-              </div>
-              <div className="border rounded p-2 bg-green-50 dark:bg-green-900 dark:text-gray-200">
-                {adminMsg}
-              </div>
-            </div>
-            <div className="flex justify-end">
-              <button
-                className="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500"
-                onClick={() => setShowContributionModal(false)}
-              >
-                Close
-              </button>
-            </div>
+            )}
           </div>
-        </div>
-      )}
+        )}
+        {activeSection === "jobBoard" && (
+          <div>
+            <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-4">
+              Job Board
+            </h2>
+          </div>
+        )}
+        {activeSection === "settings" && (
+          <div>
+            <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-4">
+              Settings
+            </h2>
+          </div>
+        )}
+      </main>
     </div>
   );
 };

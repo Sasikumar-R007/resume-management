@@ -141,10 +141,24 @@
 
 // module.exports = router;
 
-
 const express = require("express");
 const router = express.Router();
 const Recruiter = require("../models/Recruiter");
+const multer = require("multer");
+const path = require("path");
+
+// ---------------- MULTER SETUP ----------------
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, "uploads/"); // Store images in uploads/ folder
+  },
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + path.extname(file.originalname)); // Unique filename
+  },
+});
+const upload = multer({ storage });
+
+// ---------------- EXISTING ROUTES ----------------
 
 // Add new recruiter
 router.post("/", async (req, res) => {
@@ -160,29 +174,30 @@ router.post("/", async (req, res) => {
   }
 });
 
-// POST login route for recruiter
+// Recruiter login
 router.post("/login", async (req, res) => {
   const { email, password } = req.body;
-
   try {
     const recruiter = await Recruiter.findOne({ email });
-
     if (!recruiter || recruiter.password !== password) {
       return res.status(401).json({ message: "Invalid credentials" });
     }
-
     res.status(200).json({ recruiter });
   } catch (err) {
     console.error("Login error:", err);
-    res.status(500).json({ message: "Server error during login", error: err.message });
+    res
+      .status(500)
+      .json({ message: "Server error during login", error: err.message });
   }
 });
-
 
 // Get all recruiters
 router.get("/", async (req, res) => {
   try {
-    const recruiters = await Recruiter.find().populate("reportingTo", "name teamLeadId");
+    const recruiters = await Recruiter.find().populate(
+      "reportingTo",
+      "name teamLeadId"
+    );
     res.json(recruiters);
   } catch (error) {
     res.status(500).json({ message: "Failed to fetch recruiters" });
@@ -199,6 +214,45 @@ router.get("/by-email/:email", async (req, res) => {
     res.json(recruiter);
   } catch (err) {
     res.status(500).json({ message: "Error fetching recruiter" });
+  }
+});
+
+// ---------------- IMAGE UPLOAD ROUTES ----------------
+
+// Upload profile picture
+router.post(
+  "/upload-profile-pic/:id",
+  upload.single("profilePic"),
+  async (req, res) => {
+    try {
+      const recruiter = await Recruiter.findByIdAndUpdate(
+        req.params.id,
+        { profilePic: `/uploads/${req.file.filename}` },
+        { new: true }
+      );
+      res.json({
+        message: "Profile picture updated",
+        profilePic: recruiter.profilePic,
+      });
+    } catch (error) {
+      console.error("Error uploading profile picture:", error);
+      res.status(500).json({ message: "Failed to upload profile picture" });
+    }
+  }
+);
+
+// Upload banner image
+router.post("/upload-banner/:id", upload.single("banner"), async (req, res) => {
+  try {
+    const recruiter = await Recruiter.findByIdAndUpdate(
+      req.params.id,
+      { bannerUrl: `/uploads/${req.file.filename}` },
+      { new: true }
+    );
+    res.json({ message: "Banner updated", bannerUrl: recruiter.bannerUrl });
+  } catch (error) {
+    console.error("Error uploading banner:", error);
+    res.status(500).json({ message: "Failed to upload banner" });
   }
 });
 

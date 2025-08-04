@@ -16,7 +16,8 @@ const recruiterSchema = new mongoose.Schema({
   mobile: String,
   reportingTo: String, // TL ID like STTL001
   joiningDate: Date,
-  profilePic: String,
+  profilePic: { type: String, default: "" },  // <-- Default empty string
+  bannerUrl: { type: String, default: "" }, 
   linkedin: String,
 });
 
