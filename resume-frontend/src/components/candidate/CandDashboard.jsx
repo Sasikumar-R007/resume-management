@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useContext } from "react";
 import { useNavigate } from "react-router-dom";
-import { Menu, X, ExternalLink, UserCircle } from "lucide-react"; // for nav icons
+import { Menu, X, ExternalLink, UserCircle } from "lucide-react";
 import { FiExternalLink } from "react-icons/fi";
+import { FaLinkedin } from "react-icons/fa";
 import { MdDelete } from "react-icons/md";
 import { ProfileContext } from "./ProfileContext";
 import CandidateForm from "./CandidateForm";
@@ -12,81 +13,95 @@ const CandidateDashboard = () => {
   const [selectedNav, setSelectedNav] = useState("Dashboard");
   const navigate = useNavigate();
 
+  const API_BASE =
+    process.env.REACT_APP_API_BASE_URL || "http://localhost:5000";
   const navItems = ["Dashboard", "Job Board", "Settings"];
 
   const { profile, setProfile } = useContext(ProfileContext);
-
-  // Modal state
-  const [formData, setFormData] = useState(profile);
+  const [formData, setFormData] = useState(null);
   const [showEdit, setShowEdit] = useState(false);
 
   const [projects, setProjects] = useState([]);
-
   const [showSkillModal, setShowSkillModal] = useState(false);
   const [showProjectModal, setShowProjectModal] = useState(false);
-
   const [skills, setSkills] = useState({
     primary: "",
     secondary: "",
     knowledge: "",
   });
-
   const [newProject, setNewProject] = useState({ name: "", link: "" });
-  // Change Image
+
+  const handleChangeBanner = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const formData = new FormData();
+    formData.append("bannerImage", file);
+    try {
+      const res = await fetch(`${API_BASE}/upload-banner`, {
+        method: "POST",
+        body: formData,
+      });
+      const data = await res.json();
+      setProfile((prev) => ({
+        ...prev,
+        bannerUrl: data.bannerUrl || URL.createObjectURL(file),
+      }));
+    } catch (error) {
+      console.error("Error uploading banner:", error);
+    }
+  };
+
+  const handleRemoveBanner = () => {
+    setProfile((prev) => ({ ...prev, bannerUrl: "" }));
+  };
+
   const handleImageUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    const reader = new FileReader();
-    reader.onloadend = async () => {
-      const base64Image = reader.result;
+    const formData = new FormData();
+    formData.append("profileImage", file);
 
-      // 1. Update the local profile state with the image
-      setProfile((prev) => ({ ...prev, profileImage: base64Image }));
+    try {
+      const res = await fetch(`${API_BASE}/upload-profile-image`, {
+        method: "POST",
+        body: formData,
+      });
 
-      try {
-        // 2. Update the backend with the image
-        const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
+      const data = await res.json();
 
-        const res = await axios.put(
-          `${API_BASE_URL}/api/candidates/profile-image`,
-          {
-            email: profile.email, // assuming email is used to identify user
-            profileImage: base64Image,
-          }
-        );
+      // ✅ Step 1: Debug log
+      console.log("📦 Upload response:", data);
 
-        console.log("Profile image updated:", res.data);
-        alert("Profile image updated successfully!");
-      } catch (error) {
-        console.error("Image update failed", error);
-        alert("Failed to update profile image");
+      // ✅ Step 2: Check if data and candidate object exist
+      if (!data || typeof data !== "object" || !data.candidate) {
+        console.error("❌ Invalid data structure from API:", data);
+        return;
       }
-    };
 
-    reader.readAsDataURL(file); // convert image to base64
+      // ✅ Step 3: Check if candidate object is valid
+      const candidate = data.candidate;
+      if (
+        typeof candidate !== "object" ||
+        !candidate.firstName ||
+        !candidate.primaryEmail
+      ) {
+        console.error("❌ Invalid candidate data structure:", candidate);
+        return;
+      }
+
+      // ✅ Step 4: Safely update profile context
+      setProfile((prev) => ({
+        ...prev,
+        ...candidate,
+      }));
+    } catch (error) {
+      console.error("Error uploading profile image:", error);
+    }
   };
 
-  const handleRemoveImage = async () => {
-    try {
-      const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
-
-      const res = await axios.put(
-        `${API_BASE_URL}/api/candidates/profile-image`,
-        {
-          email: profile.email,
-          profileImage: "", // remove image
-        }
-      );
-
-      if (res.status === 200) {
-        setProfile((prev) => ({ ...prev, profileImage: "" }));
-        alert("Profile image removed successfully.");
-      }
-    } catch (err) {
-      console.error("Error removing profile image", err);
-      alert("Failed to remove image.");
-    }
+  const handleRemoveImage = () => {
+    setProfile((prev) => ({ ...prev, profileImage: "" }));
   };
 
   useEffect(() => {
@@ -97,7 +112,6 @@ const CandidateDashboard = () => {
 
   const [resumeFile, setResumeFile] = useState(null);
 
-  // Sample applied jobs
   const [appliedJobs] = useState([
     {
       id: "job001",
@@ -143,7 +157,6 @@ const CandidateDashboard = () => {
     },
   ]);
 
-  // Sample suggestions
   const [suggestedJobs] = useState([
     { title: "Data Analyst", company: "InsightSoft", type: "Full-Time" },
     { title: "DevOps Engineer", company: "CloudBase", type: "Internship" },
@@ -170,37 +183,24 @@ const CandidateDashboard = () => {
     const fetchJobs = async () => {
       try {
         const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
-
         const res = await axios.get(`${API_BASE_URL}/api/jobs`);
         setJobs(res.data);
       } catch (err) {
         console.error("Error fetching jobs", err);
       }
     };
-
     fetchJobs();
   }, []);
 
-  // useEffect(() => {
-  //   const isLoggedIn = localStorage.getItem("token"); // or "user"
-  //   if (!isLoggedIn) {
-  //     navigate("/login", { replace: true }); // Block back navigation
-  //   }
-  // }, [navigate]);
-
-  // ✅ Logout function
   const handleSignOut = () => {
-    localStorage.removeItem("token"); // clear session
-
-    // Go to login and replace entire history stack
+    localStorage.removeItem("token");
     window.location.href = "/candidate-auth";
   };
 
   return (
     <div className="min-h-screen flex">
       {/* Sidebar */}
-      <div className="hidden md:flex flex-col w-64 bg-gray-800 text-white p-4 space-y-4 fixed h-full">
-        <h2 className="text-2xl font-bold mb-4">Candidate</h2>
+      <div className="hidden md:flex flex-col w-64 bg-gray-800 text-white p-4 space-y-4 fixed h-full pt-20">
         {navItems.map((item, index) => (
           <button
             key={index}
@@ -259,7 +259,126 @@ const CandidateDashboard = () => {
       )}
 
       {/* Main Content */}
-      <div className="flex-1 p-6 bg-gray-100 min-h-screen  md:ml-64">
+      <div className="flex-1 bg-gray-100 min-h-screen  md:ml-64">
+        {/* Top Banner Section */}
+        {/* Banner Section */}
+        <div className="relative w-full">
+          {/* Banner Image */}
+          <div className="relative group">
+            <img
+              src={
+                profile?.bannerUrl
+                  ? `${API_BASE}${profile.bannerUrl}`
+                  : "/default-banner.jpg"
+              }
+              alt="Banner"
+              className="w-full h-48 object-cover"
+            />
+            {/* Hover options for banner */}
+            <div className="absolute inset-0 bg-black bg-opacity-30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition">
+              <label className="bg-white text-sm px-3 py-1 rounded cursor-pointer mr-2">
+                Change
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleChangeBanner} // Keep same function logic as recruiter
+                />
+              </label>
+              {profile.bannerUrl && (
+                <button
+                  className="bg-red-500 text-white text-sm px-3 py-1 rounded"
+                  onClick={handleRemoveBanner}
+                >
+                  Remove
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Profile Picture */}
+          <div className="absolute left-1/2 transform -translate-x-1/2 bottom-[-70px] group">
+            <img
+              src={
+                profile?.profileImage
+                  ? `${API_BASE}${profile.profileImage}`
+                  : "/default-profile.jpg"
+              }
+              alt="Profile"
+              className="w-32 h-32 rounded-full object-cover border-4 border-white"
+            />
+            {/* Hover options for profile */}
+            <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center opacity-0 group-hover:opacity-100 rounded-full transition">
+              <label className="bg-white text-xs px-2 py-1 rounded cursor-pointer mr-1">
+                Change
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleImageUpload}
+                />
+              </label>
+              {profile.profileImage && (
+                <button
+                  className="bg-red-500 text-white text-xs px-2 py-1 rounded"
+                  onClick={handleRemoveImage}
+                >
+                  Remove
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Row: Contribution, LinkedIn, Edit */}
+        <div className="flex justify-between items-center mt-5 px-6">
+          <p className="font-semibold text-gray-700">
+            Total Contribution <br />
+            <span className="text-xl">₹{profile.totalContribution || "0"}</span>
+          </p>
+
+          <div className="flex items-center gap-3">
+            <a
+              href={profile.linkedin || "#"}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-blue-500 hover:bg-blue-700"
+            >
+              <FaLinkedin className="w-5 h-5 text-white" />
+            </a>
+
+            <button
+              onClick={() => setShowEdit(true)} // Keep same edit logic
+              className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 text-sm font-medium"
+            >
+              Edit Profile
+            </button>
+          </div>
+        </div>
+
+        {/* Candidate Info */}
+        <div className="text-center mt-3">
+          <h2 className="text-xl font-bold text-gray-900">
+            {profile.firstName} {profile.lastName}
+          </h2>
+          <p className="text-gray-600 font-bold">
+            {profile.currentRole}{" "}
+            <span className="ml-2 px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs">
+              {profile.candidateId}
+            </span>
+          </p>
+          <p className="text-gray-500 text-sm mt-1">
+            📞 {profile.mobile} &nbsp; ✉️ {profile.primaryEmail}
+          </p>
+          <p className="text-gray-400 text-sm">
+            Current Company: {profile.currentCompany || "N/A"}
+          </p>
+          <p className="text-gray-400 text-sm">
+            Experience: {profile.experience || "0"} years
+          </p>
+        </div>
+
+        {/* before ui */}
         {selectedNav === "Dashboard" && (
           <div>
             {/* Profile Section */}
@@ -498,13 +617,13 @@ const CandidateDashboard = () => {
                     ))}
                   </div>
                   {/* <div className="mt-4">
-                    <button
-                      onClick={() => navigate("/candidate-details")}
-                      className="text-sm bg-blue-600 hover:bg-blue-700 text-white px-4 py-1 rounded"
-                    >
-                      View Candidate
-                    </button>
-                  </div> */}
+                      <button
+                        onClick={() => navigate("/candidate-details")}
+                        className="text-sm bg-blue-600 hover:bg-blue-700 text-white px-4 py-1 rounded"
+                      >
+                        View Candidate
+                      </button>
+                    </div> */}
                 </div>
 
                 {/* Skill Section */}
@@ -876,60 +995,60 @@ const CandidateDashboard = () => {
 
             <div className="space-y-6">
               {/* <div>
-                {jobData.map((job) => (
-                  <div
-                    key={job.id}
-                    className="bg-white rounded-lg shadow p-4 flex justify-between items-start"
-                  >
+                  {jobData.map((job) => (
+                    <div
+                      key={job.id}
+                      className="bg-white rounded-lg shadow p-4 flex justify-between items-start"
+                    >
 
-                    <div className="flex-1">
-                      <div className="flex items-center gap-4">
-                        <img
-                          src={job.logo}
-                          alt="logo"
-                          className="w-12 h-12 rounded"
-                        />
-                        <div>
-                          <h3 className="text-xl font-semibold">
-                            {job.company}
-                          </h3>
-                          <p className="text-gray-600">{job.title}</p>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-4">
+                          <img
+                            src={job.logo}
+                            alt="logo"
+                            className="w-12 h-12 rounded"
+                          />
+                          <div>
+                            <h3 className="text-xl font-semibold">
+                              {job.company}
+                            </h3>
+                            <p className="text-gray-600">{job.title}</p>
+                          </div>
+                        </div>
+
+                        <div className="mt-3 text-sm text-gray-700 space-y-1">
+                          <p>
+                            <strong>Type:</strong> {job.type}
+                          </p>
+                          <p>
+                            <strong>Employees:</strong> {job.employees}+
+                          </p>
+                          <p>
+                            <strong>About:</strong> {job.description}
+                          </p>
+                        </div>
+
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          {job.skills.map((skill, i) => (
+                            <span
+                              key={i}
+                              className="bg-gray-200 text-sm text-gray-800 px-3 py-1 rounded-full"
+                            >
+                              {skill}
+                            </span>
+                          ))}
                         </div>
                       </div>
 
-                      <div className="mt-3 text-sm text-gray-700 space-y-1">
-                        <p>
-                          <strong>Type:</strong> {job.type}
-                        </p>
-                        <p>
-                          <strong>Employees:</strong> {job.employees}+
-                        </p>
-                        <p>
-                          <strong>About:</strong> {job.description}
-                        </p>
-                      </div>
-
-                      <div className="mt-3 flex flex-wrap gap-2">
-                        {job.skills.map((skill, i) => (
-                          <span
-                            key={i}
-                            className="bg-gray-200 text-sm text-gray-800 px-3 py-1 rounded-full"
-                          >
-                            {skill}
-                          </span>
-                        ))}
+                      <div className="ml-4 mt-2">
+                        <button className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded flex items-center gap-2">
+                          Apply
+                          <ExternalLink size={18} />
+                        </button>
                       </div>
                     </div>
-
-                    <div className="ml-4 mt-2">
-                      <button className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded flex items-center gap-2">
-                        Apply
-                        <ExternalLink size={18} />
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div> */}
+                  ))}
+                </div> */}
 
               {/* jobs from rec */}
 
@@ -1034,7 +1153,7 @@ const CandidateDashboard = () => {
                           {job.priority === "Burning"
                             ? "🔥 Burning"
                             : job.priority === "Hot"
-                            ? "♨️ Hot"
+                            ? "♨️ x Hot"
                             : "🕓 Ongoing"}
                         </span>
                       </p>

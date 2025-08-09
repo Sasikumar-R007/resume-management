@@ -3,15 +3,17 @@ const router = express.Router();
 const Candidate = require("../models/Candidate");
 const multer = require("multer");
 const path = require("path");
+const storage = multer.memoryStorage();
+const upload = multer({ storage });
 
 // =================== Multer Config ===================
 // For Vercel serverless, use memory storage
-const upload = multer({
-  storage: multer.memoryStorage(),
-  limits: {
-    fileSize: 10 * 1024 * 1024, // 10MB limit
-  },
-});
+// const upload = multer({
+//   storage: multer.memoryStorage(),
+//   limits: {
+//     fileSize: 10 * 1024 * 1024, // 10MB limit
+//   },
+// });
 
 // =================== Upload Resume ===================
 router.post("/upload", upload.single("resume"), (req, res) => {
@@ -83,28 +85,69 @@ router.get("/archived", async (req, res) => {
 });
 
 // =================== PUT: Update Profile Image ===================
-router.put("/profile-image", async (req, res) => {
-  const { email, profileImage } = req.body;
+// router.put("/profile-image", async (req, res) => {
+//   const { email, profileImage } = req.body;
 
+//   try {
+//     const updatedCandidate = await Candidate.findOneAndUpdate(
+//       { email },
+//       { profileImage },
+//       { new: true }
+//     );
+
+//     if (!updatedCandidate) {
+//       return res.status(404).json({ message: "Candidate not found" });
+//     }
+
+//     res
+//       .status(200)
+//       .json({ message: "Profile image updated", candidate: updatedCandidate });
+//   } catch (error) {
+//     console.error("Error updating profile image:", error);
+//     res.status(500).json({ error: "Server error" });
+//   }
+// });
+
+// =================== POST: Upload Banner ===================
+router.post("/upload-banner", upload.single("bannerImage"), async (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ message: "No banner image uploaded" });
+  }
+
+  const bannerUrl = `/uploads/${Date.now()}_banner_${req.file.originalname}`;
+  res.status(200).json({ bannerUrl }); // mimic upload (adjust if storing elsewhere)
+});
+
+// =================== POST: Upload Profile Image ===================
+router.post("/upload-profile-image", upload.single("profileImage"), async (req, res) => {
   try {
+    const email = req.body.email;
+
+    if (!req.file) {
+      return res.status(400).json({ error: "No file uploaded" });
+    }
+
+    // Simulate storing image URL — in real-world, upload to cloud and get URL
+    const imageBuffer = req.file.buffer;
+    const imageBase64 = `data:${req.file.mimetype};base64,${imageBuffer.toString("base64")}`;
+
     const updatedCandidate = await Candidate.findOneAndUpdate(
-      { email },
-      { profileImage },
+      { primaryEmail: email },
+      { profileImage: imageBase64 },
       { new: true }
     );
 
     if (!updatedCandidate) {
-      return res.status(404).json({ message: "Candidate not found" });
+      return res.status(404).json({ error: "Candidate not found" });
     }
 
-    res
-      .status(200)
-      .json({ message: "Profile image updated", candidate: updatedCandidate });
-  } catch (error) {
-    console.error("Error updating profile image:", error);
+    res.json({ message: "Image uploaded", candidate: updatedCandidate });
+  } catch (err) {
+    console.error("Upload error:", err);
     res.status(500).json({ error: "Server error" });
   }
 });
+
 
 // =================== PATCH: Archive Candidate ===================
 router.patch("/:id/archive", async (req, res) => {

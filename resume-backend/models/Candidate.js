@@ -6,7 +6,6 @@ const candidateSchema = new mongoose.Schema({
     unique: true,
     required: true
   },
-  
 
   firstName: String,
   lastName: String,
@@ -20,11 +19,7 @@ const candidateSchema = new mongoose.Schema({
   },
 
   secondaryEmail: String,
-
-  password: {
-    type: String,
-    required: false,
-  },
+  password: { type: String, required: false },
 
   linkedin: String,
   portfolio: String,
@@ -48,30 +43,17 @@ const candidateSchema = new mongoose.Schema({
   preferredLocation: String,
   noticePeriod: String,
 
-  resumeLink: {
-    type: String,
-    default: "",
-  },
-
-  profileImage: String,
+  resumeLink: { type: String, default: "" },
+  profileImage: { type: String, default: "" },
+  bannerUrl: { type: String, default: "" }, // <-- Add this for banner
+  totalContribution: { type: Number, default: 0 }, // <-- Add this for frontend
 
   resetOTP: Number,
   otpExpires: Date,
 
-  appliedBy: {
-    type: String,
-    default: "candidate", // or "recruiter"
-  },
-
-  createdAt: {
-    type: Date,
-    default: Date.now,
-  },
-
-  isArchived: {
-    type: Boolean,
-    default: false,
-  },
+  appliedBy: { type: String, default: "candidate" },
+  createdAt: { type: Date, default: Date.now },
+  isArchived: { type: Boolean, default: false },
 });
 
 module.exports = mongoose.model("Candidate", candidateSchema);

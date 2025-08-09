@@ -355,7 +355,7 @@ const SourceResume = () => {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-50">
         <div className="bg-white rounded-xl shadow-lg p-8 w-full max-w-2xl">
-          <h2 className="text-2xl font-bold mb-6 text-purple-700">
+          <h2 className="text-2xl font-bold mb-6 text-blue-600">
             Source Resume
           </h2>
           <div className="mb-4 flex items-center gap-4">
@@ -523,7 +523,7 @@ const SourceResume = () => {
             </div>
           </div>
           <button
-            className="w-full bg-purple-600 text-white py-3 rounded-lg font-semibold text-lg mt-6 hover:bg-purple-700 transition"
+            className="w-full bg-green-600 text-white py-3 rounded-lg font-semibold text-lg mt-6 hover:bg-green-700 transition"
             onClick={() => setStep(2)}
           >
             Source Resume

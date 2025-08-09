@@ -8,6 +8,7 @@ import {
   FaHandshake,
   FaEdit,
 } from "react-icons/fa";
+
 import { useNavigate } from "react-router-dom";
 import {
   ClipboardList,
@@ -15,6 +16,8 @@ import {
   CheckCircle,
   Moon,
   Sun,
+  Funnel,
+  SlidersHorizontal,
 } from "lucide-react";
 
 const getToday = () => {
@@ -889,6 +892,105 @@ const RecruiterDashboardMain = () => {
 
   const lastClosure = closures.length > 0 ? closures[0] : null;
 
+  const perdata = [
+    {
+      candidate: "Aarav",
+      position: "Frontend Developer",
+      client: "TechCorp",
+      offeredOn: "06-06-2025",
+      joinedOn: "06-06-2025",
+      quarter: "FMA",
+      closureValue: "1,52,500",
+      incentive: "3000",
+    },
+    {
+      candidate: "Arjun",
+      position: "UI/UX Designer",
+      client: "Designify",
+      offeredOn: "08-06-2025",
+      joinedOn: "08-06-2025",
+      quarter: "MJJ",
+      closureValue: "4,50,000",
+      incentive: "6000",
+    },
+    {
+      candidate: "Shaurya",
+      position: "Backend Developer",
+      client: "CodeLabs",
+      offeredOn: "20-06-2025",
+      joinedOn: "20-06-2025",
+      quarter: "ASO",
+      closureValue: "3,50,000",
+      incentive: "3000",
+    },
+    {
+      candidate: "Vihaan",
+      position: "QA Tester",
+      client: "AppLogic",
+      offeredOn: "01-07-2025",
+      joinedOn: "01-07-2025",
+      quarter: "NDJ",
+      closureValue: "2,00,000",
+      incentive: "3000",
+    },
+    {
+      candidate: "Aditya",
+      position: "Mobile App Developer",
+      client: "Bug Catchers",
+      offeredOn: "23-07-2025",
+      joinedOn: "23-07-2025",
+      quarter: "NDJ",
+      closureValue: "1,75,000",
+      incentive: "3000",
+    },
+  ];
+
+  const sampleJobs = [
+    {
+      id: 1,
+      company: "Google Technologies Inc.",
+      role: "Cloud Engineer",
+      logo: "https://upload.wikimedia.org/wikipedia/commons/2/2f/Google_2015_logo.svg",
+      brand: "Google",
+      location: "Bengaluru",
+      salary: "25 LPA",
+      type: "Permanent",
+      mode: "Work from office",
+      experience: "8 Years",
+      openings: 2,
+      category: "B2B",
+      nature: "Full Time",
+      stack: ["CI/CD", "Docker", "Azure"],
+      posted: "3 days ago",
+      hot: true,
+    },
+    {
+      id: 2,
+      company: "Google Technologies Inc.",
+      role: "Frontend Developer",
+      logo: "https://upload.wikimedia.org/wikipedia/commons/4/44/Microsoft_logo.svg",
+      brand: "Microsoft",
+      location: "Bengaluru",
+      salary: "25 LPA",
+      type: "Permanent",
+      mode: "Work from office",
+      experience: "8 Years",
+      openings: 2,
+      category: "C2C",
+      nature: "Part Time",
+      stack: ["CI/CD", "Docker", "Azure"],
+      posted: "3 days ago",
+      hot: true,
+    },
+    // Add more jobs if needed
+  ];
+
+  const [showHotJobs, setShowHotJobs] = useState(true);
+
+  const filteredJobs = showHotJobs
+    ? sampleJobs.filter(job => job.hot)
+    : sampleJobs;
+
   return (
     <div className="flex min-h-screen">
       {/* Sidebar */}
@@ -1213,7 +1315,7 @@ const RecruiterDashboardMain = () => {
               {/*new tabbed sessions*/}
 
               <div className="flex border-b mt-5">
-                {["updates", "requirements", "pipeline", "activity"].map(
+                {["updates", "requirements", "pipeline", "performance"].map(
                   (tab) => (
                     <button
                       key={tab}
@@ -1247,7 +1349,7 @@ const RecruiterDashboardMain = () => {
                         </button>
                         <button
                           onClick={handleUploadClick}
-                          className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition mr-5 dark:bg-green-600 dark:hover:bg-green-700"
+                          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition mr-5 dark:bg-green-600 dark:hover:bg-green-700"
                         >
                           Upload Resume
                         </button>
@@ -2028,7 +2130,7 @@ const RecruiterDashboardMain = () => {
                 {activeTab === "pipeline" && (
                   <div>
                     {/* Resume/Pipeline Section */}
-                    <h2 className="text-xl font-semibold mb-4">Pipeline</h2>
+                    {/* <h2 className="text-xl font-semibold mb-4">Pipeline</h2> */}
                     {/* Right Column Buttons for small screens */}
                     <div className="block lg:hidden mt-6 flex flex-col gap-3">
                       <button
@@ -2045,7 +2147,7 @@ const RecruiterDashboardMain = () => {
                       </button>
                     </div>
                     {/* Right Column Buttons for large screens */}
-                    <div className="hidden lg:flex lg:w-[25%] flex-col gap-4">
+                    {/* <div className="hidden lg:flex lg:w-[25%] flex-col gap-4">
                       <button
                         className="w-full py-3 bg-green-600 text-white text-lg rounded-xl shadow hover:bg-green-700"
                         onClick={() => navigate("/funnel")}
@@ -2058,12 +2160,287 @@ const RecruiterDashboardMain = () => {
                       >
                         Archived
                       </button>
+                    </div> */}
+
+                    <div className="grid grid-cols-4 gap-4 p-4">
+                      <div className="p-4 bg-white rounded-lg shadow-md hover:shadow-xl cursor-pointer">
+                        <div className="text-gray-500">Resume processed</div>
+                        <div className="text-4xl font-bold">20</div>
+                      </div>
+                      <div className="p-4 bg-white rounded-lg shadow-md hover:shadow-xl cursor-pointer">
+                        <div className="text-gray-500">Recruitment worked</div>
+                        <div className="text-4xl font-bold">12</div>
+                      </div>
+                      <div className="p-4 bg-white rounded-lg shadow-md hover:shadow-xl cursor-pointer">
+                        <div className="text-gray-500">Feedback pending</div>
+                        <div className="text-4xl font-bold">8</div>
+                      </div>
+                      <div className="p-4 bg-white rounded-lg shadow-md hover:shadow-xl cursor-pointer">
+                        <div className="text-gray-500">Assignment cleared</div>
+                        <div className="text-4xl font-bold">10</div>
+                      </div>
+                    </div>
+
+                    {/* Pipeline shells */}
+
+                    <div className="p-4 text-white">
+                      <div className="grid grid-cols-7 gap-4 text-center font-semibold mb-4 text-blue-600 bg-white p-2">
+                        <div>Level 1</div>
+                        <div>Level 2</div>
+                        <div>Level 3</div>
+                        <div>Final Round</div>
+                        <div>HR Round</div>
+                        <div>Offer Stage</div>
+                        <div>Closure</div>
+                      </div>
+
+                      <div className="grid grid-cols-7 gap-4">
+                        {/* Keerthana */}
+                        <div className="p-2 bg-blue-100 text-blue-800 rounded shadow-lg">
+                          Keerthana
+                        </div>
+                        <div className="p-2 bg-blue-100 text-blue-800 rounded shadow-lg">
+                          Keerthana
+                        </div>
+                        <div className="p-2 bg-blue-100 text-blue-800 rounded shadow-lg">
+                          Keerthana
+                        </div>
+                        <div className="p-2 bg-yellow-100 text-yellow-800 rounded shadow-lg">
+                          Keerthana
+                        </div>
+                        <div className="p-2 bg-yellow-100 text-yellow-800 rounded shadow-lg">
+                          Keerthana
+                        </div>
+                        <div className="p-2 bg-green-100 text-green-800 rounded shadow-lg">
+                          Keerthana
+                        </div>
+                        <div className="p-2 bg-green-100 text-green-800 rounded shadow-lg">
+                          Keerthana
+                        </div>
+
+                        {/* Vishnu Purana */}
+                        <div className="p-2 bg-blue-100 text-blue-800 rounded shadow-lg">
+                          Vishnu
+                        </div>
+                        <div className="p-2 bg-blue-100 text-blue-800 rounded shadow-lg">
+                          Vishnu
+                        </div>
+                        <div className="p-2 bg-blue-100 text-blue-800 rounded shadow-lg">
+                          Vishnu
+                        </div>
+                        <div className="p-2 bg-yellow-100 text-yellow-800 rounded shadow-lg">
+                          Vishnu
+                        </div>
+                        <div className="p-2 bg-yellow-100 text-yellow-800 rounded shadow-lg">
+                          Vishnu
+                        </div>
+                        <div className="p-2 bg-green-100 text-green-800 rounded shadow-lg">
+                          Vishnu
+                        </div>
+                        <div className="p-2 bg-green-100 text-green-800 rounded shadow-lg">
+                          Vishnu
+                        </div>
+
+                        {/* Chanakya */}
+                        <div className="p-2 bg-blue-100 text-blue-800 rounded shadow-sm">
+                          Chanakya
+                        </div>
+                        <div className="p-2 bg-blue-100 text-blue-800 rounded shadow-sm">
+                          Chanakya
+                        </div>
+                        <div className="p-2 bg-blue-100 text-blue-800 rounded shadow-sm">
+                          Chanakya
+                        </div>
+                        <div className="p-2 bg-yellow-100 text-yellow-800 rounded shadow-sm">
+                          Chanakya
+                        </div>
+                        <div className="p-2 bg-yellow-100 text-yellow-800 rounded shadow-sm">
+                          Chanakya
+                        </div>
+                        <div className="p-2"></div>
+                        <div className="p-2"></div>
+
+                        {/* Adhya */}
+                        <div className="p-2 bg-blue-100 text-blue-800 rounded shadow-sm">
+                          Adhya
+                        </div>
+                        <div className="p-2 bg-blue-100 text-blue-800 rounded shadow-sm">
+                          Adhya
+                        </div>
+                        <div className="p-2 bg-blue-100 text-blue-800 rounded shadow-sm">
+                          Adhya
+                        </div>
+                        <div className="p-2 bg-yellow-100 text-yellow-800 rounded shadow-sm">
+                          Adhya
+                        </div>
+                        <div className="p-2"></div>
+                        <div className="p-2"></div>
+                        <div className="p-2"></div>
+
+                        {/* Vanshika */}
+                        <div className="p-2 bg-blue-100 text-blue-800 rounded shadow-sm">
+                          Vanshika
+                        </div>
+                        <div className="p-2 bg-blue-100 text-blue-800 rounded shadow-sm">
+                          Vanshika
+                        </div>
+                        <div className="p-2 bg-blue-100 text-blue-800 rounded shadow-sm">
+                          Vanshika
+                        </div>
+                        <div className="p-2"></div>
+                        <div className="p-2"></div>
+                        <div className="p-2"></div>
+                        <div className="p-2"></div>
+
+                        {/* Reyansh */}
+                        <div className="p-2 bg-blue-100 text-blue-800 rounded shadow-sm">
+                          Reyansh
+                        </div>
+                        <div className="p-2 bg-blue-100 text-blue-800 rounded shadow-sm">
+                          Reyansh
+                        </div>
+                        <div className="p-2"></div>
+                        <div className="p-2"></div>
+                        <div className="p-2"></div>
+                        <div className="p-2"></div>
+                        <div className="p-2"></div>
+
+                        {/* Shaurya */}
+                        <div className="p-2 bg-blue-100 text-blue-800 rounded shadow-sm">
+                          Shaurya
+                        </div>
+                        <div className="p-2"></div>
+                        <div className="p-2"></div>
+                        <div className="p-2"></div>
+                        <div className="p-2"></div>
+                        <div className="p-2"></div>
+                        <div className="p-2"></div>
+
+                        {/* Vihana */}
+                        <div className="p-2 bg-blue-100 text-blue-800 rounded shadow-sm">
+                          Vihana
+                        </div>
+                        <div className="p-2"></div>
+                        <div className="p-2"></div>
+                        <div className="p-2"></div>
+                        <div className="p-2"></div>
+                        <div className="p-2"></div>
+                        <div className="p-2"></div>
+                      </div>
                     </div>
                   </div>
                 )}
 
-                {activeTab === "activity" && (
+                {activeTab === "performance" && (
                   <div>
+                    <div className="p-8 font-sans">
+                      {/* Summary Cards Section - Keeping the original clean design */}
+                      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                        <div className="bg-white p-4 rounded-xl shadow flex flex-col items-center text-center hover:shadow-xl cursor-pointer">
+                          <div className="text-lg font-semibold text-blue-700 mb-1">
+                            Tenure
+                          </div>
+                          <div className="text-3xl font-bold text-gray-800">
+                            4
+                          </div>
+                          <div className="text-red-500 text-lg font-medium">
+                            Quarters
+                          </div>
+                        </div>
+
+                        <div className="bg-white p-4 rounded-xl shadow flex flex-col items-center text-center hover:shadow-xl cursor-pointer">
+                          <div className="text-lg font-semibold text-blue-700 mb-1">
+                            Total Closures
+                          </div>
+                          <div className="text-3xl font-bold text-gray-800 mt-2">
+                            12
+                          </div>
+                        </div>
+
+                        <div className="bg-white p-4 rounded-xl shadow flex flex-col items-center text-center hover:shadow-xl cursor-pointer">
+                          <div className="text-lg font-semibold text-blue-700 mb-1">
+                            Recent Closure
+                          </div>
+                          <div className="text-lg font-bold text-gray-500">
+                            Adhitya
+                          </div>
+                          <div className="text-red-500 text-lg font-medium">
+                            Tracx
+                          </div>
+                        </div>
+
+                        <div className="bg-white p-4 rounded-xl shadow flex flex-col items-center text-center hover:shadow-xl cursor-pointer">
+                          <div className="text-lg font-semibold text-blue-700 mb-1">
+                            Last Closure
+                          </div>
+                          <div className="text-lg font-bold text-gray-500 mt-3">
+                            1 Month 15 Days
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Data Table Section - Improved design with zebra-striping */}
+                      <div className="bg-white p-6 rounded-lg shadow-md">
+                        {/* Table Header with Filter Icon */}
+                        <div className="relative mb-4">
+                          {/* Filter icon row */}
+                          <div className="flex justify-end mb-3 mr-2">
+                            <Funnel
+                              size={24}
+                              className="text-blue-500 cursor-pointer"
+                            />
+                          </div>
+
+                          {/* Header grid row */}
+                          <div className="grid grid-cols-8 gap-2 text-gray-600 font-bold text-sm w-full bg-gray-100 p-2 rounded-t-lg">
+                            <div className="col-span-1">Candidate</div>
+                            <div className="col-span-1">Position</div>
+                            <div className="col-span-1">Client</div>
+                            <div className="col-span-1">Offered On</div>
+                            <div className="col-span-1">Joined On</div>
+                            <div className="col-span-1">Quarter</div>
+                            <div className="col-span-1">Closure Value</div>
+                            <div className="col-span-1">Incentive</div>
+                          </div>
+                        </div>
+
+                        {/* Table Rows */}
+                        {perdata.map((row, index) => (
+                          <div
+                            key={index}
+                            className={`grid grid-cols-8 gap-2 text-sm items-center py-2 border-b border-gray-200 ${
+                              index % 2 === 1 ? "bg-gray-50" : ""
+                            } last:border-b-0`}
+                          >
+                            <div className="col-span-1 text-gray-800 font-medium">
+                              {row.candidate}
+                            </div>
+                            <div className="col-span-1 text-gray-600">
+                              {row.position}
+                            </div>
+                            <div className="col-span-1 text-gray-600">
+                              {row.client}
+                            </div>
+                            <div className="col-span-1 text-gray-600">
+                              {row.offeredOn}
+                            </div>
+                            <div className="col-span-1 text-gray-600">
+                              {row.joinedOn}
+                            </div>
+                            <div className="col-span-1 text-gray-600">
+                              {row.quarter}
+                            </div>
+                            <div className="col-span-1 text-gray-600">
+                              {row.closureValue}
+                            </div>
+                            <div className="col-span-1 text-gray-600">
+                              {row.incentive}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
                     {/* Activity Section */}
                     <h2 className="text-xl mx-5 font-semibold mb-4">
                       Recent Activity
@@ -2607,9 +2984,148 @@ const RecruiterDashboardMain = () => {
         )}
         {activeSection === "jobBoard" && (
           <div>
-            <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-4">
-              Job Board
-            </h2>
+
+            {/* Main Content */}
+            <main className="flex-1 p-8">
+              {/* Header */}
+              <div className="flex justify-between items-center mb-6">
+                <h1 className="text-2xl font-bold text-gray-800">Job Board</h1>
+
+                <div className="flex items-center gap-4">
+                  <input
+                    type="text"
+                    placeholder="Search Jobs"
+                    className="border border-gray-300 rounded-full px-4 py-1 w-64 text-sm"
+                  />
+                  <div className="flex items-center gap-2">
+                    <button
+                      className={`text-sm font-semibold px-4 py-1 rounded-full ${
+                        showHotJobs
+                          ? "bg-red-600 text-white"
+                          : "bg-gray-200 text-gray-700"
+                      }`}
+                      onClick={() => setShowHotJobs(true)}
+                    >
+                      Hot Jobs
+                    </button>
+                    <button
+                      className={`text-sm font-semibold px-4 py-1 rounded-full ${
+                        !showHotJobs
+                          ? "bg-blue-600 text-white"
+                          : "bg-gray-200 text-gray-700"
+                      }`}
+                      onClick={() => setShowHotJobs(false)}
+                    >
+                      All Jobs
+                    </button>
+                  </div>
+                  <SlidersHorizontal className="text-gray-600 cursor-pointer" />
+                </div>
+              </div>
+
+              {/* Job Cards */}
+              <div className="space-y-6">
+                {filteredJobs.map((job, index) => (
+                  <div
+                    key={job.id}
+                    className="flex bg-white shadow rounded-xl overflow-hidden"
+                  >
+                    {/* Logo Section */}
+                    <div
+                      className={`w-36 flex items-center justify-center ${
+                        index % 3 === 0
+                          ? "bg-green-100"
+                          : index % 3 === 1
+                          ? "bg-pink-100"
+                          : "bg-purple-100"
+                      }`}
+                    >
+                      <div className="text-center">
+                        <img
+                          src={job.logo}
+                          alt={job.brand}
+                          className="h-10 mx-auto mb-2"
+                        />
+                        <p className="text-sm font-medium">{job.brand}</p>
+                      </div>
+                    </div>
+
+                    {/* Job Details */}
+                    <div className="flex-1 p-4">
+                      <h2 className="text-md font-semibold text-gray-800">
+                        {job.company}
+                      </h2>
+                      <h3 className="text-lg font-bold text-gray-900">
+                        {job.role}
+                        {job.hot && (
+                          <span className="ml-1 text-red-500">🔥</span>
+                        )}
+                      </h3>
+                      <p className="text-sm text-gray-600">
+                        Technology Product based hyper growth, Innovative
+                        company.
+                      </p>
+
+                      <div className="text-sm text-gray-700 mt-2 space-x-4">
+                        <span>{job.experience}</span>
+                        <span>₹ {job.salary}</span>
+                        <span>{job.location}</span>
+                        <span>{job.mode}</span>
+                        <span>{job.type}</span>
+                      </div>
+
+                      <div className="flex flex-wrap gap-2 mt-2 text-xs">
+                        <span className="bg-pink-100 text-gray-700 px-2 py-1 rounded-full">
+                          Open Positions ~ {job.openings}
+                        </span>
+                        <span className="bg-gray-200 text-gray-700 px-2 py-1 rounded-full">
+                          Product
+                        </span>
+                        <span className="bg-gray-200 text-gray-700 px-2 py-1 rounded-full">
+                          {job.category}
+                        </span>
+                        <span className="bg-gray-200 text-gray-700 px-2 py-1 rounded-full">
+                          {job.nature}
+                        </span>
+                        {job.stack.map((skill) => (
+                          <span
+                            key={skill}
+                            className="bg-green-100 text-green-700 px-2 py-1 rounded-full"
+                          >
+                            {skill}
+                          </span>
+                        ))}
+                      </div>
+
+                      <p className="text-xs text-gray-500 mt-2">
+                        Posted : {job.posted}
+                      </p>
+                    </div>
+
+                    {/* View More */}
+                    <div className="flex items-end p-4">
+                      <button className="bg-[#23395d] text-white text-sm px-4 py-2 rounded-md">
+                        View More
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Pagination */}
+              <div className="flex justify-center mt-6">
+                <div className="flex gap-2">
+                  {[1, 2, 3, 4, 5].map((num) => (
+                    <button
+                      key={num}
+                      className="w-8 h-8 text-sm font-semibold border rounded-full hover:bg-blue-600 hover:text-white transition"
+                    >
+                      {num}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </main>
           </div>
         )}
         {activeSection === "settings" && (
